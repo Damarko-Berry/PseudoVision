@@ -25,9 +25,10 @@ will default to reruns. *exeption to this is the first time you create a schedul
 Also to make sure that each show is on a weekly schedule, Up to 7 shows are selected to be played during the "Prime time" hour on the specific days, starting from saturday and going backwards. So, if you don't have a show for sunday, nothing new will play during PT.
 > reruns are picked at random
 
-(I reccomend using this for episodic shows like "Ed, Edd, n Eddy", "Scooby-doo" as missing an episode won't ruin the effect of the show)
+>I reccomend using this for episodic shows like "Ed, Edd, n Eddy", "Scooby-doo" as missing an episode won't ruin the effect of the show)
 ### Binge_Like:
 No Schedule is created at any point. You're simply connected to the next episode upon request. It selects a show at random to grab the next episode from.
+> I recomend using this for serialized shows like most anime or any show that you wouldn't want to miss an episode of.
 
 # Getting Started: 
 Open the Channel manager.
@@ -41,7 +42,7 @@ Open the Channel manager.
 >Start Server
 
 # Clients
-I've been kinda lazy on this front so bare with me, but you do have several options. Such as any video player that allows for URLs and any broser that supports the video element. I've created 2 possible links URL formats
+I've been kinda lazy on this front so bare with me, but you do have several options. Such as any video player that allows for URLs and any browser that supports the video element. I've created 2 possible links URL formats
 ### Media Players:
 http://{IP}:6589/live/channelname
 ### Browsers:
