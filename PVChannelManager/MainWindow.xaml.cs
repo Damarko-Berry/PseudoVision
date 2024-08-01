@@ -82,8 +82,8 @@ namespace PVChannelManager
         private void ServerStatus_Checked(object sender, RoutedEventArgs e)
         {
             Server = new Process();
-            Server.StartInfo = new(@"C:\Users\marko\source\repos\PseudoVision\PseudoVision\bin\Debug\net8.0\PseudoVision.exe");
-            //Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "Server", "PseudoVision.exe"));
+
+            Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "Server", "PseudoVision.exe"));
             Server.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
             Server.StartInfo.CreateNoWindow = true;
             Server.Start();

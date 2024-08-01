@@ -13,7 +13,7 @@ namespace PseudoVision
         static Settings Settings = new Settings();
         static async Task Main(string[] args)
         {
-            Directory.SetCurrentDirectory(@"C:\Users\marko\source\repos\PseudoVision\PVChannelManager\bin\Debug\net8.0-windows");
+            
             string localIp = GetLocalIPAddress();
             int prt = 6589;
             CreateScheds();
