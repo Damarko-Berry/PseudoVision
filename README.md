@@ -55,6 +55,5 @@ Edge and Chrome desktop Browser
 
 Phone Browsers
 
-#Future endevures:
-### My original hope was to get it woring with UPNP and SSDP. Still in the works.
-### Also a Roku channel would be nice as well. *is in the works.*
+# Future endevures:
+My original hope was to get it woring with UPNP and SSDP. Still in the works. Also a Roku channel would be nice as well. *is in the works.*
