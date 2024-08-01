@@ -31,21 +31,29 @@ No Schedule is created at any point. You're simply connected to the next episode
 # Getting Started: 
 Open the Channel manager.
 
-### Click "New Channel"
-### select a name and Channel Type.
-### Select New Show *Feel free to select muliple Show-folders at once*
-### Start Server
+> Click "New Channel"
+
+>select a name and Channel Type.
+
+>Select New Show *Feel free to select muliple Show-folders at once*
+
+>Start Server
 
 # Clients
 I've been kinda lazy on this front so bare with me, but you do have several options. Such as any video player that allows for URLs and any broser that supports the video element. I've created 2 possible links URL formats
-### Media Players: http://{IP}:6589/live/channelname
-### Browsers: http://{IP}:6589/watch/channelname
+### Media Players:
+http://{IP}:6589/live/channelname
+### Browsers:
+http://{IP}:6589/watch/channelname
 
 ## Working Clients
-### VLC Player
-### Windows Media PLayer
-### Edge and Chrome desktop Browser
-### Phone Browsers
+VLC Player
+
+Windows Media PLayer
+
+Edge and Chrome desktop Browser
+
+Phone Browsers
 
 #Future endevures:
 ### My original hope was to get it woring with UPNP and SSDP. Still in the works.
