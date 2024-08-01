@@ -15,7 +15,7 @@ Like other streaming servers all show folders must be set in a specific format t
 ## Shows
 A class specifically made to keep track of what's been played
 ## Channels
-These Control the behavior of a schedule. Each Channal's show list is independent of each other and can be on diferent episodes of the same show.
+These Control the behavior of a schedule. Each Channel's show list is independent of each other and can be on diferent episodes of the same show.
 ## Channel Types
 Each Channel has different behaviors depending on the type you give it.
 ### TV_Like:
