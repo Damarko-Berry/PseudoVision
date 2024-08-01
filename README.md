@@ -23,7 +23,7 @@ This was my original idea. This creates a 24hr schedule at the start of each day
 will default to reruns. *exeption to this is the first time you create a schedule. As it'll add enough content comparable to the shows selected. roughly 21mins per show*.
 
 Also to make sure that each show is on a weekly schedule, Up to 7 shows are selected to be played during the "Prime time" hour on the specific days, starting from saturday and going backwards. So, if you don't have a show for sunday, nothing new will play during PT.
-#### reruns are picked at random
+> reruns are picked at random
 (I reccomend using this for episodic shows like "Ed, Edd, n Eddy", "Scooby-doo" as missing an episode won't ruin the effect of the show)
 ### Binge_Like:
 No Schedule is created at any point. You're simply connected to the next episode upon request. It selects a show at random to grab the next episode from.
