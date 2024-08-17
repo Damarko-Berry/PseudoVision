@@ -37,7 +37,7 @@ Open the Channel manager.
 
 >select a name and Channel Type.
 
->Select New Show *Feel free to select muliple Show-folders at once*
+>Select New Show *Feel free to select multiple Show-folders at once*
 
 >Start Server
 
