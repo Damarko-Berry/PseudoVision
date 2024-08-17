@@ -37,12 +37,12 @@ Open the Channel manager.
 
 >select a name and Channel Type.
 
->Select New Show *Feel free to select muliple Show-folders at once*
+>Select New Show *Feel free to select multiple Show-folders at once*
 
 >Start Server
 
 # Clients
-I've been kinda lazy on this front so bare with me, but you do have several options. Such as any video player that allows for URLs and any browser that supports the video element. I've created 2 possible links URL formats
+I've been kinda lazy on this front so bare with me, but you do have several options. Such as any video player that allows for URLs and any browser that supports the video element. I've created 2 possible URL formats
 ### Media Players:
 http://{IP}:6589/live/channelname
 ### Browsers:
