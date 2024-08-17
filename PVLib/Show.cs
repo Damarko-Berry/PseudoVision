@@ -23,9 +23,10 @@
             get
             {
                 int e = 0;
-                for (int i = 0; i < Season+1; i++)
+                int CU = Season;
+                DirectoryInfo se= new(HomeDirectory);
+                for (int i = 0; i < CU; i++)
                 {
-                    DirectoryInfo se= new(HomeDirectory);
                     for (int j = 0; j < se.GetDirectories()[i].GetFiles().Length; j++)
                     {
                         e++;

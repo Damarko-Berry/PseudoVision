@@ -148,10 +148,18 @@ namespace PVLib
         }
         public void Cancel(string name)
         {
-            File.Delete(name);
+            File.Delete(Path.Combine(ShowDirectory,name+".shw"));
             if (Channel_Type == Channel_Type.TV_Like)
             {
                 rotation.Cancel(name, shows);
+            }
+            for (int i = 0; i < reruns.Count; i++)
+            {
+                if (reruns[i].Media.Contains(name))
+                {
+                    reruns.RemoveAt(i);
+                    i--;
+                }
             }
         }
         string ChooseNew()

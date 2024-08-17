@@ -138,11 +138,9 @@ namespace PVLib
 
         internal void Cancel(string name, Show[] other_shows)
         {
-            name = name.Replace(".shw", string.Empty);
-            ShowRef R = new();
             for (int i = 0; i < ShowList.Count; i++)
             {
-                if (ShowList[i].Directory == name)
+                if (ShowList[i].name == name)
                 {
                     OnShowComplete(ShowList[i], other_shows);
                     break;

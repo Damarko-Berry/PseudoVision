@@ -6,12 +6,16 @@
              xmlns:local="clr-namespace:PVChannelManager"
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800">
-    <Grid>
-        <TextBlock x:Name="NameBlock" TextWrapping="Wrap" Text="" VerticalAlignment="Center" HorizontalAlignment="Right" Width="200" Height="26" TextAlignment="Center" Margin="0,0,600,0"/>
-        <Slider x:Name="HourSlider" Margin="0,0,400,0" Maximum="23" ValueChanged="HourSlider_ValueChanged" Value="20" Height="18" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" />
-        <TextBlock x:Name="Hour" HorizontalAlignment="Right" Margin="0,0,494,23" TextWrapping="Wrap" Text="24" VerticalAlignment="Bottom" Height="26"/>
-        <Button x:Name="AddShow" Content="Add New Show" HorizontalAlignment="Left" Margin="400,0,0,0" VerticalAlignment="Center" Width="200" Height="50" Click="AddShow_Click"/>
-        <ComboBox x:Name="comboBox" HorizontalAlignment="Left" Margin="600,0,0,0" VerticalAlignment="Center" Width="200" Height="25"/>
-
-    </Grid>
+    <local:FillPanal Orientation="Horizontal" >
+            <TextBlock x:Name="NameBlock" TextWrapping="Wrap" Text="" VerticalAlignment="Center" TextAlignment="Center" />
+            <StackPanel Orientation="Vertical">
+                <TextBlock x:Name="Hour" HorizontalAlignment="Center" TextWrapping="Wrap" Text="24" />
+                <Slider x:Name="HourSlider" Maximum="23" ValueChanged="HourSlider_ValueChanged" Value="20" />
+            </StackPanel>
+            <Button x:Name="AddShow" Content="Add New Show" Click="AddShow_Click"/>
+            <StackPanel>
+                <TextBlock Text="Remove Show From Channel" TextAlignment="Center"/>
+                <ComboBox x:Name="ShowList" SelectionChanged="ShowList_SelectionChanged"  />
+            </StackPanel>
+        </local:FillPanal>
 </UserControl>

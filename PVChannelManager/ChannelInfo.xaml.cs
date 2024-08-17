@@ -13,19 +13,15 @@ namespace PVChannelManager
     {
         public Channel subject;
         bool isInitialized = false;
-        public ChannelInfo()
-        {
-            InitializeComponent();
-        }
-
+        
         public ChannelInfo(Channel subject)
         {
             InitializeComponent();
-            
             this.subject = subject;
             Hour.Text = subject.PrimeTime.Hour.ToString();
             HourSlider.Value = subject.PrimeTime.Hour;
             NameBlock.Text = subject.ChannelName;
+            UpdateShowList();
             isInitialized = true;
         }
 
@@ -59,9 +55,35 @@ namespace PVChannelManager
                     Show show = new();
                     show.HomeDirectory = showinfo.FullName;
                     SaveLoad<Show>.Save(show, Path.Combine(subject.HomeDirectory, "Shows", showinfo.Name+".shw"));
-
+                    UpdateShowList();
                 }
             }
         }
+        bool usd;
+        void UpdateShowList()
+        {
+            usd = true;
+
+            ShowList.Items.Clear();
+            DirectoryInfo AllShows = new(subject.ShowDirectory);
+            for (int i = 0; i < AllShows.GetFiles().Length; i++)
+            {
+                var nam = AllShows.GetFiles()[i].Name.Replace(".shw", string.Empty);
+                ShowList.Items.Add(nam);
+            }
+            ShowList.SelectedIndex= -1;
+            usd = false;
+        }
+
+        private void ShowList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (usd | !isInitialized) return;
+            string ShowName = ShowList.Items[ShowList.SelectedIndex].ToString();
+            MessageBox.Show(ShowName);
+            subject.Cancel(ShowName);
+            UpdateShowList();
+            MainWindow.Instance.SaveChans();
+        }
     }
+    
 }

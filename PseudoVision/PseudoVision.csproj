@@ -2,10 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <BaseOutputPath>C:\Users\marko\source\repos\PseudoVision\PVChannelManager\bin</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

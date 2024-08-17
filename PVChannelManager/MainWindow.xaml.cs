@@ -33,39 +33,35 @@ namespace PVChannelManager
         public void Load()
         {
             DirectoryInfo info = new DirectoryInfo(Channels);
-            ChannelList.Items.Clear();
+            ChannelList.Children.Clear();
             for (int i = 0; i < info.GetDirectories().Length; i++)
             {
                 var ch = SaveLoad<Channel>.Load(Path.Combine(info.GetDirectories()[i].FullName, "Channel.chan"));
                 ChannelInfo channel = new(ch);
-                ChannelList.Items.Add(channel);
+                ChannelList.Children.Add(channel);
+            }
+        }
+        public void SaveChans()
+        {
+            for (int i = 0; i < ChannelList.Children.Count; i++)
+            {
+                if (ChannelList.Children[i].GetType() == typeof(ChannelInfo))
+                {
+                    var ch = (ChannelInfo)ChannelList.Children[i];
+                    SaveLoad<Channel>.Save(ch.subject, Path.Combine(ch.subject.HomeDirectory, "Channel.chan"));
+                }
             }
         }
         Process Server = null;
-        private void StartServer_Click(object sender, RoutedEventArgs e)
-        {
-            if(Server != null)
-            Server.Kill();
-            try
-            {
-                Server = new Process();
-                Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "Server", "PseudoVision.exe"));
-                Server.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-            }
-            catch(Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-            Server.Start();
-        }
+        
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            for (int i = 0; i < ChannelList.Items.Count; i++)
+            for (int i = 0; i < ChannelList.Children.Count; i++)
             {
-                if (ChannelList.Items[i].GetType() == typeof(ChannelInfo))
+                if (ChannelList.Children[i].GetType() == typeof(ChannelInfo))
                 {
-                    var ch = (ChannelInfo)ChannelList.Items[i];
+                    var ch = (ChannelInfo)ChannelList.Children[i];
                     SaveLoad<Channel>.Save(ch.subject ,Path.Combine(ch.subject.HomeDirectory, "Channel.chan"));
                 }
             }
@@ -82,8 +78,7 @@ namespace PVChannelManager
         private void ServerStatus_Checked(object sender, RoutedEventArgs e)
         {
             Server = new Process();
-
-            Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "Server", "PseudoVision.exe"));
+            Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "PseudoVision.exe"));
             Server.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
             Server.StartInfo.CreateNoWindow = true;
             Server.Start();
