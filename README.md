@@ -59,3 +59,5 @@ Phone Browsers
 
 # Future endevures:
 My original hope was to get it woring with UPNP and SSDP. Still in the works. Also a Roku channel would be nice as well. *is in the works.*
+
+I also want to do "true live"
