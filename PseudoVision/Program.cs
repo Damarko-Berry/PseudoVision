@@ -11,6 +11,7 @@ namespace PseudoVision
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static Settings Settings = new Settings();
+        static UPNP UPNP = new UPNP();
         static async Task Main(string[] args)
         {
             
@@ -21,8 +22,10 @@ namespace PseudoVision
             Public_IP = PIP.ToString();
             Task.Run(() => StartHttpServer(localIp, prt));
             Thread.Sleep(1000);
-            Task.Run(() => SendSsdpAnnouncements(localIp, prt));
-            Task.Run(() => ListenForSsdpRequests(localIp, prt));
+            if(Settings.useUPNP)
+            {
+                //
+            }
             Console.WriteLine("DLNA Server is running. Press Enter to exit...");
             waittilnextday();
             Console.ReadLine();
@@ -155,72 +158,7 @@ namespace PseudoVision
             {
                 response.Redirect("https://cartoonnetwork.com");
             }
-        }
-        
-        static async Task SendSsdpAnnouncements(string localIp,int port)
-        {
-            string ssdpNotifyTemplate = "NOTIFY * HTTP/1.1\r\n" +
-                                        "HOST: 239.255.255.250:1900\r\n" +
-                                        "CACHE-CONTROL: max-age=1800\r\n" +
-                                        $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                        "NT: urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                        "NTS: ssdp:all\r\n" +
-                                        "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                        $"USN: uuid:{UPNP.UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                        "\r\n";
-
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("239.255.255.250"), 1900);
-            UdpClient client = new UdpClient();
-            byte[] buffer = Encoding.UTF8.GetBytes(ssdpNotifyTemplate);
-
-            while (true)
-            {
-                Console.WriteLine("ssdp message sent");
-                client.Send(buffer, buffer.Length, endPoint);
-                await Task.Delay(1000 * 30); // Send every 30 seconds
-            }
-        }
-
-        static async Task ListenForSsdpRequests(string localIp, int port)
-        {
-            UdpClient client = new UdpClient();
-            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 1900);
-            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            client.ExclusiveAddressUse = false;
-            client.Client.Bind(localEndPoint);
-            client.JoinMulticastGroup(IPAddress.Parse("239.255.255.250"));
-
-            while (true)
-            {
-                UdpReceiveResult result = await client.ReceiveAsync();
-                string request = Encoding.UTF8.GetString(result.Buffer);
-                
-                if (request.Contains("M-SEARCH") && request.Contains("ssdp:discover"))
-                {   
-                    string responseTemplate = !request.Contains("upnp:rootdevice") ? $"HTTP/1.1 200 OK\r\n" +
-                                              "CACHE-CONTROL: max-age=1800\r\n" +
-                                              $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
-                                              "EXT:\r\n" +
-                                              $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                              "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              "ST: urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                              $"USN: uuid:{UPNP.UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                              "\r\n":
-                                              $"HTTP/1.1 200 OK\r\n" +
-                                              "CACHE-CONTROL: max-age=1800\r\n" +
-                                              $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
-                                              "EXT:\r\n" +
-                                              $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                              "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              "ST: upnp:rootdevice\r\n" +
-                                              $"USN: uuid:{UPNP.UniqueID}::upnp:rootdevice\r\n" +
-                                              "\r\n";
-
-                    byte[] responseData = Encoding.UTF8.GetBytes(responseTemplate);
-                    await client.SendAsync(responseData, responseData.Length, result.RemoteEndPoint);
-                }
-            }
-        }
+        } 
 
         static string GetLocalIPAddress()
         {

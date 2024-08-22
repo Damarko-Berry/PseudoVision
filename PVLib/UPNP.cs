@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PseudoVision
+namespace PVLib
 {
-    internal static class UPNP
+    internal class UPNP
     {
-        public static DeviceType DeviceType = DeviceType.MediaServer;
-        public static string DeviceTypeSchema => $"<deviceType>urn:schemas-upnp-org:device:{DeviceType}:1</deviceType>";
         public static int Major=1, Minor=5;
-        static public string UniqueID = "45da98e2-34af-4f39-a620-3bb14e942f22";
-        static public string DeviceName = "PseudoVision";
-        static public string ModelName= "model 1";
-        static public double ModelNumber= 1.12;
-        static public string Manufacturer = "YAKWII";
-        public static List<ServiceSchema> ServiceList = new List<ServiceSchema>()
+        public string UniqueID = "45da98e2-34af-4f39-a620-3bb14e942f22";
+        public string DeviceName = "PseudoVision";
+        public string ModelName= "model 1";
+        public double ModelNumber= 1.12;
+        public string Manufacturer = "YAKWII";
+        public List<ServiceSchema> ServiceList = new List<ServiceSchema>()
         {
             new ServiceSchema()
             {
@@ -33,7 +33,7 @@ namespace PseudoVision
                 eventSubURL = "events"
             },
         };
-        public static string ServiceListSchemas
+        public string ServiceListSchemas
         {
             get
             {
@@ -47,7 +47,7 @@ namespace PseudoVision
                 return Sch;
             }
         }
-        static public string ToString()
+        public string ToString()
         {
             return $@"<?xml version='1.0'?>
 <root xmlns='urn:schemas-upnp-org:device-1-0'>
@@ -56,7 +56,7 @@ namespace PseudoVision
     <minor>{Minor}</minor>
   </specVersion>
   <device>
-    {DeviceTypeSchema}
+    <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
     <friendlyName>{DeviceName}</friendlyName>
     <manufacturer>{Manufacturer}</manufacturer>
     <modelName>{ModelName}</modelName>
@@ -178,6 +178,75 @@ namespace PseudoVision
   </serviceStateTable>
 </scpd>
 ";
+        public async void Start(string localIp, int port)
+        {
+            Task.Run(()=>SendSsdpAnnouncements(localIp, port));
+            Task.Run(()=>ListenForSsdpRequests(localIp, port));
+        }
+        async Task SendSsdpAnnouncements(string localIp, int port)
+        {
+            string ssdpNotifyTemplate = "NOTIFY * HTTP/1.1\r\n" +
+                                        "HOST: 239.255.255.250:1900\r\n" +
+                                        "CACHE-CONTROL: max-age=1800\r\n" +
+                                        $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                        "NT: urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                        "NTS: ssdp:all\r\n" +
+                                        "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
+                                        $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                        "\r\n";
+
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("239.255.255.250"), 1900);
+            UdpClient client = new UdpClient();
+            byte[] buffer = Encoding.UTF8.GetBytes(ssdpNotifyTemplate);
+
+            while (true)
+            {
+                Console.WriteLine("ssdp message sent");
+                client.Send(buffer, buffer.Length, endPoint);
+                await Task.Delay(1000 * 30); // Send every 30 seconds
+            }
+        }
+
+        async Task ListenForSsdpRequests(string localIp, int port)
+        {
+            UdpClient client = new UdpClient();
+            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Any, 1900);
+            client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            client.ExclusiveAddressUse = false;
+            client.Client.Bind(localEndPoint);
+            client.JoinMulticastGroup(IPAddress.Parse("239.255.255.250"));
+
+            while (true)
+            {
+                UdpReceiveResult result = await client.ReceiveAsync();
+                string request = Encoding.UTF8.GetString(result.Buffer);
+
+                if (request.Contains("M-SEARCH") && request.Contains("ssdp:discover"))
+                {
+                    string responseTemplate = !request.Contains("upnp:rootdevice") ? $"HTTP/1.1 200 OK\r\n" +
+                                              "CACHE-CONTROL: max-age=1800\r\n" +
+                                              $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
+                                              "EXT:\r\n" +
+                                              $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                              "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
+                                              "ST: urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              "\r\n" :
+                                              $"HTTP/1.1 200 OK\r\n" +
+                                              "CACHE-CONTROL: max-age=1800\r\n" +
+                                              $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
+                                              "EXT:\r\n" +
+                                              $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                              "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
+                                              "ST: upnp:rootdevice\r\n" +
+                                              $"USN: uuid:{UniqueID}::upnp:rootdevice\r\n" +
+                                              "\r\n";
+
+                    byte[] responseData = Encoding.UTF8.GetBytes(responseTemplate);
+                    await client.SendAsync(responseData, responseData.Length, result.RemoteEndPoint);
+                }
+            }
+        }
     }
     internal class ServiceSchema
     {
