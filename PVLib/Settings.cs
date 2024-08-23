@@ -11,6 +11,7 @@ namespace PVLib
         public PlaylistFormat playlistFormat;
         public int Port;
         public bool useUPNP;
+        public UPNP upnp;
         public string Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists");
         public Uri redirectsite;
         public bool UseLogin;

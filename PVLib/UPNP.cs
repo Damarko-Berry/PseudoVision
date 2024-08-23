@@ -8,15 +8,24 @@ using System.Threading.Tasks;
 
 namespace PVLib
 {
-    internal class UPNP
+    public class UPNP
     {
-        public static int Major=1, Minor=5;
-        public string UniqueID = "45da98e2-34af-4f39-a620-3bb14e942f22";
-        public string DeviceName = "PseudoVision";
-        public string ModelName= "model 1";
-        public double ModelNumber= 1.12;
-        public string Manufacturer = "YAKWII";
-        public List<ServiceSchema> ServiceList = new List<ServiceSchema>()
+        public static UPNP Default => new UPNP()
+        {
+            DeviceName = "PseudoVision",
+            Manufacturer = "YAKWII",
+            ModelName = "model 1",
+            ModelNumber = 0,
+            UniqueID = Guid.NewGuid().ToString(),
+            Major = 0, Minor = 1,
+        };
+        public int Major, Minor;
+        public string UniqueID;
+        public string DeviceName ;
+        public string ModelName;
+        public double ModelNumber;
+        public string Manufacturer;
+        List<ServiceSchema> ServiceList => new List<ServiceSchema>()
         {
             new ServiceSchema()
             {
@@ -33,7 +42,14 @@ namespace PVLib
                 eventSubURL = "events"
             },
         };
-        public string ServiceListSchemas
+        public List<ISchedule> ScheduleList = new();
+        public string contentDirectory()
+        {
+            var Srt = "<?xml version=\"1.0\"?>";
+             
+            return Srt;
+        }
+        string ServiceListSchemas
         {
             get
             {
@@ -75,7 +91,7 @@ namespace PVLib
   </device>
 </root>";
         }
-        public const string CDS_XML = @"<?xml version=""1.0""?>
+        public static string CDS_XML => @"<?xml version=""1.0""?>
 <scpd xmlns=""urn:schemas-upnp-org:service-1-0"">
   <specVersion>
     <major>1</major>

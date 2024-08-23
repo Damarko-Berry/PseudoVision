@@ -36,6 +36,14 @@ namespace PVLib
                 StartTime = slots[^1].EndTime;
             }
         }
+        public TimeSlot(string media)
+        {
+            Media = media;
+            var player = new WindowsMediaPlayer();
+            var clip = player.newMedia(media);
+            Duration = TimeSpan.FromSeconds(clip.duration);
+            StartTime = DateTime.Now;
+        }
         public TimeSlot(Rerun media, List<TimeSlot> slots)
         {
             Media = media.Media;

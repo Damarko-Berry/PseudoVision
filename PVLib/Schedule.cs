@@ -67,6 +67,11 @@ namespace PVLib
             }
         }
 
+        public string GetContent()
+        {
+            throw new NotImplementedException();
+        }
+
         public Schedule()
         {
 

@@ -25,7 +25,9 @@ namespace PseudoVision
             if(Settings.useUPNP)
             {
                 //
+
             }
+            UPNP.Default.Start(localIp,prt);
             Console.WriteLine("DLNA Server is running. Press Enter to exit...");
             waittilnextday();
             Console.ReadLine();
@@ -86,7 +88,7 @@ namespace PseudoVision
             }
         }
         
-        static async void HandleClient(HttpListenerContext context, string ip, int prt)
+        static async Task HandleClient(HttpListenerContext context, string ip, int prt)
         {
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;

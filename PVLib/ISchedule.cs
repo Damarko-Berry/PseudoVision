@@ -11,5 +11,6 @@ namespace PVLib
     {
         public async void SendMedia(HttpListenerResponse client) { }
         public Channel_Type ScheduleType { get; }
+        public string GetContent();
     }
 }

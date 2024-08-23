@@ -10,17 +10,22 @@ namespace PVLib
     public class ShowList: ISchedule
     {
         public Channel_Type ScheduleType => Channel_Type.Binge_Like;
-        public List<string> Shows;
+        public List<string> Shows = new();
+        TimeSlot CurrentlyPlaying = new();
         public async void SendMedia(HttpListenerResponse client)
         {
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);
             try
             {
-                Show show = SaveLoad<Show>.Load(Shows[shw]);
-                var info = new FileInfo(show.NextEpisode());
-                SaveLoad<Show>.Save(show, Shows[shw]);
-                var StreamBuffer = File.ReadAllBytes(info.FullName);
+                if (DateTime.Now > CurrentlyPlaying.EndTime)
+                {
+                    Show show = SaveLoad<Show>.Load(Shows[shw]);
+                    CurrentlyPlaying = new TimeSlot(show.NextEpisode());
+                    SaveLoad<Show>.Save(show, Shows[shw]);
+                }
+                var info = new FileInfo(CurrentlyPlaying.Media);
+                var StreamBuffer = File.ReadAllBytes(CurrentlyPlaying.Media);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
                 client.ContentLength64 = StreamBuffer.Length;
                 client.SendChunked = true;
@@ -32,6 +37,12 @@ namespace PVLib
             }
             client.Close();
         }
+
+        public string GetContent()
+        {
+            throw new NotImplementedException();
+        }
+
         public ShowList() { }
         public ShowList(DirectoryInfo ShowDirectory)
         {
