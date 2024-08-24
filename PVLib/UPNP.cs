@@ -16,7 +16,7 @@ namespace PVLib
             Manufacturer = "YAKWII",
             ModelName = "model 1",
             ModelNumber = 0,
-            UniqueID = Guid.NewGuid().ToString(),
+            UniqueID = "45da98e2-34af-4f39-a620-3bb14e942f22",
             Major = 0, Minor = 1,
         };
         public int Major, Minor;
@@ -63,7 +63,7 @@ namespace PVLib
                 return Sch;
             }
         }
-        public string ToString()
+        public override string ToString()
         {
             return $@"<?xml version='1.0'?>
 <root xmlns='urn:schemas-upnp-org:device-1-0'>
@@ -196,6 +196,7 @@ namespace PVLib
 ";
         public async void Start(string localIp, int port)
         {
+            await Task.Delay(1000);
             Task.Run(()=>SendSsdpAnnouncements(localIp, port));
             Task.Run(()=>ListenForSsdpRequests(localIp, port));
         }
@@ -264,7 +265,7 @@ namespace PVLib
             }
         }
     }
-    internal class ServiceSchema
+    internal struct ServiceSchema
     {
         public ServiceType ServiceType;
         public string SCPDURL;

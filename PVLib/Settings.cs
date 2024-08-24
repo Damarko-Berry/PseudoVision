@@ -8,13 +8,13 @@ namespace PVLib
 {
     public class Settings
     {
-        public PlaylistFormat playlistFormat;
+        public PlaylistFormat playlistFormat = PlaylistFormat.m3u;
         public int Port;
         public bool useUPNP;
-        public UPNP upnp;
+        public UPNP upnp = UPNP.Default;
         public string Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists");
         public Uri redirectsite;
-        public bool UseLogin;
+        public SecurityLevel securityLevel = SecurityLevel.None;
         public Settings() { }
     }
 }

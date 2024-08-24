@@ -9,7 +9,6 @@ namespace PVLib
     public class UserInfo
     {
         public string Username;
-        public string Email;
         public string Password;
         public Access access;
         public static void Save(UserInfo user)

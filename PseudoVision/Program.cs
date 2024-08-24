@@ -11,7 +11,7 @@ namespace PseudoVision
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static Settings Settings = new Settings();
-        static UPNP UPNP = new UPNP();
+        static UPNP upnp = new UPNP();
         static async Task Main(string[] args)
         {
             
@@ -27,7 +27,8 @@ namespace PseudoVision
                 //
 
             }
-            UPNP.Default.Start(localIp,prt);
+            upnp = UPNP.Default;
+            upnp.Start(localIp, prt);
             Console.WriteLine("DLNA Server is running. Press Enter to exit...");
             waittilnextday();
             Console.ReadLine();
@@ -98,7 +99,7 @@ namespace PseudoVision
             
             if (request.Url.AbsolutePath == "/description.xml")
             {
-                var des = UPNP.ToString();
+                var des = upnp.ToString();
                 byte[] buffer = Encoding.UTF8.GetBytes(des);
                 response.ContentLength64 = buffer.Length;
                 response.ContentType = "text/xml";
@@ -139,12 +140,12 @@ namespace PseudoVision
                 
                 bool isPrivate = userip.Contains("192");
                 string channame = request.Url.AbsolutePath.Replace("/watch/", string.Empty);
-                string Web_PLayer = isPrivate switch
+                string ChosenIP = isPrivate switch
                 {
-                    false => webPubPlayer(prt, channame.ToLower()),
-                    _ => webPlayer(ip, prt, channame.ToLower())
+                    false => ip,
+                    _ => Public_IP
                 };
-                byte[] buffer = Encoding.UTF8.GetBytes(Web_PLayer);
+                byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt, channame.ToLower()));
                 response.ContentLength64 = buffer.Length;
                 response.ContentType = "text/html";
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
@@ -229,44 +230,13 @@ namespace PseudoVision
 </html>";
         }
         
-        static string webPubPlayer(int port, string ch)
+        static void creatIndex(string ip, int port)
         {
-            return @$"
-<html>
- #myVideo {{
-             transform: translate(-50%, -50%);
-             position: absolute;
-             top: 50%;
-             left: 50%;
-             min-width: 100%;
-             max-height: 100%;
-             color: black
-        }}
-<body>
-    <video id=""myVideo"" controls autoplay>
-        < type=""video/mp4"">
-        Your browser does not support the video tag.
-    </video>
-</body>
-<script>
-    var video = document.getElementsByTagName('video')[0];
-    video.onended = function (e) {{
-        start();
-    }}
-    async function start() {{
-    video.src = ""http://{Public_IP}:{port}/live/{ch}"";
-        await pause(10);
-        video.play();
-        console.log(""PLAYING"");
-    }}
-
-    async function pause(seconds) {{
-        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
-    }}
-    start();
-    
-</script>
-</html>";
+            string[] links;
+            for (int i = 0; i < Schedules.Count; i++)
+            {
+                
+            }
         }
         
         static async Task<IPAddress?> GetExternalIpAddress()

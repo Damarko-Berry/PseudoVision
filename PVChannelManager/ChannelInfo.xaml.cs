@@ -3,6 +3,7 @@ using PVLib;
 using System.IO;
 using System.Windows.Controls;
 using System.Windows;
+using System.Windows.Input;
 
 namespace PVChannelManager
 {
@@ -13,7 +14,18 @@ namespace PVChannelManager
     {
         public Channel subject;
         bool isInitialized = false;
-        
+
+        protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
+        {
+            if(MessageBox.Show($"Are you sure that you want to delete {subject.ChannelName}", "Deleting channel" ,MessageBoxButton.YesNo)== MessageBoxResult.Yes)
+            {
+                Directory.Delete(Path.Combine(MainWindow.Channels, subject.ChannelName),true);
+                if(Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", subject.ChannelName)))
+                Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", subject.ChannelName),true);
+            }
+            MainPage.Instance.Load();
+        }
+
         public ChannelInfo(Channel subject)
         {
             InitializeComponent();
@@ -82,7 +94,7 @@ namespace PVChannelManager
             MessageBox.Show(ShowName);
             subject.Cancel(ShowName);
             UpdateShowList();
-            MainWindow.Instance.SaveChans();
+            MainPage.Instance.SaveChans();
         }
     }
     

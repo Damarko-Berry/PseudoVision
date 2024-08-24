@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <None Remove="CDTemp.xml" />
+    <None Remove="Index.html" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +34,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PVLib\PVLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Index.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 
   <ItemGroup>

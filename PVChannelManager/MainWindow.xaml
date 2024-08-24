@@ -7,11 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
-        <StackPanel Width="200" HorizontalAlignment="Left">
-            <Button x:Name="New" Content="New Channel"   Click="New_Click"/>
-            <Button x:Name="Save" Content="Save" Click="Save_Click"/>
-            <CheckBox x:Name="ServerStatus" Content="Server: Off"  Checked="ServerStatus_Checked" Unchecked="ServerStatus_Unchecked" HorizontalAlignment="Center"/>
-        </StackPanel>
-        <StackPanel x:Name="ChannelList" Height="295" VerticalAlignment="Top" Margin="0,139,0,0"/>
+        <Frame Name="Main"/>
+        
     </Grid>
 </Window>

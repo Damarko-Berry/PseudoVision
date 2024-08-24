@@ -43,7 +43,7 @@ namespace PVChannelManager
             channel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
             channel.Channel_Type = ChannelType;
             SaveLoad<Channel>.Save(channel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan"));
-            MainWindow.Instance.Load();
+            MainPage.Instance.Load();
             Close();
         }
 
