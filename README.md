@@ -1,4 +1,5 @@
 A little while ago I came to the realization that Binge watching shows is inferior to weekly episodes and that every UI is clunky, and so PseudoVision was born.
+##### The following Package is considered "portable".
 # What is PseudoVision?
 Pseudovision is a media server. That grabs the media you've given it and serves it to you at in a somewhat random fashion. As soon as you connect with any video player it grabs a file from a selection of Shows/movies and streams it to you.
 Getting rid of the need of selection screens. The 3 projects above must be together. 
