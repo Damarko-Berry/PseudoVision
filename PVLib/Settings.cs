@@ -12,7 +12,7 @@ namespace PVLib
         public int Port;
         public bool useUPNP;
         public UPNP upnp = UPNP.Default;
-        public string Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists");
+        public string Archive_Output;
         public string redirectsite;
         public SecurityLevel securityLevel = SecurityLevel.None;
         public Settings() { }

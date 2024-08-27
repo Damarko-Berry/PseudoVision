@@ -1,4 +1,5 @@
-﻿using PVLib;
+﻿using Microsoft.Win32;
+using PVLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,6 +96,15 @@ namespace PVChannelManager
         {
             SaveLoad<Settings>.Save(NSettings, "settings");
             MainWindow.Instance.Main.GoBack();
+        }
+
+        private void Chosepth_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFolderDialog folderDialog = new OpenFolderDialog();
+            if (folderDialog.ShowDialog()== true)
+            {
+                OutPath.Text = folderDialog.FolderName;
+            }
         }
     }
 }

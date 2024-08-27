@@ -21,7 +21,7 @@
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Archive Path: "/>
                 <TextBlock Name="OutPath"/>
-                <Button x:Name="Chosepth" Content="Select Path"/>
+                <Button x:Name="Chosepth" Content="Select Path" Click="Chosepth_Click"/>
             </StackPanel>
             <TextBlock/>
             <CheckBox x:Name="UPNPbool" Content="Use UPNP" Checked="UPNPbool_Checked"  Unchecked="UPNPbool_Unchecked" />
