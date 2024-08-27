@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace PVLib
 {
@@ -42,6 +43,7 @@ namespace PVLib
                 eventSubURL = "events"
             },
         };
+        [XmlIgnore]
         public List<ISchedule> ScheduleList = new();
         public string contentDirectory()
         {
@@ -264,6 +266,7 @@ namespace PVLib
                 }
             }
         }
+        UPNP() { }
     }
     internal struct ServiceSchema
     {

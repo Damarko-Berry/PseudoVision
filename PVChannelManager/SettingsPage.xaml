@@ -1,0 +1,62 @@
+﻿<Page x:Class="PVChannelManager.SettingsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:PVChannelManager"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SettingsPage">
+
+    <Grid>
+        <StackPanel >
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Port: "/>
+                <local:NumberBox x:Name="Port"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="PlaylistFormat: "/>
+                <ComboBox Name="PlstFormat"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Archive Path: "/>
+                <TextBlock Name="OutPath"/>
+                <Button x:Name="Chosepth" Content="Select Path"/>
+            </StackPanel>
+            <TextBlock/>
+            <CheckBox x:Name="UPNPbool" Content="Use UPNP" Checked="UPNPbool_Checked"  Unchecked="UPNPbool_Unchecked" />
+            <StackPanel Name="UPNPStuff" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Server Name: "/>
+                    <TextBox x:Name="UPNPName" Text="Pseudo"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Model Name: "/>
+                    <TextBox x:Name="UPNPModelName"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Model Number: "/>
+                    <local:NumberBox x:Name="UPNPModelNumber"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Major: "/>
+                    <local:NumberBox x:Name="Major"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Minor: "/>
+                    <local:NumberBox x:Name="Minor"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Manufacturer: "/>
+                    <TextBox Name="UPNPManufacturer"/>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Security"/>
+                <ComboBox x:Name="SecurityType"/>
+            </StackPanel>
+            <Button x:Name="save" Content="Save" Click="save_Click"/>
+        </StackPanel>
+    </Grid>
+</Page>

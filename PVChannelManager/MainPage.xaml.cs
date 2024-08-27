@@ -28,6 +28,10 @@ namespace PVChannelManager
             InitializeComponent();
             if (Instance == null) Instance = this;
             Load();
+            if (!File.Exists("settings"))
+            {
+                SaveLoad<Settings>.Save(Settings.Default, "settings");
+            }
         }
         private void New_Click(object sender, RoutedEventArgs e)
         {
@@ -90,6 +94,11 @@ namespace PVChannelManager
             Server.Kill();
             ServerStatus.Content = "Server: Off";
 
+        }
+
+        private void tosets_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow.Instance.Main.Content = new SettingsPage();
         }
     }
 }

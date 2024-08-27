@@ -11,7 +11,7 @@ namespace PseudoVision
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static Settings Settings = new Settings();
-        static UPNP upnp = new UPNP();
+        static UPNP upnp => Settings.upnp;
         static async Task Main(string[] args)
         {
             
@@ -20,17 +20,24 @@ namespace PseudoVision
             CreateScheds();
             var PIP = await GetExternalIpAddress();
             Public_IP = PIP.ToString();
-            Task.Run(() => StartHttpServer(localIp, prt));
+            Task.Run(() => StartHttpServer(localIp, Settings.Port));
             Thread.Sleep(1000);
+            try
+            {
+                Settings = SaveLoad<Settings>.Load("settings");
+            }
+            catch
+            {
+                Settings = Settings.Default;
+            }
             if(Settings.useUPNP)
             {
                 //
+                upnp.Start(localIp, Settings.Port);
 
             }
-            upnp = UPNP.Default;
-            upnp.Start(localIp, prt);
-            Console.WriteLine("DLNA Server is running. Press Enter to exit...");
             waittilnextday();
+            Console.WriteLine("Server is running. Press Enter to exit...");
             Console.ReadLine();
         }
         

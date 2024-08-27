@@ -13,8 +13,24 @@ namespace PVLib
         public bool useUPNP;
         public UPNP upnp = UPNP.Default;
         public string Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists");
-        public Uri redirectsite;
+        public string redirectsite;
         public SecurityLevel securityLevel = SecurityLevel.None;
         public Settings() { }
+        public static Settings Default
+        {
+            get
+            {
+                return new Settings()
+                {
+                    Port = 6589,
+                    upnp = UPNP.Default,
+                    useUPNP = true,
+                    Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists"),
+                    redirectsite = "http://cartoonnetwork.com",
+                    securityLevel = SecurityLevel.None,
+                    playlistFormat = PlaylistFormat.m3u
+                };
+            }
+        }
     }
 }
