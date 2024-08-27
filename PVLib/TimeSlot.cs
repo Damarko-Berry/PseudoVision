@@ -11,6 +11,10 @@ namespace PVLib
         {
             get
             {
+                if (Media == string.Empty | Media == null)
+                {
+                    return DateTime.MinValue;
+                }
                 DateTime ET = StartTime;
                 return ET + Duration;
             }

@@ -4,6 +4,9 @@ using System.IO;
 using System.Windows.Controls;
 using System.Windows;
 using System.Windows.Input;
+using System.Net.Sockets;
+using System.Net;
+using System.Net.Http;
 
 namespace PVChannelManager
 {
@@ -95,6 +98,38 @@ namespace PVChannelManager
             subject.Cancel(ShowName);
             UpdateShowList();
             MainPage.Instance.SaveChans();
+        }
+
+        private void Local_Click(object sender, RoutedEventArgs e)
+        {
+            Clipboard.SetText($"{GetLocalIPAddress()}:6589/watch/{subject.ChannelName}");
+        }
+        static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("Local IP Address Not Found!");
+        }
+
+
+        private async void Public_Click(object sender, RoutedEventArgs e)
+        {
+            var IP = await GetExternalIpAddress();
+            Clipboard.SetText($"{IP}:6589/watch/{subject.ChannelName}");
+        }
+        static async Task<IPAddress?> GetExternalIpAddress()
+        {
+            var externalIpString = (await new HttpClient().GetStringAsync("http://icanhazip.com"))
+                .Replace("\r\n", "").Replace("\n", "").Trim();
+            if (!IPAddress.TryParse(externalIpString, out var ipAddress))
+                return null;
+            return ipAddress;
         }
     }
     

@@ -7,7 +7,13 @@
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800">
     <local:FillPanal Orientation="Horizontal" >
-            <TextBlock x:Name="NameBlock" TextWrapping="Wrap" Text="" VerticalAlignment="Center" TextAlignment="Center" />
+        <local:FillPanal>
+            <TextBlock x:Name="NameBlock" TextWrapping="Wrap" Text="a" VerticalAlignment="Center" TextAlignment="Center" />
+            <local:FillPanal Orientation="Horizontal">
+                <Button x:Name="Local" Content="Local Link" Click="Local_Click"/>
+                <Button x:Name="Public" Content="Public Link" Click="Public_Click"/>
+            </local:FillPanal>
+        </local:FillPanal>
             <StackPanel Orientation="Vertical">
                 <TextBlock x:Name="Hour" HorizontalAlignment="Center" TextWrapping="Wrap" Text="24" />
                 <Slider x:Name="HourSlider" Maximum="23" ValueChanged="HourSlider_ValueChanged" Value="20" />

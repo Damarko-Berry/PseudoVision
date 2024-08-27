@@ -25,6 +25,7 @@ namespace PVLib
                     SaveLoad<Show>.Save(show, Shows[shw]);
                 }
                 var info = new FileInfo(CurrentlyPlaying.Media);
+                Console.WriteLine(info.Name);
                 var StreamBuffer = File.ReadAllBytes(CurrentlyPlaying.Media);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
                 client.ContentLength64 = StreamBuffer.Length;

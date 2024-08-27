@@ -82,7 +82,7 @@ namespace PseudoVision
             listener.Prefixes.Add($"http://{localIp}:{port}/");
             listener.Start();
             Console.WriteLine($"HTTP Server started at http://{localIp}:{port}/");
-            //Console.WriteLine($"HTTP Server started at http://{Public_IP}:{prt}/");
+            
             while (true)
             {
                 HandleClient(await listener.GetContextAsync(), localIp, port);
@@ -142,7 +142,7 @@ namespace PseudoVision
                 string channame = request.Url.AbsolutePath.Replace("/watch/", string.Empty);
                 string ChosenIP = isPrivate switch
                 {
-                    false => ip,
+                    true => ip,
                     _ => Public_IP
                 };
                 byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt, channame.ToLower()));

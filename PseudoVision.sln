@@ -5,9 +5,9 @@ VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PseudoVision", "PseudoVision\PseudoVision.csproj", "{8793C943-3EC4-4E59-BF72-888085A51C0B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PVLib", "PVLib\PVLib.csproj", "{2A4654A7-B3F0-4D5E-9BA4-2C448E2236A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PVLib", "PVLib\PVLib.csproj", "{2A4654A7-B3F0-4D5E-9BA4-2C448E2236A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PVChannelManager", "PVChannelManager\PVChannelManager.csproj", "{212E5125-26ED-457A-9FD2-CD8CE3EB7684}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PVChannelManager", "PVChannelManager\PVChannelManager.csproj", "{212E5125-26ED-457A-9FD2-CD8CE3EB7684}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -23,7 +23,7 @@ namespace PseudoVision
                 if(users.Length == 0) LoadArray();
                 for (int i = 0; i < users.Length; i++)
                 {
-                    if(username == users[i].Username| username == users[i].Email)
+                    if(username == users[i].Username)
                         return password == users[i].Password;
                 }
             }
@@ -42,7 +42,7 @@ namespace PseudoVision
                 if (users.Length == 0)LoadArray();
                 for (int i = 0; i < users.Length; i++)
                 {
-                    if (username == users[i].Username | username == users[i].Email)
+                    if (username == users[i].Username)
                         return password == users[i].Password & users[i].access >= levelReq;
                 }
             }
