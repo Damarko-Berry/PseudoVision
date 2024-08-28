@@ -16,12 +16,6 @@ namespace PseudoVision
         {
             
             string localIp = GetLocalIPAddress();
-            int prt = 6589;
-            CreateScheds();
-            var PIP = await GetExternalIpAddress();
-            Public_IP = PIP.ToString();
-            Task.Run(() => StartHttpServer(localIp, Settings.Port));
-            Thread.Sleep(1000);
             try
             {
                 Settings = SaveLoad<Settings>.Load("settings");
@@ -30,6 +24,12 @@ namespace PseudoVision
             {
                 Settings = Settings.Default;
             }
+            int prt = Settings.Port;
+            CreateScheds();
+            var PIP = await GetExternalIpAddress();
+            Public_IP = PIP.ToString();
+            Task.Run(() => StartHttpServer(localIp, Settings.Port));
+            Thread.Sleep(1000);
             if(Settings.useUPNP)
             {
                 //

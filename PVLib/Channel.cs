@@ -71,6 +71,7 @@ namespace PVLib
             if(Channel_Type == Channel_Type.Binge_Like)
             {
                 ShowList showList = new(new(ShowDirectory));
+                if (showList.Shows.Count <= 0) return;
                 Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName));
                 SaveLoad<ShowList>.Save(showList, Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd"));
                 Console.WriteLine($"Scheduling process ended: {DateTime.Now}");

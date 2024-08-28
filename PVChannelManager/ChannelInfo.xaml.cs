@@ -18,6 +18,7 @@ namespace PVChannelManager
         public Channel subject;
         bool isInitialized = false;
 
+
         protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
         {
             if(MessageBox.Show($"Are you sure that you want to delete {subject.ChannelName}", "Deleting channel" ,MessageBoxButton.YesNo)== MessageBoxResult.Yes)
@@ -102,7 +103,7 @@ namespace PVChannelManager
 
         private void Local_Click(object sender, RoutedEventArgs e)
         {
-            Clipboard.SetText($"{GetLocalIPAddress()}:6589/watch/{subject.ChannelName}");
+            Clipboard.SetText($"{GetLocalIPAddress()}:{SaveLoad<Settings>.Load("settings").Port }/watch/{subject.ChannelName}");
         }
         static string GetLocalIPAddress()
         {
@@ -118,10 +119,10 @@ namespace PVChannelManager
         }
 
 
-        private async void Public_Click(object sender, RoutedEventArgs e)
+        private void Public_Click(object sender, RoutedEventArgs e)
         {
-            var IP = await GetExternalIpAddress();
-            Clipboard.SetText($"{IP}:6589/watch/{subject.ChannelName}");
+            
+            Clipboard.SetText($"http://{GetLocalIPAddress()}:{SaveLoad<Settings>.Load("settings").Port}/live/{subject.ChannelName}");
         }
         static async Task<IPAddress?> GetExternalIpAddress()
         {
