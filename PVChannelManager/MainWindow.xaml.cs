@@ -1,8 +1,5 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
+﻿using System.IO;
 using System.Windows;
-using PVLib;
 
 
 namespace PVChannelManager
@@ -21,13 +18,6 @@ namespace PVChannelManager
             Instance ??= this;
             Directory.CreateDirectory(Channels);
             Main.Content= new MainPage();
-        }
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            e.Cancel = true;
-            Hide();
-            base.OnClosing(e);
-        }
-        
+        }   
     }
 }

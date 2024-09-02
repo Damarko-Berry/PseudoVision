@@ -23,15 +23,27 @@ namespace PVChannelManager
     public partial class MainPage : Page
     {
         public static MainPage Instance = null;
+        
         public MainPage()
         {
+
             InitializeComponent();
             if (Instance == null) Instance = this;
-            Load();
             if (!File.Exists("settings"))
             {
                 SaveLoad<Settings>.Save(Settings.Default, "settings");
             }
+
+            var pros = Process.GetProcesses(Environment.MachineName);
+            for (int i = 0; i < pros.Length; i++)
+            {
+                if (pros[i].ProcessName == "PseudoVision")
+                {
+                    Server = pros[i];
+                    ServerStatus.IsChecked = true;
+                }
+            }
+            Load();
         }
         private void New_Click(object sender, RoutedEventArgs e)
         {
@@ -78,14 +90,16 @@ namespace PVChannelManager
 
         }
 
-        bool serv;
         private void ServerStatus_Checked(object sender, RoutedEventArgs e)
         {
-            Server = new Process();
-            Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "PseudoVision.exe"));
-            Server.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
-            Server.StartInfo.CreateNoWindow = true;
-            Server.Start();
+            if (Server == null)
+            {
+                Server = new Process();
+                Server.StartInfo = new(Path.Combine(Directory.GetCurrentDirectory(), "PseudoVision.exe"));
+                Server.StartInfo.WorkingDirectory = Directory.GetCurrentDirectory();
+                Server.StartInfo.CreateNoWindow = true;
+                Server.Start();
+            }
             ServerStatus.Content = "Server: On";
         }
 
@@ -93,7 +107,7 @@ namespace PVChannelManager
         {
             Server.Kill();
             ServerStatus.Content = "Server: Off";
-
+            Server = null;
         }
 
         private void tosets_Click(object sender, RoutedEventArgs e)
