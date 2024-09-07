@@ -21,11 +21,12 @@ namespace PVChannelManager
     public partial class ChannelMaker : Window
     {
         public string ChanName;
-        public Channel_Type ChannelType;
+        public Channel_Type ChannelType => (Channel_Type)TypeSelect.SelectedIndex;
         public ChannelMaker()
         {
             InitializeComponent();
             TypeSelect.ItemsSource = Enum.GetNames(typeof(Channel_Type));
+            TypeSelect.SelectedIndex = 0;
         }
 
         private void CN_TextChanged(object sender, TextChangedEventArgs e)
@@ -39,17 +40,24 @@ namespace PVChannelManager
             if (Directory.Exists(Path.Combine(MainWindow.Channels, ChanName))) return;
             Directory.CreateDirectory(Path.Combine(MainWindow.Channels, ChanName));
             Directory.CreateDirectory(Path.Combine(MainWindow.Channels, ChanName, "Shows"));
-            Channel channel = new Channel();
-            channel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
-            channel.Channel_Type = ChannelType;
-            SaveLoad<Channel>.Save(channel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan"));
+            switch (ChannelType)
+            {
+                case Channel_Type.Binge_Like:
+                    Binge_LikeChannel Bchannel = new();
+                    Bchannel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
+                    SaveLoad<Binge_LikeChannel>.Save(Bchannel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan")); 
+                    break;
+                case Channel_Type.TV_Like:
+                    TV_LikeChannel Tchannel = new();
+                    Tchannel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
+                    SaveLoad<TV_LikeChannel>.Save(Tchannel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan")); 
+                    break;
+
+            }
             MainPage.Instance.Load();
             Close();
         }
 
-        private void TypeSelect_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ChannelType = (Channel_Type)TypeSelect.SelectedIndex;
-        }
+       
     }
 }

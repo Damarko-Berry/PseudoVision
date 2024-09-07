@@ -11,7 +11,6 @@
     <Grid>
         <StackPanel Width="200" HorizontalAlignment="Left">
             <Button x:Name="New" Content="New Channel"   Click="New_Click"/>
-            <Button x:Name="Save" Content="Save" Click="Save_Click"/>
             <CheckBox x:Name="ServerStatus" Content="Server: Off"  Checked="ServerStatus_Checked" Unchecked="ServerStatus_Unchecked" HorizontalAlignment="Center"/>
             <Button x:Name="tosets" Content="Settings" Click="tosets_Click"/>
         </StackPanel>

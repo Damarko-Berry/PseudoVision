@@ -58,22 +58,12 @@ namespace PVChannelManager
             ChannelList.Children.Clear();
             for (int i = 0; i < info.GetDirectories().Length; i++)
             {
-                var ch = SaveLoad<Channel>.Load(Path.Combine(info.GetDirectories()[i].FullName, "Channel.chan"));
+                var ch = Channel.Load(Path.Combine(info.GetDirectories()[i].FullName, "Channel.chan"));
                 ChannelInfo channel = new(ch);
                 ChannelList.Children.Add(channel);
             }
         }
-        public void SaveChans()
-        {
-            for (int i = 0; i < ChannelList.Children.Count; i++)
-            {
-                if (ChannelList.Children[i].GetType() == typeof(ChannelInfo))
-                {
-                    var ch = (ChannelInfo)ChannelList.Children[i];
-                    SaveLoad<Channel>.Save(ch.subject, Path.Combine(ch.subject.HomeDirectory, "Channel.chan"));
-                }
-            }
-        }
+        
         Process Server = null;
 
 

@@ -14,11 +14,7 @@
                 <Button x:Name="Public" Content="Media Player" Click="Public_Click"/>
             </local:FillPanal>
         </local:FillPanal>
-            <StackPanel Orientation="Vertical">
-                <TextBlock x:Name="Hour" HorizontalAlignment="Center" TextWrapping="Wrap" Text="24" />
-                <Slider x:Name="HourSlider" Maximum="23" ValueChanged="HourSlider_ValueChanged" Value="20" />
-            </StackPanel>
-            <Button x:Name="AddShow" Content="Add New Show" Click="AddShow_Click"/>
+        <Button x:Name="AddShow" Content="Add New Show" Click="AddShow_Click"/>
             <StackPanel>
                 <TextBlock Text="Remove Show From Channel" TextAlignment="Center"/>
                 <ComboBox x:Name="ShowList" SelectionChanged="ShowList_SelectionChanged"  />

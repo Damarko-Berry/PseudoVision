@@ -21,43 +21,19 @@ namespace PVChannelManager
 
         protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
         {
-            if(MessageBox.Show($"Are you sure that you want to delete {subject.ChannelName}", "Deleting channel" ,MessageBoxButton.YesNo)== MessageBoxResult.Yes)
-            {
-                Directory.Delete(Path.Combine(MainWindow.Channels, subject.ChannelName),true);
-                if(Directory.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", subject.ChannelName)))
-                Directory.Delete(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", subject.ChannelName),true);
-            }
-            MainPage.Instance.Load();
+            
         }
 
         public ChannelInfo(Channel subject)
         {
             InitializeComponent();
             this.subject = subject;
-            Hour.Text = subject.PrimeTime.Hour.ToString();
-            HourSlider.Value = subject.PrimeTime.Hour;
             NameBlock.Text = subject.ChannelName;
             UpdateShowList();
             isInitialized = true;
         }
 
-        private void HourSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!isInitialized) return;
-            var f = (int)HourSlider.Value;
-            Hour.Text = (f > 12) switch
-            {
-                true => $"{f - 12}pm",
-                _ => f switch
-                {
-                    12 => $"{f}pm",
-                    _ => $"{f}am"
-                }
-
-            };
-            subject.PrimeTime.Hour = f;
-        }
-
+        
         private void AddShow_Click(object sender, RoutedEventArgs e)
         {
             OpenFolderDialog folderDialog = new OpenFolderDialog();
@@ -70,7 +46,7 @@ namespace PVChannelManager
                     DirectoryInfo showinfo = new(folderDialog.FolderNames[i]);
                     Show show = new();
                     show.HomeDirectory = showinfo.FullName;
-                    SaveLoad<Show>.Save(show, Path.Combine(subject.HomeDirectory, "Shows", showinfo.Name+".shw"));
+                    SaveLoad<Show>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name+".shw"));
                     UpdateShowList();
                 }
             }
@@ -98,7 +74,6 @@ namespace PVChannelManager
             MessageBox.Show(ShowName);
             subject.Cancel(ShowName);
             UpdateShowList();
-            MainPage.Instance.SaveChans();
         }
 
         private void Local_Click(object sender, RoutedEventArgs e)

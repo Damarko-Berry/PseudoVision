@@ -3,15 +3,17 @@
     internal class Playlist
     {
         List<TimeSlot> files;
-        public Playlist(Schedule schedule)
+        PlaylistFormat format;
+        public Playlist(Schedule schedule, PlaylistFormat playlistFormat)
         {
             files = new();
             for (int i = 0; i < schedule.slots.Count; i++)
             {
                 files.Add(schedule.slots[i]);
             }
+            format = playlistFormat;
         }
-        public string ToM3u()
+        string ToM3u()
         {
             var Da = DateTime.Now;
             var M = Da.Date.Month;
@@ -26,7 +28,7 @@
             return sb;
         }
 
-        public string ToPls()
+        string ToPls()
         {
             var sb = "[playlist]\n\n";
             for (int i = 0; i < files.Count; i++)
@@ -38,6 +40,16 @@
             sb += $"Version=2";
 
             return sb;
+        }
+
+        public override string ToString()
+        {
+            return format switch
+            {
+                PlaylistFormat.m3u => ToM3u(),
+                PlaylistFormat.pls => ToPls(),
+                _=> throw new Exception("Invalid Selection")
+            };
         }
     }
 }

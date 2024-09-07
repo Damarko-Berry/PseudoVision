@@ -10,7 +10,7 @@
     <Grid>
         <TextBox x:Name="CN" HorizontalAlignment="Center" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Width="613" Height="36" TextChanged="CN_TextChanged" Margin="0,0,0,133"/>
         <Button x:Name="Make" Content="Create" HorizontalAlignment="Center" Margin="0,0,0,37" Width="231" Height="20" VerticalAlignment="Bottom" Click="Make_Click"/>
-        <ComboBox Name="TypeSelect" HorizontalAlignment="Left" Margin="178,0,0,0" VerticalAlignment="Center" Width="180" SelectionChanged="TypeSelect_SelectionChanged"/>
+        <ComboBox Name="TypeSelect" HorizontalAlignment="Left" Margin="178,0,0,0" VerticalAlignment="Center" Width="180"/>
         <TextBlock  HorizontalAlignment="Left" Margin="98,0,0,0" TextWrapping="Wrap" Text="Channel Type" VerticalAlignment="Center"/>
 
     </Grid>

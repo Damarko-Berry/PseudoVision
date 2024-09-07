@@ -61,9 +61,9 @@ namespace PseudoVision
             Schedules.Clear();
             for (int i = 0; i < Channels.GetDirectories().Length; i++)
             {
-                Channel chan = SaveLoad<Channel>.Load(Path.Combine(Channels.GetDirectories()[i].FullName, "Channel.chan"));
+                Channel chan = Channel.Load(Path.Combine(Channels.GetDirectories()[i].FullName, "Channel.chan"));
                 chan.CreateNewSchedule(DateTime.Now);
-                ISchedule sch = (chan.Channel_Type == Channel_Type.TV_Like) ? 
+                ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like) ? 
                     SaveLoad<Schedule>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd")):
                     SaveLoad<ShowList>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd"));
                 sch.Name = chan.ChannelName.ToLower();
@@ -75,10 +75,10 @@ namespace PseudoVision
                 {
                     var sch = (Schedule)Schedules.ElementAt(i).Value;
                     sch.StartCycle();
-                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value);
+                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value, Settings.playlistFormat);
                     string pth = Path.Combine(Settings.Archive_Output, "PV-Archives", Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
-                    File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.m3u"), playlist.ToM3u());
+                    File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.{Settings.playlistFormat}"), playlist.ToString());
                     Console.WriteLine(Schedules.ElementAt(i).Key);
                 }
             }
@@ -137,14 +137,6 @@ namespace PseudoVision
                     byte[] buffer = Encoding.UTF8.GetBytes(Re);
                     response.ContentLength64 = buffer.Length;
                     response.ContentType = "text/xml";
-                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    response.OutputStream.Close();
-                }
-                else if (request.Url.AbsolutePath == "/cds.xml")
-                {
-                    byte[] buffer = Encoding.UTF8.GetBytes(UPNP.CDS_XML);
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = Application.Xml;
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                     response.OutputStream.Close();
                 }
@@ -256,16 +248,6 @@ namespace PseudoVision
             return ipAddress;
         }
        
-        static string result(string chan)
-        {
-            
-            return $@"<item id=""1"" parentID=""0"" restricted=""false"">
-                        <dc:title>{chan}</dc:title>
-                        <dc:creator>Unknown</dc:creator>
-                        <upnp:class>object.item.videoItem.movie</upnp:class>
-                        <res protocolInfo=""http-get:*:video/mp4:*"">http://192.168.0.40:8080/live/{chan}</res>
-                    </item>";
-        }
        
     }
 }

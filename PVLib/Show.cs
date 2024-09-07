@@ -2,6 +2,7 @@
 {
     public class Show
     {
+        public string HomeDirectory;
         public int Season;
         public int EpisodeNo;
         int TotalEps
@@ -40,7 +41,6 @@
                 return e;
             }
         }
-        public string HomeDirectory;
         public string NextEpisode()
         {
 
@@ -83,12 +83,20 @@
         {
             get
             {
-
                 if (CuEpNo >= TotalEps) return ShowStatus.Complete;
                 else if (CuEpNo > 0&CuEpNo<TotalEps) return ShowStatus.Ongoing;
                 return ShowStatus.New;
             }
         }
+        public void Reset()
+        {
+            Season = 0;
+            EpisodeNo = 0;
+        }
 
+        public Show Clone()
+        {
+            return (Show)MemberwiseClone();
+        }
     }
 }
