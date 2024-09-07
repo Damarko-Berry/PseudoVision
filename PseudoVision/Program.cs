@@ -66,6 +66,7 @@ namespace PseudoVision
                 ISchedule sch = (chan.Channel_Type == Channel_Type.TV_Like) ? 
                     SaveLoad<Schedule>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd")):
                     SaveLoad<ShowList>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd"));
+                sch.Name = chan.ChannelName.ToLower();
                 Schedules.Add(chan.ChannelName.ToLower() , sch);
             }
             for (int i = 0; i < Schedules.Count; i++)
@@ -103,7 +104,7 @@ namespace PseudoVision
             var userip = context.Request.RemoteEndPoint.Address.ToString();
            
             Console.WriteLine(request.Url.AbsolutePath);
-            
+
             if (request.Url.AbsolutePath == "/description.xml")
             {
                 var des = upnp.ToString();
@@ -113,50 +114,13 @@ namespace PseudoVision
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
             }
-            else if (request.Url.AbsolutePath == "/media")
+            else if (request.Url.AbsolutePath == "/CreateNewUser")
             {
-                var Re = $@"<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
-  <s:Body>
-    <u:BrowseResponse xmlns:u=""urn:schemas-upnp-org:service:ContentDirectory:1"">
-        <DIDL-Lite xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"" xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"">
-        {result(Schedules.ElementAt(0).Key)}
-    </DIDL-Lite>
-      <NumberReturned>1</NumberReturned>
-      <TotalMatches>1</TotalMatches>
-      <UpdateID>0</UpdateID>
-    </u:BrowseResponse>
-  </s:Body>
-</s:Envelope>
-";
-                byte[] buffer = Encoding.UTF8.GetBytes(Re);
-                response.ContentLength64 = buffer.Length;
-                response.ContentType = "text/xml; charset=utf-8";
-                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+
             }
-            else if(request.Url.AbsolutePath == "/cds.xml")
+            else if (request.Url.AbsolutePath == "NewPass")
             {
-                byte[] buffer = Encoding.UTF8.GetBytes(UPNP.CDS_XML);
-                response.ContentLength64 = buffer.Length;
-                response.ContentType = Application.Xml;
-                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
-            }
-            else if (request.Url.AbsolutePath.Contains("/watch/"))
-            {
-                
-                bool isPrivate = userip.Contains("192");
-                string channame = request.Url.AbsolutePath.Replace("/watch/", string.Empty);
-                string ChosenIP = isPrivate switch
-                {
-                    true => ip,
-                    _ => Public_IP
-                };
-                byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt, channame.ToLower()));
-                response.ContentLength64 = buffer.Length;
-                response.ContentType = "text/html";
-                await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+
             }
             else if (request.Url.AbsolutePath.Contains("/live/"))
             {
@@ -164,10 +128,47 @@ namespace PseudoVision
                 Console.WriteLine($"Connecting {userip} to {channame}");
                 Schedules[channame.ToLower()].SendMedia(response);
             }
+            else if(UserAuthenticator.Auth(request,Settings.securityLevel))
+            {    
+                if (request.Url.AbsolutePath == "/media")
+                {
+                    var sc = Schedules.Values.ToArray();
+                    var Re = upnp.Media(sc, ip, prt);
+                    byte[] buffer = Encoding.UTF8.GetBytes(Re);
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentType = "text/xml";
+                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    response.OutputStream.Close();
+                }
+                else if (request.Url.AbsolutePath == "/cds.xml")
+                {
+                    byte[] buffer = Encoding.UTF8.GetBytes(UPNP.CDS_XML);
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentType = Application.Xml;
+                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    response.OutputStream.Close();
+                }
+                else if (request.Url.AbsolutePath.Contains("/watch/"))
+                {
+
+                    bool isPrivate = userip.Contains("192");
+                    string channame = request.Url.AbsolutePath.Replace("/watch/", string.Empty);
+                    string ChosenIP = isPrivate switch
+                    {
+                        true => ip,
+                        _ => Public_IP
+                    };
+                    byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt, channame.ToLower()));
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentType = "text/html";
+                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    response.OutputStream.Close();
+                }
+            }
             else
             {
-                response.Redirect("https://cartoonnetwork.com");
-            }
+                    response.Redirect("https://cartoonnetwork.com");
+            } 
         } 
 
         static string GetLocalIPAddress()

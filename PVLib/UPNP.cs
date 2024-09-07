@@ -26,6 +26,7 @@ namespace PVLib
         public string ModelName;
         public double ModelNumber;
         public string Manufacturer;
+        static public int Update {  get; set; }
         List<ServiceSchema> ServiceList => new List<ServiceSchema>()
         {
             new ServiceSchema()
@@ -45,12 +46,7 @@ namespace PVLib
         };
         [XmlIgnore]
         public List<ISchedule> ScheduleList = new();
-        public string contentDirectory()
-        {
-            var Srt = "<?xml version=\"1.0\"?>";
-             
-            return Srt;
-        }
+       
         string ServiceListSchemas
         {
             get
@@ -199,8 +195,34 @@ namespace PVLib
         public async void Start(string localIp, int port)
         {
             await Task.Delay(1000);
-            Task.Run(()=>SendSsdpAnnouncements(localIp, port));
             Task.Run(()=>ListenForSsdpRequests(localIp, port));
+            Task.Run(()=>SendSsdpAnnouncements(localIp, port));
+        }
+        public string Media(ISchedule[] Medias, string IP, int port)
+        {
+            var items = string.Empty;
+            for (int i = 0; i < Medias.Length; i++)
+            {
+                items += Medias[i].GetContent(i+1, IP, port)+"\n";
+            }
+            return $@"<?xml version='1.0'?>
+<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
+  <s:Body>
+    <u:BrowseResponse xmlns:u=""urn:schemas-upnp-org:service:ContentDirectory:1"">
+        <DIDL-Lite xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"" xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"">
+        <container id=""0"" parentID=""-1"" restricted=""false"" searchable=""true"">
+          <dc:title>My Video Container</dc:title>
+          <upnp:class>object.container</upnp:class>
+{items}
+        </container>
+    </DIDL-Lite>
+      <NumberReturned>{Medias.Length}</NumberReturned>
+      <TotalMatches>{Medias.Length}</TotalMatches>
+      <UpdateID>{Update}</UpdateID>
+    </u:BrowseResponse>
+  </s:Body>
+</s:Envelope>
+";
         }
         async Task SendSsdpAnnouncements(string localIp, int port)
         {

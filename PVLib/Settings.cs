@@ -14,7 +14,7 @@ namespace PVLib
         public UPNP upnp = UPNP.Default;
         public string Archive_Output;
         public string redirectsite;
-        public SecurityLevel securityLevel = SecurityLevel.None;
+        public SecurityApplication securityLevel = SecurityApplication.Never;
         public Settings() { }
         public static Settings Default
         {
@@ -27,7 +27,7 @@ namespace PVLib
                     useUPNP = true,
                     Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists"),
                     redirectsite = "http://cartoonnetwork.com",
-                    securityLevel = SecurityLevel.None,
+                    securityLevel = SecurityApplication.Never,
                     playlistFormat = PlaylistFormat.m3u
                 };
             }

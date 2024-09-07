@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,6 +13,8 @@ namespace PVLib
         public Channel_Type ScheduleType => Channel_Type.Binge_Like;
         public List<string> Shows = new();
         TimeSlot CurrentlyPlaying = new();
+        FileInfo info => new FileInfo(CurrentlyPlaying.Media);
+        public string Name { get; set; }
         public async void SendMedia(HttpListenerResponse client)
         {
             Random rnd = new Random();
@@ -24,7 +27,6 @@ namespace PVLib
                     CurrentlyPlaying = new TimeSlot(show.NextEpisode());
                     SaveLoad<Show>.Save(show, Shows[shw]);
                 }
-                var info = new FileInfo(CurrentlyPlaying.Media);
                 Console.WriteLine(info.Name);
                 var StreamBuffer = File.ReadAllBytes(CurrentlyPlaying.Media);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
@@ -39,9 +41,14 @@ namespace PVLib
             client.Close();
         }
 
-        public string GetContent()
+        public string GetContent(int s, string ip, int prt)
         {
-            throw new NotImplementedException();
+            return $@"<item id=""{s}"" parentID=""0"" restricted=""false"">
+                        <dc:title>{Name}</dc:title>
+                        <dc:creator>Unknown</dc:creator>
+                        <upnp:class>object.item.videoItem.videoProgram</upnp:class>
+                        <res protocolInfo=""http-get:*:video/mp4:*"">http://{ip}:{prt}/live/{Name}.mp4</res>
+                    </item>";
         }
 
         public ShowList() { }

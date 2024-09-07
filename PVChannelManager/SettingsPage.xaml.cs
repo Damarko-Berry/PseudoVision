@@ -37,7 +37,7 @@ namespace PVChannelManager
                 settings.upnp.Minor = (int)Minor;
                 settings.upnp.Manufacturer = UPNPManufacturer.Text;
                 settings.playlistFormat = (PlaylistFormat)PlstFormat.SelectedIndex;
-                settings.securityLevel = (SecurityLevel)SecurityType.SelectedIndex;
+                settings.securityLevel = (SecurityApplication)SecurityType.SelectedIndex;
                 return settings;
             }
         }
@@ -64,7 +64,7 @@ namespace PVChannelManager
             UPNPManufacturer.Text = sets.upnp.Manufacturer;
             PlstFormat.ItemsSource = Enum.GetValues(typeof(PlaylistFormat));
             PlstFormat.SelectedIndex = (int)sets.playlistFormat;
-            SecurityType.ItemsSource = Enum.GetValues(typeof(SecurityLevel));
+            SecurityType.ItemsSource = Enum.GetValues(typeof(SecurityApplication));
             SecurityType.SelectedIndex = (int)sets.securityLevel;
             UPNPStuff.IsEnabled = (bool)UPNPbool.IsChecked;
         }
