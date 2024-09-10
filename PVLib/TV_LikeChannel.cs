@@ -50,6 +50,7 @@ namespace PVLib
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
+            if (shows.Length <= 0) return;
             if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd")))
             {
                 return;
@@ -122,7 +123,7 @@ namespace PVLib
             }
             Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName));
             SaveLoad<Schedule>.Save(schedule, Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd"));
-            SaveLoad<Channel>.Save(this, Path.Combine(HomeDirectory, $"Channel.chan"));
+            SaveLoad<TV_LikeChannel>.Save(this, Path.Combine(HomeDirectory, $"Channel.chan"));
             Console.WriteLine($"Scheduling process ended: {DateTime.Now}");
         }
         void OnMissingRerun(string epname)

@@ -3,6 +3,19 @@
     public class Show
     {
         public string HomeDirectory;
+        string dir
+        {
+            get
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    HomeDirectory = HomeDirectory.Replace("C:\\", "/mnt/c/");
+                    return HomeDirectory.Replace('\\', '/');
+
+                }
+                return HomeDirectory;
+            }
+        }
         public int Season;
         public int EpisodeNo;
         int TotalEps
@@ -10,7 +23,7 @@
             get
             {
                 int e = 0;
-                DirectoryInfo se= new(HomeDirectory);
+                DirectoryInfo se= new(dir);
                 var td = se.GetDirectories().Length;
                 for (int i = 0; i < td; i++)
                 {
@@ -25,7 +38,7 @@
             {
                 int e = 0;
                 int CU = Season;
-                DirectoryInfo se= new(HomeDirectory);
+                DirectoryInfo se= new(dir);
                 for (int i = 0; i < CU; i++)
                 {
                     for (int j = 0; j < se.GetDirectories()[i].GetFiles().Length; j++)
@@ -44,7 +57,7 @@
         public string NextEpisode()
         {
 
-            DirectoryInfo H = new DirectoryInfo(HomeDirectory);
+            DirectoryInfo H = new DirectoryInfo(dir);
             if(Status== ShowStatus.Complete)
             {
                 return GetRerun();
@@ -64,10 +77,10 @@
             int ep = rnd.Next(TotalEps);
             int r = 0;
             int s = 0; int e = 0;
-            DirectoryInfo H = new DirectoryInfo(HomeDirectory);
+            DirectoryInfo H = new DirectoryInfo(dir);
             for (; s < H.GetDirectories().Length; s++)
             {
-                DirectoryInfo se = new(HomeDirectory);
+                DirectoryInfo se = new(dir);
                 for (; e < se.GetDirectories()[s].GetFiles().Length; e++)
                 {
                     r++;

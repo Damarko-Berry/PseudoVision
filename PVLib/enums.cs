@@ -10,7 +10,7 @@
     public enum SecurityApplication {Never, Only_Public_Requests}
     public enum Access {User, Modderator}
 
-    static class EnumTranslator
+    public static class EnumTranslator
     {
         public static Channel_Type CT_fromString(string str)
         {
@@ -18,6 +18,16 @@
             for (int i = 0; i < enums.Length; i++)
             {
                 if (str == ((Channel_Type)i).ToString()) return (Channel_Type)i;
+            }
+            throw new Exception("Not a Channel Type");
+        }
+
+        public static ServiceType ST_FromString(string str)
+        {
+            var enums = Enum.GetValues(typeof(ServiceType));
+            for (int i = 0; i < enums.Length; i++)
+            {
+                if (((ServiceType)i).ToString().Contains(str)) return (ServiceType)i;
             }
             throw new Exception("Not a Channel Type");
         }

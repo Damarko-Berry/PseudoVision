@@ -66,20 +66,6 @@ namespace PVChannelManager
         
         Process Server = null;
 
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-            for (int i = 0; i < ChannelList.Children.Count; i++)
-            {
-                if (ChannelList.Children[i].GetType() == typeof(ChannelInfo))
-                {
-                    var ch = (ChannelInfo)ChannelList.Children[i];
-                    SaveLoad<Channel>.Save(ch.subject, Path.Combine(ch.subject.HomeDirectory, "Channel.chan"));
-                }
-            }
-
-        }
-
         private void ServerStatus_Checked(object sender, RoutedEventArgs e)
         {
             if (Server == null)

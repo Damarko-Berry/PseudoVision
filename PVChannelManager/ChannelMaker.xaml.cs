@@ -3,7 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Intrinsics.X86;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,6 +22,31 @@ namespace PVChannelManager
     /// </summary>
     public partial class ChannelMaker : Window
     {
+        List<string> ForbiddenWinNames = new List<string>()
+        {
+            "con",
+            "prn", 
+            "aux", 
+            "nul", 
+            "com1", 
+            "com2", 
+            "com3", 
+            "com4", 
+            "com5",
+            "com6", 
+            "com7", 
+            "com8", 
+            "com9", 
+            "lpt1", 
+            "lpt2", 
+            "lpt3", 
+            "lpt4", 
+            "lpt5", 
+            "lpt6", 
+            "lpt7", 
+            "lpt8", 
+            "lpt9"
+        };
         public string ChanName;
         public Channel_Type ChannelType => (Channel_Type)TypeSelect.SelectedIndex;
         public ChannelMaker()
@@ -31,12 +58,17 @@ namespace PVChannelManager
 
         private void CN_TextChanged(object sender, TextChangedEventArgs e)
         {
-            ChanName = CN.Text;
+            ChanName = CN.Text.ToLower().Replace(" ",string.Empty);
         }
 
         private void Make_Click(object sender, RoutedEventArgs e)
         {
             if (ChanName == string.Empty) return;
+            if(ForbiddenWinNames.Contains(ChanName))
+            {
+                MessageBox.Show("Windows won't let you use that name");
+                return;
+            }
             if (Directory.Exists(Path.Combine(MainWindow.Channels, ChanName))) return;
             Directory.CreateDirectory(Path.Combine(MainWindow.Channels, ChanName));
             Directory.CreateDirectory(Path.Combine(MainWindow.Channels, ChanName, "Shows"));
@@ -58,6 +90,11 @@ namespace PVChannelManager
             Close();
         }
 
-       
+        private void CN_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            // Regular expression to allow only letters and digits
+            Regex regex = new Regex("[^a-zA-Z0-9]+");
+            e.Handled = regex.IsMatch(e.Text);
+        }
     }
 }

@@ -13,10 +13,18 @@ namespace PVLib
         public Channel_Type ScheduleType => Channel_Type.Binge_Like;
         public List<string> Shows = new();
         TimeSlot CurrentlyPlaying = new();
+        string LastPLayed => Path.Combine(Directory.GetCurrentDirectory(), "Schedules", Name, "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
         public async void SendMedia(HttpListenerResponse client)
         {
+            if (File.Exists(LastPLayed)) {
+                CurrentlyPlaying = SaveLoad<TimeSlot>.Load(LastPLayed);
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", Name, "Last Played"));
+            }
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);
             try
@@ -27,6 +35,7 @@ namespace PVLib
                     CurrentlyPlaying = new TimeSlot(show.NextEpisode());
                     SaveLoad<Show>.Save(show, Shows[shw]);
                 }
+                SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
                 Console.WriteLine(info.Name);
                 var StreamBuffer = File.ReadAllBytes(CurrentlyPlaying.Media);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";

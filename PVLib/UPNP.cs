@@ -98,29 +98,15 @@ namespace PVLib
         }
         public string Media(ISchedule[] Medias, string IP, int port)
         {
-            var items = string.Empty;
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ChannleList));
+            StringWriter sw = new StringWriter();
+            ChannleList list = new();
             for (int i = 0; i < Medias.Length; i++)
             {
-                items += Medias[i].GetContent(i+1, IP, port)+"\n";
+                list.Add($"http://{IP}:{port}/live/{Medias[i].Name}");
             }
-            return $@"<?xml version='1.0'?>
-<s:Envelope xmlns:s=""http://schemas.xmlsoap.org/soap/envelope/"">
-  <s:Body>
-    <u:BrowseResponse xmlns:u=""urn:schemas-upnp-org:service:ContentDirectory:1"">
-        <DIDL-Lite xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"" xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"">
-        <container id=""0"" parentID=""-1"" restricted=""false"" searchable=""true"">
-          <dc:title>My Video Container</dc:title>
-          <upnp:class>object.container</upnp:class>
-{items}
-        </container>
-    </DIDL-Lite>
-      <NumberReturned>{Medias.Length}</NumberReturned>
-      <TotalMatches>{Medias.Length}</TotalMatches>
-      <UpdateID>{Update}</UpdateID>
-    </u:BrowseResponse>
-  </s:Body>
-</s:Envelope>
-";
+            xmlSerializer.Serialize(sw, new());
+            return sw.ToString();
         }
         async Task SendSsdpAnnouncements(string localIp, int port)
         {
@@ -128,10 +114,10 @@ namespace PVLib
                                         "HOST: 239.255.255.250:1900\r\n" +
                                         "CACHE-CONTROL: max-age=1800\r\n" +
                                         $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                        "NT: urn:Psudovision:MediaServer:1\r\n" +
+                                        "NT: urn:schemas-upnp-org:MediaServer:1\r\n" +
                                         "NTS: ssdp:all\r\n" +
                                         "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                        $"USN: uuid:{UniqueID}::urn:Psudovision:device:MediaServer:1\r\n" +
+                                        $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
                                         "\r\n";
 
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("239.255.255.250"), 1900);
@@ -167,10 +153,9 @@ namespace PVLib
                                               $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
                                               "EXT:\r\n" +
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                              $"Channels: http://{localIp}:{port}/Media\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              "ST:  urn:Psudovision:device:MediaServer:1\r\n" +
-                                              $"USN: uuid:{UniqueID}::urn:Psudovision:device:MediaServer:1\r\n" +
+                                              "ST: urn:PseudoVision:device:MediaServer:1\r\n" +
+                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
                                               "\r\n" :
                                               $"HTTP/1.1 200 OK\r\n" +
                                               "CACHE-CONTROL: max-age=1800\r\n" +
@@ -181,7 +166,10 @@ namespace PVLib
                                               "ST: upnp:rootdevice\r\n" +
                                               $"USN: uuid:{UniqueID}::upnp:rootdevice\r\n" +
                                               "\r\n";
-
+                    if (request.Contains("upnp:rootdevice"))
+                    {
+                        Console.WriteLine("ROOT");
+                    }
                     byte[] responseData = Encoding.UTF8.GetBytes(responseTemplate);
                     await client.SendAsync(responseData, responseData.Length, result.RemoteEndPoint);
                 }
@@ -189,7 +177,7 @@ namespace PVLib
         }
         UPNP() { }
     }
-    internal struct ServiceSchema
+    public struct ServiceSchema
     {
         public ServiceType ServiceType;
         public string SCPDURL;

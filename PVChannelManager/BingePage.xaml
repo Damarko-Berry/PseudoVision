@@ -1,0 +1,22 @@
+﻿<Page x:Class="PVChannelManager.BingePage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:PVChannelManager"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="BingePage">
+
+    <local:FillPanal>
+        <TextBlock x:Name="ChanName" FontSize="30" Text="Name" TextAlignment="Center"/>
+        <CheckBox Name="SendToNC" Content="Send to next Channel when finished" Checked="SendToNC_Checked" Unchecked="SendToNC_Unchecked" VerticalAlignment="Top"/>
+        <StackPanel Orientation="Horizontal" Name="CJ" VerticalAlignment="Top">
+            <TextBlock Text="Destination: "/>
+            <ComboBox Name="ChannelList" SelectionChanged="ChannelList_SelectionChanged"/>
+        </StackPanel>
+        <Button x:Name="Add" Content="Add New Show" Click="Add_Click"/>
+        <WrapPanel Name="AllShows"/>
+        <Button x:Name="Save" Content="Save" Click="Save_Click"/>
+    </local:FillPanal>
+</Page>

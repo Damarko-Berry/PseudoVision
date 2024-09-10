@@ -9,7 +9,20 @@ namespace PVLib
     {
         public string ChannelName => new DirectoryInfo(HomeDirectory).Name;
         public string HomeDirectory;
-        public string ShowDirectory => Path.Combine(HomeDirectory,"Shows");
+        string dir
+        {
+            get
+            {
+                if (Environment.OSVersion.Platform == PlatformID.Unix)
+                {
+                    HomeDirectory = HomeDirectory.Replace("C:\\", "/mnt/c/");
+                    return HomeDirectory.Replace('\\', '/');
+
+                }
+                return HomeDirectory;
+            }
+        }
+        public string ShowDirectory => Path.Combine(dir,"Shows");
         public abstract Channel_Type channel_Type {get;}
         public Show[] shows
         {
@@ -35,7 +48,6 @@ namespace PVLib
         public virtual void Cancel(string name)
         {
             File.Delete(Path.Combine(ShowDirectory,name+".shw"));
-            
         }
         
         public Channel() { }

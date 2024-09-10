@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,6 +12,7 @@ namespace PVLib
     {
         public PlaylistFormat playlistFormat = PlaylistFormat.m3u;
         public int Port;
+        public string IP = string.Empty;
         public bool useUPNP;
         public UPNP upnp = UPNP.Default;
         public string Archive_Output;
@@ -28,8 +31,21 @@ namespace PVLib
                     Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists"),
                     redirectsite = "http://cartoonnetwork.com",
                     securityLevel = SecurityApplication.Never,
-                    playlistFormat = PlaylistFormat.m3u
+                    playlistFormat = PlaylistFormat.m3u,
+                    IP = GetLocalIPAddress()
                 };
+                string GetLocalIPAddress()
+                {
+                    var host = Dns.GetHostEntry(Dns.GetHostName());
+                    foreach (var ip in host.AddressList)
+                    {
+                        if (ip.AddressFamily == AddressFamily.InterNetwork)
+                        {
+                            return ip.ToString();
+                        }
+                    }
+                    throw new Exception("Local IP Address Not Found!");
+                }
             }
         }
     }

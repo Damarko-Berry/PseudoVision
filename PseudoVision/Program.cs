@@ -15,7 +15,6 @@ namespace PseudoVision
         static async Task Main(string[] args)
         {
             
-            string localIp = GetLocalIPAddress();
             try
             {
                 Settings = SaveLoad<Settings>.Load("settings");
@@ -24,6 +23,7 @@ namespace PseudoVision
             {
                 Settings = Settings.Default;
             }
+            string localIp = GetLocalIPAddress();
             int prt = Settings.Port;
             CreateScheds();
             var PIP = await GetExternalIpAddress();
@@ -63,11 +63,14 @@ namespace PseudoVision
             {
                 Channel chan = Channel.Load(Path.Combine(Channels.GetDirectories()[i].FullName, "Channel.chan"));
                 chan.CreateNewSchedule(DateTime.Now);
-                ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like) ? 
-                    SaveLoad<Schedule>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd")):
-                    SaveLoad<ShowList>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd"));
-                sch.Name = chan.ChannelName.ToLower();
-                Schedules.Add(chan.ChannelName.ToLower() , sch);
+                if (chan.shows.Length > 0)
+                {
+                    ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like) ?
+                        SaveLoad<Schedule>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd")) :
+                        SaveLoad<ShowList>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd"));
+                    sch.Name = chan.ChannelName.ToLower();
+                    Schedules.Add(chan.ChannelName.ToLower(), sch);
+                }
             }
             for (int i = 0; i < Schedules.Count; i++)
             {
@@ -165,10 +168,14 @@ namespace PseudoVision
 
         static string GetLocalIPAddress()
         {
+            if(Settings.IP != string.Empty)
+            {
+                return Settings.IP;
+            }
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
             {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                if (ip.AddressFamily == AddressFamily.InterNetwork & ip.ToString().Contains("192.168"))
                 {
                     return ip.ToString();
                 }

@@ -21,7 +21,15 @@ namespace PVChannelManager
 
         protected override void OnMouseDoubleClick(MouseButtonEventArgs e)
         {
-            
+            switch(subject.channel_Type)
+            {
+                case Channel_Type.Binge_Like:
+                    MainWindow.Instance.Main.Content = new BingePage((Binge_LikeChannel)subject);
+                    break;
+                case Channel_Type.TV_Like:
+                    MainWindow.Instance.Main.Content = new TV_Page((TV_LikeChannel)subject);
+                    break;
+            }
         }
 
         public ChannelInfo(Channel subject)
@@ -82,6 +90,8 @@ namespace PVChannelManager
         }
         static string GetLocalIPAddress()
         {
+            var set = SaveLoad<Settings>.Load("settings");
+            if (set.IP != string.Empty) return set.IP;
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
             {
