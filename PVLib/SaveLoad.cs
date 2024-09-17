@@ -1,5 +1,6 @@
 ﻿using System.Xml.Serialization;
 
+
 namespace PVLib
 {
     public static class SaveLoad<T>
@@ -11,6 +12,7 @@ namespace PVLib
             serializer.Serialize(writer, obj);
             writer.Close();
         }
+       
         
         public static T Load(string path)
         {

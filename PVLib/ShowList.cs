@@ -27,6 +27,7 @@ namespace PVLib
             }
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);
+            FileStream fs = new FileStream(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
             try
             {
                 if (DateTime.Now > CurrentlyPlaying.EndTime)
@@ -37,17 +38,19 @@ namespace PVLib
                 }
                 SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
                 Console.WriteLine(info.Name);
-                var StreamBuffer = File.ReadAllBytes(CurrentlyPlaying.Media);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
-                client.ContentLength64 = StreamBuffer.Length;
+                client.ContentLength64 = fs.Length;
+                client.AddHeader("Access-Control-Allow-Origin", "*");
                 client.SendChunked = true;
-                await client.OutputStream.WriteAsync(StreamBuffer, 0, StreamBuffer.Length);
+                fs.CopyTo(client.OutputStream);
             }
             catch (Exception ex)
             {
+                fs.Close();
                 Console.WriteLine(ex.ToString());
             }
             client.Close();
+            fs.Close();
         }
 
         public string GetContent(int s, string ip, int prt)
@@ -56,7 +59,7 @@ namespace PVLib
                         <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
                         <upnp:class>object.item.videoItem.videoProgram</upnp:class>
-                        <res protocolInfo=""http-get:*:video/mp4:*"">http://{ip}:{prt}/live/{Name}.mp4</res>
+                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"">http://{ip}:{prt}/live/{Name}.mp4</res>
                     </item>";
         }
 

@@ -10,30 +10,29 @@ namespace PseudoVision
         //static Schedule schedule = null;
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
-        static Settings Settings = new Settings();
-        static UPNP upnp => Settings.upnp;
+        static UPNP upnp => Settings.CurrentSettings.upnp;
         static async Task Main(string[] args)
         {
             
             try
             {
-                Settings = SaveLoad<Settings>.Load("settings");
+                Settings.CurrentSettings = SaveLoad<Settings>.Load("settings");
             }
             catch
             {
-                Settings = Settings.Default;
+                Settings.CurrentSettings = Settings.Default;
             }
             string localIp = GetLocalIPAddress();
-            int prt = Settings.Port;
+            int prt = Settings.CurrentSettings.Port;
             CreateScheds();
             var PIP = await GetExternalIpAddress();
             Public_IP = PIP.ToString();
-            Task.Run(() => StartHttpServer(localIp, Settings.Port));
+            Task.Run(() => StartHttpServer(localIp, Settings.CurrentSettings.Port));
             Thread.Sleep(1000);
-            if(Settings.useUPNP)
+            if(Settings.CurrentSettings.useUPNP)
             {
                 //
-                upnp.Start(localIp, Settings.Port);
+                upnp.Start(localIp, Settings.CurrentSettings.Port);
 
             }
             waittilnextday();
@@ -78,10 +77,10 @@ namespace PseudoVision
                 {
                     var sch = (Schedule)Schedules.ElementAt(i).Value;
                     sch.StartCycle();
-                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value, Settings.playlistFormat);
-                    string pth = Path.Combine(Settings.Archive_Output, "PV-Archives", Channels.GetDirectories()[i].Name);
+                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value, Settings.CurrentSettings.playlistFormat);
+                    string pth = Path.Combine(Settings.CurrentSettings.Archive_Output, "PV-Archives", Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
-                    File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.{Settings.playlistFormat}"), playlist.ToString());
+                    File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.{Settings.CurrentSettings.playlistFormat}"), playlist.ToString());
                     Console.WriteLine(Schedules.ElementAt(i).Key);
                 }
             }
@@ -131,7 +130,7 @@ namespace PseudoVision
                 Console.WriteLine($"Connecting {userip} to {channame}");
                 Schedules[channame.ToLower()].SendMedia(response);
             }
-            else if(UserAuthenticator.Auth(request,Settings.securityLevel))
+            else if (UserAuthenticator.Auth(request,Settings.CurrentSettings.securityLevel))
             {    
                 if (request.Url.AbsolutePath == "/media")
                 {
@@ -168,9 +167,9 @@ namespace PseudoVision
 
         static string GetLocalIPAddress()
         {
-            if(Settings.IP != string.Empty)
+            if(Settings.CurrentSettings.IP != string.Empty)
             {
-                return Settings.IP;
+                return Settings.CurrentSettings.IP;
             }
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)

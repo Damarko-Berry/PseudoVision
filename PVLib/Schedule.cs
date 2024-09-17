@@ -4,12 +4,15 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace PVLib
 {
-    public class Schedule : ISchedule
+
+
+    public class Schedule : ISchedule 
     {
         public readonly List<TimeSlot> slots = new();
         public string Name {  get; set; }
         int CurrentSlot;
-        byte[] StreamBuffer;
+        
+       
         public Channel_Type ScheduleType => Channel_Type.TV_Like;
         public TimeSlot Slot => slots[CurrentSlot];
         
@@ -28,18 +31,22 @@ namespace PVLib
         public FileInfo info => new FileInfo(Slot.Media);
         public async void SendMedia(HttpListenerResponse client)
         {
+            FileStream fs = new FileStream(Slot.Media, FileMode.Open, FileAccess.Read);
             try
             {
                 client.ContentType = $"video/{info.Extension}";
-                client.ContentLength64 = StreamBuffer.Length;
-                client.SendChunked = true;
-                await client.OutputStream.WriteAsync(StreamBuffer);
+                client.ContentLength64 = fs.Length;
+                client.AddHeader("Access-Control-Allow-Origin", "*");
+                //client.SendChunked = true;
+                fs.CopyTo(client.OutputStream);
             }
             catch(Exception ex)
             {
+                fs.Close();
                 Console.WriteLine(ex.ToString());
             }
             client.Close();
+            fs.Close();
         }
 
         public async void StartCycle()
@@ -54,21 +61,21 @@ namespace PVLib
                     break;
                 }
             }
-            StreamBuffer = File.ReadAllBytes(Slot.Media);
+            
             UPNP.Update++;
             await Task.Delay(TimeSpan.FromMilliseconds(timeleft));
             while (CurrentSlot < slots.Count)
             {
                 CurrentSlot++;
                 UPNP.Update++;
-                StreamBuffer = File.ReadAllBytes(Slot.Media);
+               
                 await Task.Delay((int)Slot.Duration.TotalMilliseconds);
             }
             if (DateTime.Now.Day == slots[^1].StartTime.Day)
             {
                 Random random = new((int)DateTime.Now.Ticks);
                 CurrentSlot = random.Next(0, slots.Count);
-                StreamBuffer = File.ReadAllBytes(Slot.Media);
+                
             }
         }
 

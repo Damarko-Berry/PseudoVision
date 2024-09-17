@@ -19,6 +19,7 @@ namespace PVLib
         public string redirectsite;
         public SecurityApplication securityLevel = SecurityApplication.Never;
         public Settings() { }
+        public static Settings CurrentSettings { get; set; }
         public static Settings Default
         {
             get
