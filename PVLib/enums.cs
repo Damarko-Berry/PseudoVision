@@ -9,27 +9,28 @@
     /// </summary>
     public enum SecurityApplication {Never, Only_Public_Requests}
     public enum Access {User, Modderator}
+    public enum DeviceType { MediaServer, InternetGatewayDevice, lighting, reminder }
+    public enum ServiceType { ContentDirectory, ConnectionManager }
 
-    public static class EnumTranslator
+    public static class EnumTranslator<T>
     {
-        public static Channel_Type CT_fromString(string str)
+        public static T fromString(string str)
         {
-            var enums = Enum.GetValues(typeof(Channel_Type));
-            for (int i = 0; i < enums.Length; i++)
+            try
             {
-                if (str == ((Channel_Type)i).ToString()) return (Channel_Type)i;
+                var enums = Enum.GetValues(typeof(T));
+                for (int i = 0; i < enums.Length; i++)
+                {
+                    if (str == enums.GetValue(i).ToString())
+                        return (T)enums.GetValue(i);
+                }
             }
-            throw new Exception("Not a Channel Type");
+            catch
+            {
+                
+            }
+            throw new Exception($"Not a valid {typeof(T).Name}");
         }
 
-        public static ServiceType ST_FromString(string str)
-        {
-            var enums = Enum.GetValues(typeof(ServiceType));
-            for (int i = 0; i < enums.Length; i++)
-            {
-                if (((ServiceType)i).ToString().Contains(str)) return (ServiceType)i;
-            }
-            throw new Exception("Not a Channel Type");
-        }
     }
 }
