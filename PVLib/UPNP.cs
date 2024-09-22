@@ -98,9 +98,9 @@ namespace PVLib
         }
         public string Media(ISchedule[] Medias, string IP, int port)
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ChannleList));
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(ChannelList));
             StringWriter sw = new StringWriter();
-            ChannleList list = new();
+            ChannelList list = new();
             for (int i = 0; i < Medias.Length; i++)
             {
                 list.Add($"http://{IP}:{port}/live/{Medias[i].Name}");
@@ -195,6 +195,5 @@ namespace PVLib
     </service>";
         }
     }
-    public enum DeviceType { MediaServer, InternetGatewayDevice, lighting, reminder }
-    public enum ServiceType { ContentDirectory, ConnectionManager }
+   
 }

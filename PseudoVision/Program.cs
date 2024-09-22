@@ -128,7 +128,7 @@ namespace PseudoVision
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 Console.WriteLine($"Connecting {userip} to {channame}");
-                Schedules[channame.ToLower()].SendMedia(response);
+                await Schedules[channame.ToLower()].SendMedia(response);
             }
             else if (UserAuthenticator.Auth(request,Settings.CurrentSettings.securityLevel))
             {    

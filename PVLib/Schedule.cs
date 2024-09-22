@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
+
 
 namespace PVLib
 {
@@ -12,7 +12,6 @@ namespace PVLib
         public string Name {  get; set; }
         int CurrentSlot;
         
-       
         public Channel_Type ScheduleType => Channel_Type.TV_Like;
         public TimeSlot Slot => slots[CurrentSlot];
         
@@ -29,16 +28,15 @@ namespace PVLib
             }
         }
         public FileInfo info => new FileInfo(Slot.Media);
-        public async void SendMedia(HttpListenerResponse client)
+        public async Task SendMedia(HttpListenerResponse client)
         {
             FileStream fs = new FileStream(Slot.Media, FileMode.Open, FileAccess.Read);
             try
             {
                 client.ContentType = $"video/{info.Extension}";
                 client.ContentLength64 = fs.Length;
-                client.AddHeader("Access-Control-Allow-Origin", "*");
-                //client.SendChunked = true;
-                fs.CopyTo(client.OutputStream);
+                
+                await fs.CopyToAsync(client.OutputStream);
             }
             catch(Exception ex)
             {
@@ -75,7 +73,6 @@ namespace PVLib
             {
                 Random random = new((int)DateTime.Now.Ticks);
                 CurrentSlot = random.Next(0, slots.Count);
-                
             }
         }
 

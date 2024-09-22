@@ -16,7 +16,7 @@ namespace PVLib
         string LastPLayed => Path.Combine(Directory.GetCurrentDirectory(), "Schedules", Name, "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
-        public async void SendMedia(HttpListenerResponse client)
+        public async Task SendMedia(HttpListenerResponse client)
         {
             if (File.Exists(LastPLayed)) {
                 CurrentlyPlaying = SaveLoad<TimeSlot>.Load(LastPLayed);
@@ -27,30 +27,29 @@ namespace PVLib
             }
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);
+            if (DateTime.Now > CurrentlyPlaying.EndTime)
+            {
+                Show show = SaveLoad<Show>.Load(Shows[shw]);
+                CurrentlyPlaying = new TimeSlot(show.NextEpisode());
+                SaveLoad<Show>.Save(show, Shows[shw]);
+            }
+            SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
+
             FileStream fs = new FileStream(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
             try
             {
-                if (DateTime.Now > CurrentlyPlaying.EndTime)
-                {
-                    Show show = SaveLoad<Show>.Load(Shows[shw]);
-                    CurrentlyPlaying = new TimeSlot(show.NextEpisode());
-                    SaveLoad<Show>.Save(show, Shows[shw]);
-                }
-                SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
                 Console.WriteLine(info.Name);
                 client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
                 client.ContentLength64 = fs.Length;
-                client.AddHeader("Access-Control-Allow-Origin", "*");
-                client.SendChunked = true;
-                fs.CopyTo(client.OutputStream);
+                await fs.CopyToAsync(client.OutputStream);
             }
             catch (Exception ex)
             {
                 fs.Close();
                 Console.WriteLine(ex.ToString());
             }
-            client.Close();
             fs.Close();
+            client.Close();
         }
 
         public string GetContent(int s, string ip, int prt)

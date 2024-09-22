@@ -214,6 +214,8 @@
         {
             Season = 0;
             EpisodeNo = 0;
+            MovieNo = 0;
+            EpisodesSinceLastMovie = 0;
         }
 
         public Show Clone()

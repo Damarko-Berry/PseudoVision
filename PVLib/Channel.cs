@@ -58,7 +58,7 @@ namespace PVLib
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(doc);
             XmlNodeList c = xmlDoc.GetElementsByTagName("Channel_Type");
-            var CType = EnumTranslator.CT_fromString(c[0].InnerText);
+            var CType = EnumTranslator<Channel_Type>.fromString(c[0].InnerText);
             XmlSerializer serializer = (CType == Channel_Type.Binge_Like) ? new XmlSerializer(typeof(Binge_LikeChannel)) : new XmlSerializer(typeof(TV_LikeChannel));
             StreamReader sr = new StreamReader(path);
             Channel channel = (CType == Channel_Type.Binge_Like) ? (Binge_LikeChannel)serializer.Deserialize(sr):(TV_LikeChannel)serializer.Deserialize(sr);
