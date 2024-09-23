@@ -117,6 +117,61 @@ namespace PVChannelManager
                 return null;
             return ipAddress;
         }
+
+        private void Del_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to delete this channel","Deleting channel", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                string ChanName = subject.ChannelName;
+                Directory.Delete(Path.Combine(MainWindow.Channels, ChanName), true);
+                Directory.Delete(Path.Combine(MainWindow.Schedules, ChanName), true);
+                MainPage.Instance.Load();
+            }
+        }
+
+        private void HardRe_Click(object sender, RoutedEventArgs e)
+        {
+            if(MessageBox.Show("A hard reset will delete all shows and reruns(if applicable).\nAre you sure?","Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                DirectoryInfo AllShows = new(subject.ShowDirectory);
+                while(AllShows.GetFiles().Length>0)
+                {
+                    if (subject.channel_Type == Channel_Type.TV_Like)
+                    {
+                        var TV = (TV_LikeChannel)subject;
+                        TV.Cancel(AllShows.GetFiles()[0].Name.Replace(".shw",string.Empty));
+                        SaveLoad<TV_LikeChannel>.Save(TV, Path.Combine(subject.HomeDirectory, "Channel.chan"));
+                    }
+                    else
+                    {
+                        subject.Cancel(AllShows.GetFiles()[0].FullName);
+                        SaveLoad<Binge_LikeChannel>.Save((Binge_LikeChannel)subject, Path.Combine(subject.HomeDirectory, "Channel.chan"));
+                    }
+                }
+            }
+        }
+
+        private void SoftRe_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show("A soft reset will reset any progress made on shows.\nAre you sure?", "Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            {
+                DirectoryInfo AllShows = new(subject.ShowDirectory);
+                for (int i = 0; i < AllShows.GetFiles().Length; i++)
+                {
+                    var nam = AllShows.GetFiles()[i].FullName;
+                    var shw =SaveLoad<Show>.Load(nam);
+                    shw.Reset();
+                    SaveLoad<Show>.Save(shw,nam);
+                }
+                if (subject.channel_Type == Channel_Type.TV_Like)
+                {
+                    var TV = (TV_LikeChannel)subject;
+                    TV.reruns.Clear();
+                    TV.rotation.ShowList.Clear();
+                    SaveLoad<TV_LikeChannel>.Save(TV, Path.Combine(subject.HomeDirectory, "Channel.chan"));
+                }
+            }
+        }
     }
     
 }

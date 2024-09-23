@@ -4,12 +4,10 @@ using System.Net;
 
 namespace PVLib
 {
-
-
     public class Schedule : ISchedule 
     {
         public readonly List<TimeSlot> slots = new();
-        public string Name {  get; set; }
+        public string Name { get; set; }
         int CurrentSlot;
         
         public Channel_Type ScheduleType => Channel_Type.TV_Like;
