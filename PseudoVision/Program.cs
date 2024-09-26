@@ -7,7 +7,7 @@ namespace PseudoVision
 {
     internal class Program
     {
-        //static Schedule schedule = null;
+
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static UPNP upnp => Settings.CurrentSettings.upnp;
@@ -16,7 +16,7 @@ namespace PseudoVision
             
             try
             {
-                Settings.CurrentSettings = SaveLoad<Settings>.Load("settings");
+                Settings.CurrentSettings = SaveLoad<Settings>.Load(FileSystem.Settings);
             }
             catch
             {
@@ -33,7 +33,6 @@ namespace PseudoVision
             {
                 //
                 upnp.Start(localIp, Settings.CurrentSettings.Port);
-
             }
             waittilnextday();
             Console.WriteLine("Server is running. Press Enter to exit...");
@@ -52,21 +51,22 @@ namespace PseudoVision
 
         public static void CreateScheds()
         {
-            DirectoryInfo Channels = new(Path.Combine(Directory.GetCurrentDirectory(), "Channels"));
+            DirectoryInfo Channels = new(FileSystem.Channels);
             var Da = DateTime.Now; 
             var M = Da.Date.Month;
             var D = Da.Date.Day;
             var Y = Da.Date.Year;
             Schedules.Clear();
-            for (int i = 0; i < Channels.GetDirectories().Length; i++)
+            var CDs = Channels.GetDirectories();
+            for (int i = 0; i < CDs.Length; i++)
             {
-                Channel chan = Channel.Load(Path.Combine(Channels.GetDirectories()[i].FullName, "Channel.chan"));
+                Channel chan = Channel.Load(FileSystem.ChannleChan(CDs[i].Name));
                 chan.CreateNewSchedule(DateTime.Now);
                 if (chan.shows.Length > 0)
                 {
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like) ?
-                        SaveLoad<Schedule>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd")) :
-                        SaveLoad<ShowList>.Load(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", chan.ChannelName, $"{M}.{D}.{Y}.scd"));
+                        SaveLoad<Schedule>.Load(Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")) :
+                        SaveLoad<ShowList>.Load(Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
                     sch.Name = chan.ChannelName.ToLower();
                     Schedules.Add(chan.ChannelName.ToLower(), sch);
                 }
@@ -81,8 +81,8 @@ namespace PseudoVision
                     string pth = Path.Combine(Settings.CurrentSettings.Archive_Output, "PV-Archives", Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
                     File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.{Settings.CurrentSettings.playlistFormat}"), playlist.ToString());
-                    Console.WriteLine(Schedules.ElementAt(i).Key);
                 }
+                Console.WriteLine(Schedules.ElementAt(i).Key);
             }
         }
 
@@ -112,17 +112,9 @@ namespace PseudoVision
                 var des = upnp.ToString();
                 byte[] buffer = Encoding.UTF8.GetBytes(des);
                 response.ContentLength64 = buffer.Length;
-                response.ContentType = "text/xml";
+                response.ContentType = Text.Xml;
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
-            }
-            else if (request.Url.AbsolutePath == "/CreateNewUser")
-            {
-
-            }
-            else if (request.Url.AbsolutePath == "NewPass")
-            {
-
             }
             else if (request.Url.AbsolutePath.Contains("/live/"))
             {
@@ -138,31 +130,27 @@ namespace PseudoVision
                     var Re = upnp.Media(sc, ip, prt);
                     byte[] buffer = Encoding.UTF8.GetBytes(Re);
                     response.ContentLength64 = buffer.Length;
-                    response.ContentType = "text/xml";
+                    response.ContentType = Text.Xml;
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                     response.OutputStream.Close();
                 }
-                else if (request.Url.AbsolutePath.Contains("/watch/"))
+                else if (request.Url.AbsolutePath.Contains("/watch"))
                 {
 
                     bool isPrivate = userip.Contains("192");
-                    string channame = request.Url.AbsolutePath.Replace("/watch/", string.Empty);
                     string ChosenIP = isPrivate switch
                     {
                         true => ip,
                         _ => Public_IP
                     };
-                    byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt, channame.ToLower()));
+                    byte[] buffer = Encoding.UTF8.GetBytes(webPlayer(ChosenIP, prt));
                     response.ContentLength64 = buffer.Length;
-                    response.ContentType = "text/html";
+                    response.ContentType = Text.Html;
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                     response.OutputStream.Close();
                 }
             }
-            else
-            {
-                    response.Redirect("https://cartoonnetwork.com");
-            } 
+            
         } 
 
         static string GetLocalIPAddress()
@@ -195,54 +183,20 @@ namespace PseudoVision
             throw new Exception("Local IP Address Not Found!");
         }
         
-        static string webPlayer(string localip, int port, string ch)
+        static string webPlayer(string localip, int port)
         {
-            return @$"
-<html>
-    <style>
-        #myVideo {{
-             transform: translate(-50%, -50%);
-             position: absolute;
-             top: 50%;
-             left: 50%;
-             min-width: 100%;
-             max-height: 100%;
-             color: black
-        }}
-    </style>
-    <body style=""background-color: black"">
-        <video id=""myVideo"" src = ""http://{localip}:{port}/live/{ch}"" controls autoplay type=""video/mp4"">
-            Your browser does not support the video tag.
-        </video>
-    </body>
-    <script>
-        var video = document.getElementsByTagName('video')[0];
-        video.onended = function (e) {{
-            start();
-        }}
-        async function start() {{
-        video.src = ""http://{localip}:{port}/live/{ch}"";
-            await pause(10);
-            video.play();
-            console.log(""PLAYING"");
-        }}
+            var idx = (Path.Combine(Directory.GetCurrentDirectory(), "Index.html"));
+            bool Indexu = File.Exists(idx);
 
-        async function pause(seconds) {{
-            return new Promise(resolve => setTimeout(resolve, seconds * 1000));
-        }}
-        
-    
-    </script>
-</html>";
-        }
-        
-        static void creatIndex(string ip, int port)
-        {
-            string[] links;
+            var WP = File.ReadAllText("Index.html");
+            var arr = "[";
             for (int i = 0; i < Schedules.Count; i++)
             {
-                
+                var lnk = $"http://{localip}:{port}/live/{Schedules.ElementAt(i).Key}";
+                arr += $@"""{lnk}"",";
             }
+            arr += "];";
+            return WP.Replace("REPLACEME", arr).Replace("REPLCACESRC", $"http://{localip}:{port}/live/{Schedules.ElementAt(0).Key}");
         }
         
         static async Task<IPAddress?> GetExternalIpAddress()

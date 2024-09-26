@@ -19,7 +19,6 @@
         <local:FillPanal>
             <TextBlock x:Name="NameBlock" TextWrapping="Wrap" Text="a" VerticalAlignment="Center" TextAlignment="Center" />
             <local:FillPanal Orientation="Horizontal">
-                <Button x:Name="Local" Content="Browser" Click="Local_Click"/>
                 <Button x:Name="Public" Content="Media Player" Click="Public_Click"/>
             </local:FillPanal>
         </local:FillPanal>

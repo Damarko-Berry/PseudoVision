@@ -98,7 +98,7 @@ namespace PVLib
             Random r = new Random();
             var NE = string.Empty;
             int i = r.Next(ShowList.Count);
-            var v = SaveLoad<Show>.Load( Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
+            var v = SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
             var shwrf = ShowList[i];
             if (v == null)
                 NE = string.Empty;

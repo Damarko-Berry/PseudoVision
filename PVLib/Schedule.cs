@@ -1,18 +1,15 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 
 
 namespace PVLib
 {
-    public class Schedule : ISchedule 
+    public class Schedule : ISchedule
     {
         public readonly List<TimeSlot> slots = new();
         public string Name { get; set; }
         int CurrentSlot;
-        
         public Channel_Type ScheduleType => Channel_Type.TV_Like;
         public TimeSlot Slot => slots[CurrentSlot];
-        
         public TimeSpan ScheduleDuration
         {
             get
@@ -28,15 +25,14 @@ namespace PVLib
         public FileInfo info => new FileInfo(Slot.Media);
         public async Task SendMedia(HttpListenerResponse client)
         {
-            FileStream fs = new FileStream(Slot.Media, FileMode.Open, FileAccess.Read);
+            FileStream fs = new (Slot.Media, FileMode.Open, FileAccess.Read);
             try
             {
                 client.ContentType = $"video/{info.Extension}";
                 client.ContentLength64 = fs.Length;
-                
                 await fs.CopyToAsync(client.OutputStream);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 fs.Close();
                 Console.WriteLine(ex.ToString());
@@ -57,14 +53,14 @@ namespace PVLib
                     break;
                 }
             }
-            
+
             UPNP.Update++;
             await Task.Delay(TimeSpan.FromMilliseconds(timeleft));
             while (CurrentSlot < slots.Count)
             {
                 CurrentSlot++;
                 UPNP.Update++;
-               
+
                 await Task.Delay((int)Slot.Duration.TotalMilliseconds);
             }
             if (DateTime.Now.Day == slots[^1].StartTime.Day)

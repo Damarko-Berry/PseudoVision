@@ -10,14 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="CDTemp.xml" />
     <None Remove="Index.html" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="CDTemp.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </AdditionalFiles>
   </ItemGroup>
 
   <ItemGroup>
@@ -37,15 +30,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Index.html">
+    <Content Include="Index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="Watch.html">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

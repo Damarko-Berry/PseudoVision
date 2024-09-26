@@ -1,17 +1,62 @@
-
-<html lang="en">
-<head> 
-    <title>Index</title>
+<html>
+<head>
     <style>
-        .content {
-            max-width: 500px;
-            margin: auto;
+        #myVideo {
+                transform: translate(-50%, -50%);
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                min-width: 100%;
+                max-height: 92%;
+                color: black
         }
     </style>
 </head>
-<body>
-    <div class="content">
-        <!-- Replace me -->
-    </div>
+<body style="background-color: black">
+    <video id="myVideo" controls autoplay src="REPLCACESRC" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <input type="button" value="Prev" onclick="prev()" />
+    <input type="button" value="Next" onclick="next()" />
 </body>
+<script>
+    var CN = -1;
+    var chnls = REPLACEME
+    var video = document.getElementsByTagName('video')[0];
+    video.onended = function (e) {
+        start();
+    }
+    async function start()
+    {
+        video.src = chnls[CN];
+        await pause(10);
+        video.play();
+        console.log("PLAYING");
+    }
+
+    async function pause(seconds)
+    {
+        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    }
+
+    function next() {
+        console.log(chnls.length)
+        if (chnls.length < 2) return;
+        CN++;
+        if (CN >= chnls.length) {
+            CN = 0;
+        }
+        start();
+    }
+    function prev() {
+        console.log(chnls.length)
+        if (chnls.length < 2) return;
+        CN--;
+        if (CN <= 0) {
+            CN = 0;
+        }
+        start();
+    }
+    next();
+</script>
 </html>

@@ -13,7 +13,7 @@ namespace PVLib
         public Channel_Type ScheduleType => Channel_Type.Binge_Like;
         public List<string> Shows = new();
         TimeSlot CurrentlyPlaying = new();
-        string LastPLayed => Path.Combine(Directory.GetCurrentDirectory(), "Schedules", Name, "Last Played", $"LastPLayed.lsp");
+        string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
         public async Task SendMedia(HttpListenerResponse client)
@@ -23,7 +23,7 @@ namespace PVLib
             }
             else
             {
-                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", Name, "Last Played"));
+                Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
             }
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);

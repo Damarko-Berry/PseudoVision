@@ -13,6 +13,35 @@ namespace PVLib
         public Rotation rotation = new Rotation();
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
         public override Channel_Type channel_Type => Channel_Type;
+        string SeasonsDirectory => Path.Combine(dir, "Seasons");
+        Season[] seasons
+        {
+            get
+            {
+                var seasons = new List<Season>();
+                Directory.CreateDirectory(SeasonsDirectory);
+                var SD = new DirectoryInfo(SeasonsDirectory).GetFiles();
+                for (int i = 0; i < SD.Length; i++)
+                {
+                    seasons.Add(SaveLoad<Season>.Load(SD[i].FullName));
+                }
+                return seasons.ToArray();
+            }
+        }
+        Season? CurrentSeason()
+        {
+            var seas = new List<Season>(seasons);
+            for (int i = 0; i < seas.Count; i++)
+            {
+                if (!seas[i].Durring(DateTime.Now))
+                {
+                    seas.RemoveAt(i);
+                    i--;
+                }
+            }
+            if (seas.Count == 0) return null;
+            return seas[new Random().Next(0, seas.Count)];
+        }
         TimeSpan Reruntime
         {
             get
@@ -51,7 +80,7 @@ namespace PVLib
             var D = today.Date.Day;
             var Y = today.Date.Year;
             if (shows.Length <= 0) return;
-            if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd")))
+            if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
             {
                 return;
             }
@@ -73,7 +102,7 @@ namespace PVLib
                     }
                     else
                     {
-                        Rerun();
+                        getSpecial();
                     }
                 }
                 else if (schedule.ScheduleDuration.TotalHours >= PrimeTime.Hour & schedule.ScheduleDuration.TotalHours <= PrimeTime.Hour + (AVERAGEEPISODETIME * 2))
@@ -85,19 +114,20 @@ namespace PVLib
                     }
                     else
                     {
-                        Rerun();
+                        getSpecial();
                     }
                 }
                 else
                 {
-                    Rerun();
+                    getSpecial();
                 }
             }
             void Rerun()
             {
-                Random rnd = new Random();
+                Random rnd = new();
                 if (RR.Count == 0) RR.AddRange(reruns);
                 ChoooseR:
+
                 var i = rnd.Next(RR.Count);
                 if (!File.Exists(RR[i].Media))
                 {
@@ -121,9 +151,28 @@ namespace PVLib
                 }
                 reruns.Add(new(schedule.slots[^1]));
             }
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName));
-            SaveLoad<Schedule>.Save(schedule, Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd"));
-            SaveLoad<TV_LikeChannel>.Save(this, Path.Combine(HomeDirectory, $"Channel.chan"));
+            void getSpecial()
+            {
+                var s = CurrentSeason();
+                if(s == null)
+                {
+                    Rerun();
+                    return;
+                }
+                var ses = s.Value;
+                int TR = (int)(ses.SpecialThreshold * 100);
+                if (new Random().Next(100) < TR & ses.Specials.Count>0)
+                {
+                    schedule.slots.Add(new(ses.Something, schedule.slots));
+                }
+                else
+                {
+                    Rerun();
+                }
+            }
+            Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
+            SaveLoad<Schedule>.Save(schedule, Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+            SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             Console.WriteLine($"Scheduling process ended: {DateTime.Now}");
         }
         void OnMissingRerun(string epname)

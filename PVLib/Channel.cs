@@ -9,7 +9,7 @@ namespace PVLib
     {
         public string ChannelName => new DirectoryInfo(HomeDirectory).Name;
         public string HomeDirectory;
-        string dir
+        internal string dir
         {
             get
             {
@@ -42,12 +42,12 @@ namespace PVLib
         {
             var shw = newShow.Clone();
             shw.Reset();
-            SaveLoad<Show>.Save(shw, Path.Combine(ShowDirectory, new FileInfo(shw.HomeDirectory).Name+".shw"));
+            SaveLoad<Show>.Save(shw, Path.Combine(ShowDirectory, new FileInfo(shw.HomeDirectory).Name+"."+FileSystem.ShowEXT));
         }
         public abstract void CreateNewSchedule(DateTime today);
         public virtual void Cancel(string name)
         {
-            File.Delete(Path.Combine(ShowDirectory,name+".shw"));
+            File.Delete(Path.Combine(ShowDirectory,name+"."+FileSystem.ShowEXT));
         }
         
         public Channel() { }

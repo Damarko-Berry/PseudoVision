@@ -26,18 +26,18 @@ namespace PVLib
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
-            if (File.Exists(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd")))
+            if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
             {
                 Console.WriteLine("Shedeule already exist for today");
                 return;
             }
             CheckForFin();
             if (shows.Length <= 0) return;
-            Console.WriteLine($"Scheduling process started: {DateTime.Now}");
+            Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
             ShowList showList = new(new(ShowDirectory));
-            Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName));
-            SaveLoad<ShowList>.Save(showList, Path.Combine(Directory.GetCurrentDirectory(), "Schedules", ChannelName, $"{M}.{D}.{Y}.scd"));
-            Console.WriteLine($"Scheduling process ended: {DateTime.Now}");
+            Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
+            SaveLoad<ShowList>.Save(showList, Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+            Console.WriteLine($"Scheduling process for {ChannelName} ended: {DateTime.Now}");
         }
         void CheckForFin()
         {

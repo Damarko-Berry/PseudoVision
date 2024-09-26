@@ -84,10 +84,7 @@ namespace PVChannelManager
             UpdateShowList();
         }
 
-        private void Local_Click(object sender, RoutedEventArgs e)
-        {
-            Clipboard.SetText($"{GetLocalIPAddress()}:{SaveLoad<Settings>.Load("settings").Port }/watch/{subject.ChannelName}");
-        }
+        
         static string GetLocalIPAddress()
         {
             var set = SaveLoad<Settings>.Load("settings");
@@ -109,15 +106,7 @@ namespace PVChannelManager
             
             Clipboard.SetText($"http://{GetLocalIPAddress()}:{SaveLoad<Settings>.Load("settings").Port}/live/{subject.ChannelName}");
         }
-        static async Task<IPAddress?> GetExternalIpAddress()
-        {
-            var externalIpString = (await new HttpClient().GetStringAsync("http://icanhazip.com"))
-                .Replace("\r\n", "").Replace("\n", "").Trim();
-            if (!IPAddress.TryParse(externalIpString, out var ipAddress))
-                return null;
-            return ipAddress;
-        }
-
+        
         private void Del_Click(object sender, RoutedEventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to delete this channel","Deleting channel", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
