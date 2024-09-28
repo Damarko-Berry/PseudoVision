@@ -20,6 +20,7 @@ namespace PVLib
             {
                 var seasons = new List<Season>();
                 Directory.CreateDirectory(SeasonsDirectory);
+                UpdateSeasons();
                 var SD = new DirectoryInfo(SeasonsDirectory).GetFiles();
                 for (int i = 0; i < SD.Length; i++)
                 {
@@ -197,6 +198,20 @@ namespace PVLib
                     reruns.RemoveAt(i);
                     i--;
                 }
+            }
+        }
+        void UpdateSeasons()
+        {
+            var SeD= new DirectoryInfo(SeasonsDirectory).GetFiles();
+            for (int i = 0; i < SeD.Length; i++)
+            {
+                var seas =SaveLoad<Season>.Load(SeD[i].FullName);
+                if(DateTime.Now > seas.End)
+                {
+                    seas.Start.Year++;
+                    seas.End.Year++;
+                }
+                SaveLoad<Season>.Save(seas, SeD[i].FullName);
             }
         }
     }

@@ -10,15 +10,6 @@ namespace PVLib
     {
         public bool SendToNextChanWhenFinished;
         public string NextChan;
-        void OnFinished(Show show)
-        {
-            Cancel(new FileInfo(show.HomeDirectory).Name);
-            if(SendToNextChanWhenFinished)
-            {
-                Channel NC = Load(NextChan);
-                NC.AddShow(show);
-            }
-        }
         public Channel_Type Channel_Type = Channel_Type.Binge_Like;
         public override Channel_Type channel_Type => Channel_Type;
         public override void CreateNewSchedule(DateTime today)
@@ -45,6 +36,15 @@ namespace PVLib
             for (int i = 0; i < s.Length; i++)
             {
                 if (s[i].Status == ShowStatus.Complete) OnFinished(s[i]);
+            }
+        }
+        void OnFinished(Show show)
+        {
+            Cancel(new FileInfo(show.HomeDirectory).Name);
+            if(SendToNextChanWhenFinished)
+            {
+                Channel NC = Load(NextChan);
+                NC.AddShow(show);
             }
         }
     }

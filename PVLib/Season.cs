@@ -8,9 +8,10 @@ namespace PVLib
 {
     public struct Season
     {
-        public DateTime Start;
-        public DateTime End;
+        public Time Start;
+        public Time End;
         public double SpecialThreshold;
+        
         public bool Durring(DateTime time)
         {
             DateTime st = Start;
@@ -20,5 +21,6 @@ namespace PVLib
         public List<string> Specials;
         public string Something => (Specials.Count>0)? Specials[new Random((int)DateTime.Now.Ticks).Next(Specials.Count)]: throw new Exception("No Specials Availible"); 
         public Season() { }
+        
     }
 }
