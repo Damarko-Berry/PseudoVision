@@ -16,7 +16,7 @@ namespace PseudoVision
             
             try
             {
-                Settings.CurrentSettings = SaveLoad<Settings>.Load(FileSystem.Settings);
+                Settings.CurrentSettings = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
             }
             catch
             {
@@ -77,10 +77,10 @@ namespace PseudoVision
                 {
                     var sch = (Schedule)Schedules.ElementAt(i).Value;
                     sch.StartCycle();
-                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value, Settings.CurrentSettings.playlistFormat);
-                    string pth = Path.Combine(Settings.CurrentSettings.Archive_Output, "PV-Archives", Channels.GetDirectories()[i].Name);
+                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value);
+                    string pth = FileSystem.ArchiveDIrectory(Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
-                    File.WriteAllText(Path.Combine(pth, $"{M}.{D}.{Y}.{Settings.CurrentSettings.playlistFormat}"), playlist.ToString());
+                    File.WriteAllText(FileSystem.Archive(Channels.GetDirectories()[i].Name, DateTime.Now), playlist.ToString());
                 }
                 Console.WriteLine(Schedules.ElementAt(i).Key);
             }
@@ -121,6 +121,31 @@ namespace PseudoVision
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 Console.WriteLine($"Connecting {userip} to {channame}");
                 await Schedules[channame.ToLower()].SendMedia(response);
+            }
+            else if (request.Url.AbsolutePath.Contains("/archive/"))
+            {
+                string[] URL = request.Url.AbsolutePath.Replace("/archive/", string.Empty).Split("/");
+                Time time = new()
+                {
+                    Day = int.Parse(URL[2].Replace("/", string.Empty)),
+                    Month = int.Parse(URL[1].Replace("/", string.Empty)),
+                    Year = int.Parse(URL[3].Replace("/", string.Empty)),
+                };
+                if (!File.Exists(FileSystem.Archive(URL[0].Replace("/", string.Empty), time))) return;
+                ClientPP pP = null;
+                var ppname = ClientPP.potentialfilename(context, URL[0].Replace("/",string.Empty), time);
+                var PPfile = Path.Combine(FileSystem.Schedules, "PP", ppname);
+                if (File.Exists(PPfile))
+                {
+                    pP = SaveLoad<ClientPP>.Load(PPfile);
+                }
+                else
+                {
+                    Directory.CreateDirectory(Path.Combine(FileSystem.Schedules, "PP"));
+                    pP = new(context, URL[0].Replace("/", string.Empty), URL[1].Replace("/", string.Empty), URL[2].Replace("/", string.Empty), URL[3].Replace("/", string.Empty));
+                }
+                Console.WriteLine($"Connecting {context.Request.UserAgent} to {ppname}");
+                pP.SendMedia(response);
             }
             else if (UserAuthenticator.Auth(request,Settings.CurrentSettings.securityLevel))
             {    

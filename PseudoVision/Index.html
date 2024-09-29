@@ -16,8 +16,8 @@
     <video id="myVideo" controls autoplay src="REPLCACESRC" type="video/mp4">
         Your browser does not support the video tag.
     </video>
-    <input type="button" value="Prev" onclick="prev()" />
-    <input type="button" value="Next" onclick="next()" />
+    <input type="button" value="Previous Channel" onclick="prev()" />
+    <input type="button" value="Next Channel" onclick="next()" />
 </body>
 <script>
     var CN = -1;
@@ -28,6 +28,7 @@
     }
     async function start()
     {
+        video.load();
         video.src = chnls[CN];
         await pause(10);
         video.play();
@@ -53,7 +54,7 @@
         if (chnls.length < 2) return;
         CN--;
         if (CN <= 0) {
-            CN = 0;
+            CN = chnls.length-1;
         }
         start();
     }

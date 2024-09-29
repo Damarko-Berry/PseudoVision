@@ -63,11 +63,8 @@ namespace PVLib
 
                 await Task.Delay((int)Slot.Duration.TotalMilliseconds);
             }
-            if (DateTime.Now.Day == slots[^1].StartTime.Day)
-            {
-                Random random = new((int)DateTime.Now.Ticks);
-                CurrentSlot = random.Next(0, slots.Count);
-            }
+            Random random = new((int)DateTime.Now.Ticks);
+            CurrentSlot = random.Next(0, slots.Count);
         }
 
         public string GetContent(int index, string ip, int prt)

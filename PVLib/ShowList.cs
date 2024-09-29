@@ -13,6 +13,19 @@ namespace PVLib
         public Channel_Type ScheduleType => Channel_Type.Binge_Like;
         public List<string> Shows = new();
         TimeSlot CurrentlyPlaying = new();
+        Playlist GetPlaylist
+        {
+            get
+            {
+                if (File.Exists(FileSystem.Archive(Name, DateTime.Now)))
+                {
+                    return new(FileSystem.Archive(Name, DateTime.Now));
+                }
+                Directory.CreateDirectory(FileSystem.ArchiveDIrectory(Name));
+                return new();
+            }
+            
+        }
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
@@ -25,12 +38,15 @@ namespace PVLib
             {
                 Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
             }
+            var P = GetPlaylist;
             Random rnd = new Random();
             int shw = rnd.Next(Shows.Count);
             if (DateTime.Now > CurrentlyPlaying.EndTime)
             {
                 Show show = SaveLoad<Show>.Load(Shows[shw]);
                 CurrentlyPlaying = new TimeSlot(show.NextEpisode());
+                P.Add(CurrentlyPlaying);
+                File.WriteAllText(FileSystem.Archive(Name, DateTime.Now), P.ToString());
                 SaveLoad<Show>.Save(show, Shows[shw]);
             }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);

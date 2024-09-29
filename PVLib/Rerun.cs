@@ -16,5 +16,9 @@ namespace PVLib
             Media = slot.Media;
             MediaLength = slot.Duration;
         }
+        public static implicit operator Rerun(TimeSlot timeSlot)
+        {
+            return new Rerun(timeSlot);
+        }
     }
 }
