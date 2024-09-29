@@ -1,8 +1,8 @@
 ﻿namespace PVLib
 {
     public enum ShowStatus { New, Ongoing, Complete }
-    public enum Channel_Type { TV_Like, Binge_Like }
-
+    public enum Channel_Type { TV_Like, Binge_Like, Movies }
+    public enum DirectoryType { Movie, Show}
     public enum PlaylistFormat { m3u, pls }
     /// <summary>
     /// When does your server require credentials

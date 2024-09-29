@@ -24,16 +24,16 @@ namespace PVLib
         }
         public string ShowDirectory => Path.Combine(dir,"Shows");
         public abstract Channel_Type channel_Type {get;}
-        public Show[] shows
+        public ContentDirectory[] shows
         {
             get
             {
                 DirectoryInfo info = new(ShowDirectory);
                 var allS = info.GetFiles();
-                Show[] S = new Show[allS.Length];
+                ContentDirectory[] S = new ContentDirectory[allS.Length];
                 for (int i = 0; i < S.Length; i++)
                 {
-                    S[i] = SaveLoad<Show>.Load(allS[i].FullName);
+                    S[i] = ContentDirectory.Load(allS[i].FullName);
                 }
                 return S;
             }
@@ -59,9 +59,19 @@ namespace PVLib
             xmlDoc.LoadXml(doc);
             XmlNodeList c = xmlDoc.GetElementsByTagName("Channel_Type");
             var CType = EnumTranslator<Channel_Type>.fromString(c[0].InnerText);
-            XmlSerializer serializer = (CType == Channel_Type.Binge_Like) ? new XmlSerializer(typeof(Binge_LikeChannel)) : new XmlSerializer(typeof(TV_LikeChannel));
+            XmlSerializer serializer = CType switch
+            {
+                Channel_Type.Binge_Like => new XmlSerializer(typeof(Binge_LikeChannel)),
+                Channel_Type.TV_Like => new XmlSerializer(typeof(TV_LikeChannel)),
+                _=> new XmlSerializer(typeof(MovieChannel))
+            };
             StreamReader sr = new StreamReader(path);
-            Channel channel = (CType == Channel_Type.Binge_Like) ? (Binge_LikeChannel)serializer.Deserialize(sr):(TV_LikeChannel)serializer.Deserialize(sr);
+            Channel channel = CType switch
+            {
+                Channel_Type.TV_Like => (TV_LikeChannel)serializer.Deserialize(sr),
+                Channel_Type.Binge_Like => (Binge_LikeChannel)serializer.Deserialize(sr),
+                _=> (MovieChannel)serializer.Deserialize(sr)
+            };
             sr.Close();
             return channel;
         }

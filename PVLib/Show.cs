@@ -1,24 +1,13 @@
 ﻿namespace PVLib
 {
-    public class Show
+    public class Show : ContentDirectory
     {
-        public string HomeDirectory;
-        string dir
-        {
-            get
-            {
-                if (Environment.OSVersion.Platform == PlatformID.Unix)
-                {
-                    HomeDirectory = HomeDirectory.Replace("C:\\", "/mnt/c/");
-                    return HomeDirectory.Replace('\\', '/');
-
-                }
-                return HomeDirectory;
-            }
-        }
+        
         public int Season;
         public int EpisodeNo;
         public int MovieNo;
+        public DirectoryType directoryType = DirectoryType.Show;
+        public override DirectoryType dirtype => directoryType;
         int EpisodesPerMovie
         {
             get
@@ -115,7 +104,7 @@
                 return e;
             }
         }
-        public string NextEpisode()
+        public override string NextEpisode()
         {
             if(Status == ShowStatus.Complete)
             {

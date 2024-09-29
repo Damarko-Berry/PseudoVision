@@ -64,20 +64,21 @@ namespace PseudoVision
                 chan.CreateNewSchedule(DateTime.Now);
                 if (chan.shows.Length > 0)
                 {
-                    ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like) ?
-                        SaveLoad<Schedule>.Load(Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")) :
-                        SaveLoad<ShowList>.Load(Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+                    var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}");
+                    ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?
+                        SaveLoad<Schedule>.Load(scdpath) :
+                        SaveLoad<ShowList>.Load(scdpath);
                     sch.Name = chan.ChannelName.ToLower();
                     Schedules.Add(chan.ChannelName.ToLower(), sch);
                 }
             }
             for (int i = 0; i < Schedules.Count; i++)
             {
-                if (Schedules.ElementAt(i).Value.ScheduleType == Channel_Type.TV_Like)
+                if (Schedules.ElementAt(i).Value.ScheduleType == Channel_Type.TV_Like | Schedules.ElementAt(i).Value.ScheduleType == Channel_Type.Movies )
                 {
                     var sch = (Schedule)Schedules.ElementAt(i).Value;
                     sch.StartCycle();
-                    Playlist playlist = new((Schedule)Schedules.ElementAt(i).Value);
+                    Playlist playlist = new(sch);
                     string pth = FileSystem.ArchiveDIrectory(Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
                     File.WriteAllText(FileSystem.Archive(Channels.GetDirectories()[i].Name, DateTime.Now), playlist.ToString());

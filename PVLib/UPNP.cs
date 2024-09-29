@@ -105,7 +105,7 @@ namespace PVLib
             {
                 list.Add($"http://{IP}:{port}/live/{Medias[i].Name}");
             }
-            xmlSerializer.Serialize(sw, new());
+            xmlSerializer.Serialize(sw, list);
             return sw.ToString();
         }
         async Task SendSsdpAnnouncements(string localIp, int port)
@@ -114,7 +114,8 @@ namespace PVLib
                                         "HOST: 239.255.255.250:1900\r\n" +
                                         "CACHE-CONTROL: max-age=1800\r\n" +
                                         $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                        "NT: urn:schemas-upnp-org:MediaServer:1\r\n" +
+                                        $"CHANNELS: http://{localIp}:{port}/media\r\n" +
+                                        "NT: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
                                         "NTS: ssdp:all\r\n" +
                                         "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
                                         $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
@@ -153,6 +154,7 @@ namespace PVLib
                                               $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
                                               "EXT:\r\n" +
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                              $"CHANNELS: http://{localIp}:{port}/media\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
                                               "ST: urn:PseudoVision:device:MediaServer:1\r\n" +
                                               $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +

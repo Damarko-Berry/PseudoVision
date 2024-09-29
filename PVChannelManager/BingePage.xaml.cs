@@ -72,7 +72,7 @@ namespace PVChannelManager
         void LoadList(string j= "")
         {
             AllShows.Children.Clear();
-            var sh = channel.shows;
+            var sh = channel.Shows;
             for (int i = 0; i < sh.Length; i++)
             {
                 var Butt = new OmniButton<string>(new FileInfo(sh[i].HomeDirectory).Name, channel.Cancel);

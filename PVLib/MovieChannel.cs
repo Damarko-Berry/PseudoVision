@@ -8,9 +8,9 @@ namespace PVLib
 {
     public class MovieChannel : Channel
     {
-        Channel_Type type;
+        public Channel_Type type = Channel_Type.Movies;
         public override Channel_Type channel_Type => type;
-
+        public MovieDirectory[] Shows => (MovieDirectory[])shows;
         public override void CreateNewSchedule(DateTime today)
         {
             throw new NotImplementedException();

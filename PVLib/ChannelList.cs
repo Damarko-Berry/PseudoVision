@@ -9,6 +9,7 @@ namespace PVLib
         public string this[int index] => Channels[index];
         public void Add(string channle)
         {
+            if (Channels == null) Channels = new();
             Channels.Add(channle);
         } 
         public static ChannelList operator +(ChannelList a, ChannelList b)

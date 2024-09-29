@@ -9,6 +9,19 @@ namespace PVLib
     public class Binge_LikeChannel : Channel
     {
         public bool SendToNextChanWhenFinished;
+        public Show[] Shows
+        {
+            get
+            {
+                List<Show> list = new List<Show>();
+                var cd = shows;
+                for (int i = 0; i < cd.Length; i++)
+                {
+                    if (cd[i].dirtype == DirectoryType.Show) list.Add((Show)cd[i]);
+                }
+                return list.ToArray();
+            }
+        }
         public string NextChan;
         public Channel_Type Channel_Type = Channel_Type.Binge_Like;
         public override Channel_Type channel_Type => Channel_Type;
@@ -35,7 +48,8 @@ namespace PVLib
             var s = shows;
             for (int i = 0; i < s.Length; i++)
             {
-                if (s[i].Status == ShowStatus.Complete) OnFinished(s[i]);
+                var sh = (Show)s[i];
+                if (sh.Status == ShowStatus.Complete) OnFinished(sh);
             }
         }
         void OnFinished(Show show)

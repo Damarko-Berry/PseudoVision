@@ -70,6 +70,21 @@ namespace PVLib
                 return time > FULLDAY ? FULLDAY : time;
             }
         }
+
+        public Show[] Shows
+        {
+            get
+            {
+                List<Show> list = new List<Show>();
+                var cd = shows;
+                for (int i = 0; i < cd.Length; i++)
+                {
+                    if (cd[i].dirtype == DirectoryType.Show) list.Add((Show)cd[i]);
+                }
+                return list.ToArray();
+            }
+        }
+
         public Time PrimeTime = new Time()
         {
             Hour = 8
@@ -89,7 +104,7 @@ namespace PVLib
             Schedule schedule = new Schedule();
             if (Reruntime.TotalHours < RerunTimeThreshhold)
             {
-                rotation.CreateNewRotation(shows);
+                rotation.CreateNewRotation(Shows);
             }
             var RR = new List<Rerun>(reruns);
             while (schedule.ScheduleDuration.TotalHours < FULLDAY)
@@ -190,7 +205,7 @@ namespace PVLib
         public override void Cancel(string name)
         {
             base.Cancel(name);
-            rotation.Cancel(name, shows);
+            rotation.Cancel(name, (Shows));
             for (int i = 0; i < reruns.Count; i++)
             {
                 if (reruns[i].Media.Contains(name))

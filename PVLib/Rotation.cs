@@ -65,7 +65,7 @@ namespace PVLib
             }
             return false;
         }
-        internal string GetNextEp(DayOfWeek day, Channel channel)
+        internal string GetNextEp(DayOfWeek day, TV_LikeChannel channel)
         {
             if(ShowList.Count == 0) return string.Empty;
             var NE = string.Empty;
@@ -87,12 +87,12 @@ namespace PVLib
                 SaveLoad<Show>.Save(v, Path.Combine(channel.ShowDirectory, shwrf.name + ".shw"));
                 if (v.Status == ShowStatus.Complete)
                 {
-                    OnShowComplete(shwrf, channel.shows);
+                    OnShowComplete(shwrf, channel.Shows);
                 }
             }
             return NE;
         }
-        internal string GetNextEp(Channel channel)
+        internal string GetNextEp(TV_LikeChannel channel)
         {
             if(ShowList.Count == 0) return string.Empty;
             Random r = new Random();
@@ -108,7 +108,7 @@ namespace PVLib
                 SaveLoad<Show>.Save(v, Path.Combine(channel.ShowDirectory, shwrf.name + ".shw"));
                 if (v.Status == ShowStatus.Complete)
                 {
-                    OnShowComplete(shwrf, channel.shows);
+                    OnShowComplete(shwrf, channel.Shows);
                 }
             }
             return NE;
