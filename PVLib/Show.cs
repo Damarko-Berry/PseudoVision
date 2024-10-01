@@ -2,10 +2,9 @@
 {
     public class Show : ContentDirectory
     {
-        
-        public int Season;
-        public int EpisodeNo;
+        public int CurrentEpisodeNumber;
         public int MovieNo;
+        public int EpisodesSinceLastMovie;
         public DirectoryType directoryType = DirectoryType.Show;
         public override DirectoryType dirtype => directoryType;
         int EpisodesPerMovie
@@ -14,11 +13,10 @@
             {
                 if(MovieProgress == ShowStatus.Complete)return 0;
                 if(EpisodeProgress == ShowStatus.Complete)return -1;
-                if(TotalEps == 0)return -1;
-                return TotalEps / TotalMovies;
+                if(TotalEpsisodes == 0)return -1;
+                return TotalEpsisodes / TotalMovies;
             }
         }
-        public int EpisodesSinceLastMovie;
         DirectoryInfo MovieDirectory
         {
             get
@@ -53,62 +51,13 @@
                 return MovieDirectory.GetFiles().Length;
             }
         }
-        DirectoryInfo[] SeasonDirectories
-        {
-            get
-            {
-                DirectoryInfo se = new(dir);
-                var td = new List<DirectoryInfo>(se.GetDirectories());
-                for (int i = 0; i < td.Count; i++)
-                {
-                    if (td[i].Name.ToLower().Replace(" ", string.Empty) == "movies" | td[i].Name.ToLower().Replace(" ", string.Empty) == "specials")
-                        td.RemoveAt(i);
-                }
-                return td.ToArray();
-            }
-        }
-        int TotalEps
-        {
-            get
-            {
-                int e = 0;
 
-                var td = SeasonDirectories;
-                for (int i = 0; i < td.Length; i++)
-                {
-                    e += td[i].GetFiles().Length;
-                }
-                return e;
-            }
-        }
-        int CuEpNo
-        {
-            get
-            {
-                int e = 0;
-                int CU = Season;
-                
-                var td = SeasonDirectories;
-                for (int i = 0; i < CU; i++)
-                {
-                    for (int j = 0; j < td[i].GetFiles().Length; j++)
-                    {
-                        e++;
-                        if(i == Season && j== EpisodeNo)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                return e;
-            }
-        }
+        int TotalEpsisodes => Length;
         public override string NextEpisode()
         {
             if(Status == ShowStatus.Complete)
             {
-                    return GetRerun();
+                return GetRerun();
             }
             var ep = string.Empty;
             if (EpisodesSinceLastMovie>EpisodesPerMovie)
@@ -118,13 +67,8 @@
                 MovieNo++;
             }
             else{
-               ep = SeasonDirectories[Season].GetFiles()[EpisodeNo].FullName;
-                EpisodeNo++;
-                if (EpisodeNo >= SeasonDirectories[Season].GetFiles().Length)
-                {
-                    Season++;
-                    EpisodeNo = 0;
-                }
+               ep = Content[CurrentEpisodeNumber].FullName;
+                CurrentEpisodeNumber++;
                 if(MovieProgress != ShowStatus.Complete)
                 {
                     EpisodesSinceLastMovie++;
@@ -135,23 +79,8 @@
         string GetRerun()
         {
             Random rnd = new Random();
-            int ep = rnd.Next(TotalEps);
-            int r = 0;
-            int s = 0; int e = 0;
-            var H = SeasonDirectories;
-            for (; s < H.Length; s++)
-            {
-                DirectoryInfo se = new(dir);
-                for (; e < se.GetDirectories()[s].GetFiles().Length; e++)
-                {
-                    r++;
-                    if (r >= ep)
-                    {
-                        return H[s].GetFiles()[e].FullName;
-                    }
-                }
-            }
-            return H[s-1].GetFiles()[e-1].FullName;
+            int ep = rnd.Next(TotalEpsisodes);
+            return Content[ep].FullName;
         }
         public ShowStatus Status
         {
@@ -185,8 +114,8 @@
         {
             get
             {
-                if (CuEpNo >= TotalEps) return ShowStatus.Complete;
-                else if (CuEpNo > 0&CuEpNo<TotalEps) return ShowStatus.Ongoing;
+                if (CurrentEpisodeNumber >= TotalEpsisodes) return ShowStatus.Complete;
+                else if (CurrentEpisodeNumber > 0&CurrentEpisodeNumber<TotalEpsisodes) return ShowStatus.Ongoing;
                 return ShowStatus.New;
             }
         }
@@ -199,10 +128,29 @@
                 return ShowStatus.New;
             }
         }
+
+        public override FileInfo[] Content
+        {
+            get
+            {
+                List<FileInfo> VF = new();
+                DirectoryInfo directoryInfo = new(HomeDirectory);
+                var td = new List<DirectoryInfo>(directoryInfo.GetDirectories());
+                for (int i = 0; i < td.Count; i++)
+                {
+                    if (td[i].Name.ToLower().Trim() == "movies" | td[i].Name.ToLower().Trim() == "specials"| td[i].Name.ToLower().Trim() == "shorts")
+                        td.RemoveAt(i);
+                }
+                for (int i = 0; i < td.Count; i++)
+                    for (int j = 0; j < ValidExtentions.Length; j++)
+                        VF.AddRange(td[i].GetFiles("*" + ValidExtentions[j]));
+                return [.. VF];
+            }
+        }
+
         public void Reset()
         {
-            Season = 0;
-            EpisodeNo = 0;
+            CurrentEpisodeNumber = 0;
             MovieNo = 0;
             EpisodesSinceLastMovie = 0;
         }

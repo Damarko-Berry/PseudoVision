@@ -11,6 +11,7 @@
     public enum Access {User, Modderator}
     public enum DeviceType { MediaServer, InternetGatewayDevice, lighting, reminder }
     public enum ServiceType { ContentDirectory, ConnectionManager }
+    
 
     public static class EnumTranslator<T>
     {

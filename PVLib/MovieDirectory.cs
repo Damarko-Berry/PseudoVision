@@ -8,26 +8,31 @@ namespace PVLib
 {
     public class MovieDirectory : ContentDirectory
     {
-        List<FileInfo> VideoFiles
+        public ShowStatus status;
+
+        public DirectoryType directoryType = DirectoryType.Movie;
+        public override DirectoryType dirtype => directoryType;
+        
+
+        public override FileInfo[] Content
         {
             get
             {
                 List<FileInfo> VF = new();
-                DirectoryInfo directoryInfo = new(dir);
-                VF.AddRange(directoryInfo.GetFiles("*.mp4", SearchOption.AllDirectories));
-                VF.AddRange(directoryInfo.GetFiles("*.MOV", SearchOption.AllDirectories));
-                VF.AddRange(directoryInfo.GetFiles("*.MP4", SearchOption.AllDirectories));
-
-                return VF;
+                DirectoryInfo directoryInfo = new(HomeDirectory);
+                for (int i = 0; i < ValidExtentions.Length; i++)
+                {
+                    VF.AddRange(directoryInfo.GetFiles("*" + ValidExtentions[i], SearchOption.AllDirectories));
+                }
+                return VF.ToArray();
             }
         }
-        public DirectoryType directoryType = DirectoryType.Movie;
-        public override DirectoryType dirtype => directoryType;
 
         public MovieDirectory() { }
         public override string NextEpisode()
         {
-            throw new NotImplementedException();
+            var files = Content;
+            return files[new Random().Next(0, files.Length)].FullName;
         }
     }
 }

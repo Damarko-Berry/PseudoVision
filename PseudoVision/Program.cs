@@ -62,7 +62,7 @@ namespace PseudoVision
             {
                 Channel chan = Channel.Load(FileSystem.ChannleChan(CDs[i].Name));
                 chan.CreateNewSchedule(DateTime.Now);
-                if (chan.shows.Length > 0)
+                if (chan.CTD.Length > 0)
                 {
                     var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}");
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?

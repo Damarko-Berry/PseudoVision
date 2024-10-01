@@ -14,7 +14,7 @@ namespace PVLib
             get
             {
                 List<Show> list = new List<Show>();
-                var cd = shows;
+                var cd = CTD;
                 for (int i = 0; i < cd.Length; i++)
                 {
                     if (cd[i].dirtype == DirectoryType.Show) list.Add((Show)cd[i]);
@@ -36,7 +36,7 @@ namespace PVLib
                 return;
             }
             CheckForFin();
-            if (shows.Length <= 0) return;
+            if (CTD.Length <= 0) return;
             Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
             ShowList showList = new(new(ShowDirectory));
             Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
@@ -45,7 +45,7 @@ namespace PVLib
         }
         void CheckForFin()
         {
-            var s = shows;
+            var s = CTD;
             for (int i = 0; i < s.Length; i++)
             {
                 var sh = (Show)s[i];

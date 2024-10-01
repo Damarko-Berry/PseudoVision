@@ -13,7 +13,8 @@ namespace PVLib
         public Rotation rotation = new Rotation();
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
         public override Channel_Type channel_Type => Channel_Type;
-        string SeasonsDirectory => Path.Combine(dir, "Seasons");
+        string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
+        string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
         Season[] seasons
         {
             get
@@ -47,10 +48,11 @@ namespace PVLib
         {
             get
             {
+                var Rs = reruns;
                 TimeSpan time = new TimeSpan();
-                for (int i = 0; i < reruns.Count; i++)
+                for (int i = 0; i < reruns.Length; i++)
                 {
-                    time += reruns[i].Duration;
+                    time += Rs[i].Duration;
                 }
                 return time;
             }
@@ -61,7 +63,7 @@ namespace PVLib
             {
 
                 double time = 0.0;
-                int sl = shows.Length;
+                int sl = CTD.Length;
                 for (int i = 0; i < sl; i++)
                 {
                     time += (AVERAGEEPISODETIME * 2);
@@ -76,7 +78,7 @@ namespace PVLib
             get
             {
                 List<Show> list = new List<Show>();
-                var cd = shows;
+                var cd = CTD;
                 for (int i = 0; i < cd.Length; i++)
                 {
                     if (cd[i].dirtype == DirectoryType.Show) list.Add((Show)cd[i]);
@@ -89,13 +91,25 @@ namespace PVLib
         {
             Hour = 8
         };
-        public List<Rerun> reruns = new List<Rerun>();
+        public Rerun[] reruns
+        {
+            get
+            {
+                var rrs= new List<Rerun>();
+                var rrfls = new DirectoryInfo(RerunDirectory).GetFiles(".rrn");
+                for (int i = 0; i < rrfls.Length; i++)
+                {
+                    rrs.Add(SaveLoad<Rerun>.Load(rrfls[i].FullName));
+                }
+                return rrs.ToArray();
+            }
+        }
         public override void CreateNewSchedule(DateTime today)
         {
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
-            if (shows.Length <= 0) return;
+            if (CTD.Length <= 0) return;
             if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
             {
                 return;
@@ -157,15 +171,10 @@ namespace PVLib
             void Newep(string e)
             {
                 schedule.slots.Add(new(e, schedule.slots));
-                for (int i = 0; i < reruns.Count; i++)
-                {
-                    if (schedule.slots[^1].Media == reruns[i].Media)
-                    {
-                        reruns.RemoveAt(i);
-                        break;
-                    }
-                }
-                reruns.Add(new(schedule.slots[^1]));
+                
+                Directory.CreateDirectory(RerunDirectory);
+                FileInfo file = new FileInfo(schedule.slots[^1].Media);
+                SaveLoad<Rerun>.Save(new(schedule.slots[^1]),Path.Combine(RerunDirectory,$"{file.Name}.rrn"));
             }
             void getSpecial()
             {
@@ -193,24 +202,19 @@ namespace PVLib
         }
         void OnMissingRerun(string epname)
         {
-            for (int i = 0; i < reruns.Count; i++)
-            {
-                if (reruns[i].Media == epname)
-                {
-                    reruns.RemoveAt(i);
-                    break;
-                }
-            }
+            var fi = new FileInfo(epname);
+            File.Delete(Path.Combine(RerunDirectory, $"{fi.Name}.rrn"));
         }
         public override void Cancel(string name)
         {
             base.Cancel(name);
             rotation.Cancel(name, (Shows));
-            for (int i = 0; i < reruns.Count; i++)
+            var doa = Directory.GetFiles(RerunDirectory);
+            for (int i = 0; i < doa.Length; i++)
             {
-                if (reruns[i].Media.Contains(name))
+                if (doa[i].Contains(name))
                 {
-                    reruns.RemoveAt(i);
+                    File.Delete(doa[i]);
                     i--;
                 }
             }

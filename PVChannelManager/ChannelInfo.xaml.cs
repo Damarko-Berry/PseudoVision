@@ -120,7 +120,7 @@ namespace PVChannelManager
 
         private void HardRe_Click(object sender, RoutedEventArgs e)
         {
-            if(MessageBox.Show("A hard reset will delete all shows and reruns(if applicable).\nAre you sure?","Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if(MessageBox.Show("A hard reset will delete all CTD and reruns(if applicable).\nAre you sure?","Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 DirectoryInfo AllShows = new(subject.ShowDirectory);
                 while(AllShows.GetFiles().Length>0)
@@ -142,7 +142,7 @@ namespace PVChannelManager
 
         private void SoftRe_Click(object sender, RoutedEventArgs e)
         {
-            if (MessageBox.Show("A soft reset will reset any progress made on shows.\nAre you sure?", "Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+            if (MessageBox.Show("A soft reset will reset any progress made on CTD.\nAre you sure?", "Hard Reset", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
             {
                 DirectoryInfo AllShows = new(subject.ShowDirectory);
                 for (int i = 0; i < AllShows.GetFiles().Length; i++)

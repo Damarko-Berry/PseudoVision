@@ -52,7 +52,7 @@ namespace PVChannelManager
         void Load(string A = "")
         {
             this.Showlist.Children.Clear();
-            var lit = subject.shows;
+            var lit = subject.CTD;
             for (int i = 0; i < lit.Length; i++)
             {
                 var butt = new OmniButton<string>(new DirectoryInfo(lit[i].HomeDirectory).Name, subject.Cancel);

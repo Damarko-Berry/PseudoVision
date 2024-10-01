@@ -10,21 +10,12 @@ namespace PVLib
 {
     public abstract class ContentDirectory
     {
+        protected static string[] ValidExtentions => new[] { ".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" };
+        protected static bool isValid(FileInfo file) => ValidExtentions.Contains(file.Extension);
         public string HomeDirectory;
-        public abstract DirectoryType dirtype {  get; }
-        internal string dir
-        {
-            get
-            {
-                if (Environment.OSVersion.Platform == PlatformID.Unix)
-                {
-                    HomeDirectory = HomeDirectory.Replace("C:\\", "/mnt/c/");
-                    return HomeDirectory.Replace('\\', '/');
-
-                }
-                return HomeDirectory;
-            }
-        }
+        public abstract DirectoryType dirtype { get; }
+        public abstract FileInfo[] Content {  get; }
+        public virtual int Length => Content.Length;
         public abstract string NextEpisode();
         public static ContentDirectory Load(string path)
         {
