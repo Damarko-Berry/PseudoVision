@@ -51,7 +51,6 @@
                 return MovieDirectory.GetFiles().Length;
             }
         }
-
         int TotalEpsisodes => Length;
         public override string NextEpisode()
         {
@@ -128,14 +127,13 @@
                 return ShowStatus.New;
             }
         }
-
         public override FileInfo[] Content
         {
             get
             {
                 List<FileInfo> VF = new();
-                DirectoryInfo directoryInfo = new(HomeDirectory);
-                var td = new List<DirectoryInfo>(directoryInfo.GetDirectories());
+                
+                var td = new List<DirectoryInfo>(HomeDirectoryInfo.GetDirectories());
                 for (int i = 0; i < td.Count; i++)
                 {
                     if (td[i].Name.ToLower().Trim() == "movies" | td[i].Name.ToLower().Trim() == "specials"| td[i].Name.ToLower().Trim() == "shorts")
@@ -147,7 +145,34 @@
                 return [.. VF];
             }
         }
+        public Rerun[] shorts
+        {
+            get
+            {
+                DirectoryInfo shortsdirectory = null;
+                if(HomeDirectoryInfo.GetDirectories("shorts").Length>0)
+                {
+                    shortsdirectory = HomeDirectoryInfo.GetDirectories("shorts")[0];
+                }
+                else if(HomeDirectoryInfo.GetDirectories("Shorts").Length>0)
+                {
+                    shortsdirectory = HomeDirectoryInfo.GetDirectories("Shorts")[0];
+                }
+                if (shortsdirectory == null) return [];
 
+                List<Rerun> reruns = new List<Rerun>();
+                List<FileInfo> mPaths = new();
+                for (int i = 0; i < ValidExtentions.Length; i++)
+                {
+                    mPaths.AddRange(shortsdirectory.GetFiles(ValidExtentions[i]));
+                }
+                for (int i = 0; i < mPaths.Count; i++)
+                {
+                    reruns.Add(new TimeSlot(mPaths[i].FullName));
+                }
+                return reruns.ToArray();
+            }
+        }
         public void Reset()
         {
             CurrentEpisodeNumber = 0;
@@ -159,5 +184,6 @@
         {
             return (Show)MemberwiseClone();
         }
+        public Show() { }
     }
 }

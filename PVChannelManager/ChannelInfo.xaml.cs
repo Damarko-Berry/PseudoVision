@@ -155,7 +155,8 @@ namespace PVChannelManager
                 if (subject.channel_Type == Channel_Type.TV_Like)
                 {
                     var TV = (TV_LikeChannel)subject;
-                    TV.reruns.Clear();
+                    Directory.Delete(TV.RerunDirectory, true);
+                    Directory.CreateDirectory(TV.RerunDirectory);
                     TV.rotation.ShowList.Clear();
                     SaveLoad<TV_LikeChannel>.Save(TV, Path.Combine(subject.HomeDirectory, "Channel.chan"));
                 }

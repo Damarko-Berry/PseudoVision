@@ -14,7 +14,7 @@ namespace PVLib
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
         public override Channel_Type channel_Type => Channel_Type;
         string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
-        string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
+        public string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
         Season[] seasons
         {
             get
@@ -72,7 +72,6 @@ namespace PVLib
                 return time > FULLDAY ? FULLDAY : time;
             }
         }
-
         public Show[] Shows
         {
             get
@@ -86,7 +85,7 @@ namespace PVLib
                 return list.ToArray();
             }
         }
-
+        
         public Time PrimeTime = new Time()
         {
             Hour = 8

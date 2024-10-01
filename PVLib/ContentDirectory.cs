@@ -13,6 +13,7 @@ namespace PVLib
         protected static string[] ValidExtentions => new[] { ".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" };
         protected static bool isValid(FileInfo file) => ValidExtentions.Contains(file.Extension);
         public string HomeDirectory;
+        protected DirectoryInfo HomeDirectoryInfo=> new DirectoryInfo(HomeDirectory);
         public abstract DirectoryType dirtype { get; }
         public abstract FileInfo[] Content {  get; }
         public virtual int Length => Content.Length;
