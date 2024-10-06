@@ -26,5 +26,7 @@ namespace PVLib
         {
             throw new NotImplementedException();
         }
+
+        public override bool isSupported(DirectoryType type)=> type == DirectoryType.Movie;
     }
 }

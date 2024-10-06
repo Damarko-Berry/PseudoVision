@@ -1,12 +1,12 @@
-﻿namespace PVLib
+﻿using System.Xml.Serialization;
+
+namespace PVLib
 {
     public class Show : ContentDirectory
     {
         public int CurrentEpisodeNumber;
         public int MovieNo;
         public int EpisodesSinceLastMovie;
-        public DirectoryType directoryType = DirectoryType.Show;
-        public override DirectoryType dirtype => directoryType;
         int EpisodesPerMovie
         {
             get
@@ -127,7 +127,8 @@
                 return ShowStatus.New;
             }
         }
-        public override FileInfo[] Content
+        
+        internal override FileInfo[] Content
         {
             get
             {
@@ -140,8 +141,8 @@
                         td.RemoveAt(i);
                 }
                 for (int i = 0; i < td.Count; i++)
-                    for (int j = 0; j < ValidExtentions.Length; j++)
-                        VF.AddRange(td[i].GetFiles("*" + ValidExtentions[j]));
+                    for (int j = 0; j < ValidExtensions.Length; j++)
+                        VF.AddRange(td[i].GetFiles("*" + ValidExtensions[j]));
                 return [.. VF];
             }
         }
@@ -162,9 +163,9 @@
 
                 List<Rerun> reruns = new List<Rerun>();
                 List<FileInfo> mPaths = new();
-                for (int i = 0; i < ValidExtentions.Length; i++)
+                for (int i = 0; i < ValidExtensions.Length; i++)
                 {
-                    mPaths.AddRange(shortsdirectory.GetFiles(ValidExtentions[i]));
+                    mPaths.AddRange(shortsdirectory.GetFiles(ValidExtensions[i]));
                 }
                 for (int i = 0; i < mPaths.Count; i++)
                 {

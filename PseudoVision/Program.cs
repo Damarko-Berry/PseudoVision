@@ -10,6 +10,7 @@ namespace PseudoVision
 
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
+        static bool IsGening;
         static UPNP upnp => Settings.CurrentSettings.upnp;
         static async Task Main(string[] args)
         {
@@ -52,6 +53,7 @@ namespace PseudoVision
         public static void CreateScheds()
         {
             DirectoryInfo Channels = new(FileSystem.Channels);
+            IsGening = true;
             var Da = DateTime.Now; 
             var M = Da.Date.Month;
             var D = Da.Date.Day;
@@ -85,6 +87,7 @@ namespace PseudoVision
                 }
                 Console.WriteLine(Schedules.ElementAt(i).Key);
             }
+            IsGening = false;
         }
 
         static async Task StartHttpServer(string localIp, int port)
@@ -107,7 +110,10 @@ namespace PseudoVision
             var userip = context.Request.RemoteEndPoint.Address.ToString();
            
             Console.WriteLine(request.Url.AbsolutePath);
-
+            while(IsGening)
+            {
+                await Task.Delay(500);
+            }
             if (request.Url.AbsolutePath == "/description.xml")
             {
                 var des = upnp.ToString();

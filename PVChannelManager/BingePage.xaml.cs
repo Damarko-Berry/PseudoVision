@@ -104,10 +104,17 @@ namespace PVChannelManager
                 for (int i = 0; i < folderDialog.FolderNames.Length; i++)
                 {
                     DirectoryInfo showinfo = new(folderDialog.FolderNames[i]);
-                    Show show = new();
-                    show.HomeDirectory = showinfo.FullName;
-                    SaveLoad<Show>.Save(show, Path.Combine(channel.ShowDirectory, showinfo.Name + ".shw"));
-                    LoadList();
+                    if (ContentDirectory.DDetector(showinfo) == DirectoryType.Show)
+                    {
+                        Show show = new();
+                        show.HomeDirectory = showinfo.FullName;
+                        SaveLoad<Show>.Save(show, Path.Combine(channel.ShowDirectory, showinfo.Name + ".shw"));
+                        LoadList();
+                    }
+                    else
+                    {
+                        MessageBox.Show($"{Channel_Type.Binge_Like} Channels don't support this directory's structure:\n\n {showinfo.Name}");
+                    }
                 }
             }
         }

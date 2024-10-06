@@ -95,6 +95,7 @@ namespace PVChannelManager
         private void save_Click(object sender, RoutedEventArgs e)
         {
             SaveLoad<Settings>.Save(NSettings, "settings");
+            Settings.CurrentSettings = NSettings;
             MainWindow.Instance.Main.GoBack();
         }
 

@@ -27,6 +27,7 @@ namespace PVLib
         }
         public void AddShow(Show newShow)
         {
+            if(channel_Type == Channel_Type.Movies) return;
             var shw = newShow.Clone();
             shw.Reset();
             SaveLoad<Show>.Save(shw, Path.Combine(ShowDirectory, new FileInfo(shw.HomeDirectory).Name+"."+FileSystem.ShowEXT));
@@ -36,7 +37,7 @@ namespace PVLib
         {
             File.Delete(Path.Combine(ShowDirectory,name+"."+FileSystem.ShowEXT));
         }
-        
+        public abstract bool isSupported(DirectoryType type);
         public Channel() { }
 
         public static Channel Load(string path)

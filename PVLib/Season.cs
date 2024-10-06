@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PVLib
 {
-    public struct Season
+    public class Season
     {
         public Time Start;
         public Time End;

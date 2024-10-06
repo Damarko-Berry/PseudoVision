@@ -33,6 +33,7 @@ namespace PVChannelManager
             {
                 SaveLoad<Settings>.Save(Settings.Default, "settings");
             }
+            Settings.CurrentSettings = SaveLoad<Settings>.Load("settings");
 
             var pros = Process.GetProcesses(Environment.MachineName);
             for (int i = 0; i < pros.Length; i++)

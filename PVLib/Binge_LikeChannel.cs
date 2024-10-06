@@ -61,5 +61,8 @@ namespace PVLib
                 NC.AddShow(show);
             }
         }
+
+        public override bool isSupported(DirectoryType type) => type == DirectoryType.Show;
+        
     }
 }

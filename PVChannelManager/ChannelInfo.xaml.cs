@@ -52,10 +52,27 @@ namespace PVChannelManager
                 for (int i = 0; i < folderDialog.FolderNames.Length; i++)
                 {
                     DirectoryInfo showinfo = new(folderDialog.FolderNames[i]);
-                    Show show = new();
-                    show.HomeDirectory = showinfo.FullName;
-                    SaveLoad<Show>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name+".shw"));
-                    UpdateShowList();
+                    var Dtype = ContentDirectory.DDetector(showinfo);
+                    if (subject.isSupported(Dtype))
+                    {
+                        if (Dtype == DirectoryType.Show)
+                        {
+                            Show show = new();
+                            show.HomeDirectory = showinfo.FullName;
+                            SaveLoad<Show>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name + ".shw"));
+                        }
+                        else
+                        {
+                            MovieDirectory show = new();
+                            show.HomeDirectory = showinfo.FullName;
+                            SaveLoad<MovieDirectory>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name + ".shw"));
+                        }
+                        UpdateShowList();
+                    }
+                    else
+                    {
+                        MessageBox.Show("The following channel doesn't support this directory's structure");
+                    }
                 }
             }
         }

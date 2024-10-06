@@ -17,6 +17,16 @@ namespace PVLib
         public UPNP upnp = UPNP.Default;
         public string Archive_Output;
         public string redirectsite;
+        public string VideoExtensions = string.Empty;
+        public string[] GetVideoExtensions
+        {
+            get
+            {
+                if (VideoExtensions == string.Empty) 
+                    return null;
+                return VideoExtensions.Split(',');
+            }
+        }
         public SecurityApplication securityLevel = SecurityApplication.Never;
         public Settings() { }
         public static Settings CurrentSettings { get; set; }
@@ -30,9 +40,10 @@ namespace PVLib
                     upnp = UPNP.Default,
                     useUPNP = true,
                     Archive_Output = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), "Playlists"),
-                    redirectsite = "http://cartoonnetwork.com",
+                    redirectsite = "https://cartoonnetwork.com",
                     securityLevel = SecurityApplication.Never,
                     playlistFormat = PlaylistFormat.m3u,
+                    VideoExtensions= string.Empty,
                     IP = GetLocalIPAddress()
                 };
                 string GetLocalIPAddress()
