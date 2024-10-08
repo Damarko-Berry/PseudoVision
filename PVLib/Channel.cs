@@ -7,6 +7,7 @@ namespace PVLib
 {
     public abstract class Channel
     {
+        public const double FULLDAY = 23.9;
         public string ChannelName => new DirectoryInfo(HomeDirectory).Name;
         public string HomeDirectory;
         public string ShowDirectory => Path.Combine(HomeDirectory,"Shows");
@@ -62,6 +63,21 @@ namespace PVLib
             };
             sr.Close();
             return channel;
+        }
+        public bool ScheduleExists(DateTime today)
+        {
+            var M = today.Date.Month;
+            var D = today.Date.Day;
+            var Y = today.Date.Year;
+            return File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+        }
+        public void SaveSchedule<T>(T schedule, DateTime today)
+        {
+            var M = today.Date.Month;
+            var D = today.Date.Day;
+            var Y = today.Date.Year;
+            Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
+            SaveLoad<T>.Save(schedule, Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
         }
     }
 }

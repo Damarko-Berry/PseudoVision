@@ -21,7 +21,7 @@ namespace PVLib
                 {
                     VF.AddRange(directoryInfo.GetFiles("*" + ValidExtensions[i], SearchOption.AllDirectories));
                 }
-                return VF.ToArray();
+                return [.. VF];
             }
         }
 

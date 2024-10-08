@@ -8,9 +8,9 @@ namespace PVLib
 {
     public class MovieChannel : Channel
     {
-        public Channel_Type type = Channel_Type.Movies;
-        public override Channel_Type channel_Type => type;
-        public MovieDirectory[] Shows
+        public Channel_Type Channel_Type = Channel_Type.Movies;
+        public override Channel_Type channel_Type => Channel_Type;
+        public MovieDirectory movieDirectory
         {
             get
             {
@@ -19,12 +19,29 @@ namespace PVLib
                 for (int i = 0; i < s.Length; i++)
                     if (s[i].dirtype == DirectoryType.Movie) 
                         ret.Add((MovieDirectory)s[i]);
-                return ret.ToArray();
+                return ret[new Random().Next(ret.Count)];
             }
         }
         public override void CreateNewSchedule(DateTime today)
         {
-            throw new NotImplementedException();
+            var M = today.Date.Month;
+            var D = today.Date.Day;
+            var Y = today.Date.Year;
+            if (CTD.Length <= 0) return;
+            if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
+            {
+                return;
+            }
+            if (movieDirectory == null) return;
+            Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
+            Schedule schedule = new Schedule();
+            while(schedule.ScheduleDuration.TotalHours< FULLDAY)
+            {
+                TimeSlot timeSlot = new(movieDirectory.NextEpisode(), schedule.slots);
+                schedule.slots.Add(timeSlot);
+            }
+            SaveSchedule(schedule,today);
+            Console.WriteLine($"Scheduling process for {ChannelName} ended {DateTime.Now}");
         }
 
         public override bool isSupported(DirectoryType type)=> type == DirectoryType.Movie;

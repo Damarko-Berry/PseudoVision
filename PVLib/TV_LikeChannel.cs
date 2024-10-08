@@ -8,7 +8,7 @@ namespace PVLib
 {
     public class TV_LikeChannel : Channel
     {
-        const double FULLDAY = 23.9;
+        
         const double AVERAGEEPISODETIME = .35;
         public Rotation rotation = new Rotation();
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
@@ -126,12 +126,10 @@ namespace PVLib
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
+            if (ScheduleExists(today)) return;
             if (CTD.Length <= 0) return;
-            if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
-            {
-                return;
-            }
-            Console.WriteLine($"Scheduling process started: {DateTime.Now}");
+            if (Shows.Length <= 0) return;
+            DateTime Start= DateTime.Now;
             Schedule schedule = new Schedule();
             if (Reruntime.TotalHours < RerunTimeThreshhold)
             {
@@ -243,11 +241,11 @@ namespace PVLib
                 }
                 GetRerun();
             }
-            
-            Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
-            SaveLoad<Schedule>.Save(schedule, Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+
+            SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
-            Console.WriteLine($"Scheduling process ended: {DateTime.Now}");
+            DateTime endtime = DateTime.Now;
+            Console.WriteLine($"{ChannelName} took {(endtime-Start).TotalSeconds} seconds");
         }
 
         void OnMissingRerun(string epname)

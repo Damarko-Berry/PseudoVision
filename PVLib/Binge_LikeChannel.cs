@@ -27,20 +27,16 @@ namespace PVLib
         public override Channel_Type channel_Type => Channel_Type;
         public override void CreateNewSchedule(DateTime today)
         {
-            var M = today.Date.Month;
-            var D = today.Date.Day;
-            var Y = today.Date.Year;
-            if (File.Exists(Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}")))
+            if (ScheduleExists(today))
             {
                 Console.WriteLine("Shedeule already exist for today");
                 return;
             }
             CheckForFin();
-            if (CTD.Length <= 0) return;
+            if (Shows.Length <= 0) return;
             Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
             ShowList showList = new(new(ShowDirectory));
-            Directory.CreateDirectory(FileSystem.ChanSchedules(ChannelName));
-            SaveLoad<ShowList>.Save(showList, Path.Combine(FileSystem.ChanSchedules(ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}"));
+            SaveSchedule(showList, today);
             Console.WriteLine($"Scheduling process for {ChannelName} ended: {DateTime.Now}");
         }
         void CheckForFin()

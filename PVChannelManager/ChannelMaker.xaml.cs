@@ -84,7 +84,11 @@ namespace PVChannelManager
                     Tchannel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
                     SaveLoad<TV_LikeChannel>.Save(Tchannel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan")); 
                     break;
-
+                case Channel_Type.Movies:
+                    MovieChannel Mchannel = new();
+                    Mchannel.HomeDirectory = Path.Combine(MainWindow.Channels, ChanName);
+                    SaveLoad<MovieChannel>.Save(Mchannel, Path.Combine(MainWindow.Channels, ChanName, "Channel.chan"));
+                    break;
             }
             MainPage.Instance.Load();
             Close();
