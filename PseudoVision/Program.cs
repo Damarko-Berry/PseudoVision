@@ -50,7 +50,7 @@ namespace PseudoVision
             }
         }
 
-        public static void CreateScheds()
+        static void CreateScheds()
         {
             DirectoryInfo Channels = new(FileSystem.Channels);
             IsGening = true;
