@@ -35,6 +35,9 @@ namespace PVChannelManager
             if (t > 12) t -= 12;
             else if (t == 0) t = 12;
             Time.Text = $"{t}{a}";
+            MovieModeBox.ItemsSource = Enum.GetValues(typeof(MovieMode));
+            MovieModeBox.SelectedIndex = (int)channel.movieMode;
+            TimeFillCheck.IsChecked = channel.FillTime;
             Load();
             init = false;
         }
@@ -60,8 +63,21 @@ namespace PVChannelManager
                 butt.Content = new FileInfo(lit[i].HomeDirectory).Name;
                 this.Showlist.Children.Add( butt );
             }
+            ShortsList.Children.Clear();
+            var shrtsD = new DirectoryInfo(subject.ShortsDirectory).GetFiles();
+            for (int i = 0;i < shrtsD.Length; i++)
+            {
+                var butt = new OmniButton<string>(shrtsD[i].Name, DeletShrtD);
+                butt.GetClick += Load;
+                butt.Content = shrtsD[i].Name;
+                this.ShortsList.Children.Add(butt);
+            }
         }
-
+        void DeletShrtD(string shorts)
+        {
+            File.Delete(Path.Combine(subject.ShortsDirectory, shorts));
+            Load();
+        }
         private void AddShow_Click(object sender, RoutedEventArgs e)
         {
             OpenFolderDialog folderDialog = new OpenFolderDialog();
@@ -72,13 +88,25 @@ namespace PVChannelManager
                 for (int i = 0; i < folderDialog.FolderNames.Length; i++)
                 {
                     DirectoryInfo showinfo = new(folderDialog.FolderNames[i]);
-                    Show show = new();
-                    show.HomeDirectory = showinfo.FullName;
-                    SaveLoad<Show>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name + ".shw"));
-                    Load();
+                    var Dtype = ContentDirectory.DDetector(showinfo);
+                    if (subject.isSupported(Dtype))
+                    {
+                        if (Dtype == DirectoryType.Show)
+                        {
+                            Show show = new();
+                            show.HomeDirectory = showinfo.FullName;
+                            SaveLoad<Show>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name + ".shw"));
+                        }
+                        else
+                        {
+                            MovieDirectory show = new();
+                            show.HomeDirectory = showinfo.FullName;
+                            SaveLoad<MovieDirectory>.Save(show, Path.Combine(subject.ShowDirectory, showinfo.Name + ".shw"));
+                        }
+                        Load();
+                    }
                 }
             }
-            MainPage.Instance.Load();
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -86,6 +114,37 @@ namespace PVChannelManager
             SaveLoad<TV_LikeChannel>.Save(subject, Path.Combine(subject.HomeDirectory, "Channel.chan"));
             MainPage.Instance.Load();
             MainWindow.Instance.Main.Content = MainPage.Instance;
+        }
+
+        private void TimeFillCheck_Checked(object sender, RoutedEventArgs e)
+        {
+            subject.FillTime = true;
+        }
+
+        private void TimeFillCheck_Unchecked(object sender, RoutedEventArgs e)
+        {
+            subject.FillTime = false;
+        }
+
+        private void MovieMode_Selected(object sender, RoutedEventArgs e)
+        {
+            subject.movieMode = (MovieMode)MovieModeBox.SelectedIndex;
+        }
+
+        private void AddShorts_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFolderDialog folderDialog = new OpenFolderDialog();
+            folderDialog.DefaultDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos);
+            folderDialog.Multiselect = false;
+            if ((bool)folderDialog.ShowDialog())
+            {
+                DirectoryInfo showinfo = new(folderDialog.FolderName);
+                MovieDirectory show = new();
+                show.HomeDirectory = showinfo.FullName;
+                SaveLoad<MovieDirectory>.Save(show, Path.Combine(subject.ShortsDirectory, showinfo.Name + ".shw"));
+                Load();
+            }
+            MainPage.Instance.Load();
         }
     }
 }

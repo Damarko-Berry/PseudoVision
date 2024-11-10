@@ -8,6 +8,7 @@ namespace PVLib
 {
     public class Season
     {
+        public string Name;
         public Time Start;
         public Time End;
         public double SpecialThreshold;
@@ -19,7 +20,7 @@ namespace PVLib
             return ((time >= st) && (time < et));
         }
         public List<string> Specials;
-        public string Something => (Specials.Count>0)? Specials[new Random((int)DateTime.Now.Ticks).Next(Specials.Count)]: throw new Exception("No Specials Availible"); 
+        public string Something => (Specials.Count>0)? Specials[new Random((int)DateTime.Now.Ticks).Next(Specials.Count)]: string.Empty; 
         public Season() { }
         
     }

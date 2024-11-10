@@ -165,13 +165,13 @@ namespace PVLib
                 List<FileInfo> mPaths = new();
                 for (int i = 0; i < ValidExtensions.Length; i++)
                 {
-                    mPaths.AddRange(shortsdirectory.GetFiles(ValidExtensions[i]));
+                    mPaths.AddRange(shortsdirectory.GetFiles("*"+ValidExtensions[i], SearchOption.AllDirectories));
                 }
                 for (int i = 0; i < mPaths.Count; i++)
                 {
                     reruns.Add(new TimeSlot(mPaths[i].FullName));
                 }
-                return reruns.ToArray();
+                return [.. reruns];
             }
         }
         public void Reset()

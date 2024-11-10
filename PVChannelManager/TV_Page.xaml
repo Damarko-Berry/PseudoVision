@@ -16,8 +16,13 @@
                 <TextBlock Name="Time" Text="5" HorizontalAlignment="Center"/>
                 <Slider x:Name="TimeSetter" Maximum="23" Minimum="0" Value="12" ValueChanged="TimeSetter_ValueChanged"/>
             </local:FillPanal>
-            <StackPanel/>
-            <StackPanel/>
+            <local:FillPanal Orientation="Vertical">
+                <CheckBox Name="TimeFillCheck" Content="Fill Time" Checked="TimeFillCheck_Checked" Unchecked="TimeFillCheck_Unchecked"/>
+            </local:FillPanal>
+            <local:FillPanal>
+                <TextBlock Text="Movie Mode" TextAlignment="Center"/>
+                <ComboBox Name="MovieModeBox" SelectionChanged="MovieMode_Selected" />
+            </local:FillPanal>
         </local:FillPanal>
         <Rectangle Height="20"/>
         <WrapPanel Name="Showlist"/>
@@ -25,5 +30,11 @@
         <Button x:Name="AddShow" Content="Add Show(s)" HorizontalAlignment="Left" Click="AddShow_Click"/>
         <Rectangle Height="20"/>
         <Button x:Name="Save" Content="save" HorizontalAlignment="Left" Click="Save_Click"/>
+        <Rectangle Height="20"/>
+        <Button Name="AddShorts" Content="Add Shorts directories" HorizontalAlignment="Left" Click="AddShorts_Click"/>
+        <WrapPanel Name="ShortsList"/>
+        <Rectangle Height="20"/>
+        <Button Name="AddSeasons" Content="Add Seasons" HorizontalAlignment="Left" />
+        <WrapPanel Name="SeasonsList"/>
     </StackPanel>
 </Page>

@@ -14,7 +14,7 @@ namespace PVLib
         {
             get
             {
-                List<string> list = new List<string>([".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" ]);
+                List<string> list = new List<string>([".mp4", ".MP4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" ]);
                 if (Settings.CurrentSettings.GetVideoExtensions != null)
                 {
                     var SE = Settings.CurrentSettings.GetVideoExtensions;
@@ -62,11 +62,25 @@ namespace PVLib
             xmlDoc.LoadXml(doc);
             XmlNodeList c = xmlDoc.GetElementsByTagName("HomeDirectory");
             var CType = DDetector(new(c[0].InnerText));
-            XmlSerializer serializer = (CType == DirectoryType.Movie) ? new XmlSerializer(typeof(MovieDirectory)) : new XmlSerializer(typeof(Show));
-            StreamReader sr = new StreamReader(path);
-            ContentDirectory channel = (CType == DirectoryType.Movie) ? (MovieDirectory)serializer.Deserialize(sr) : (Show)serializer.Deserialize(sr);
-            sr.Close();
-            return channel;
+            int atmpts = 0;
+        Ser:
+            try 
+            {
+                XmlSerializer serializer = (CType == DirectoryType.Movie) ? new XmlSerializer(typeof(MovieDirectory)) : new XmlSerializer(typeof(Show));
+                StreamReader sr = new StreamReader(path);
+                ContentDirectory channel = (CType == DirectoryType.Movie) ? (MovieDirectory)serializer.Deserialize(sr) : (Show)serializer.Deserialize(sr);
+                sr.Close();
+                return channel;
+            }
+            catch
+            {
+                CType= (CType == DirectoryType.Movie) ? DirectoryType.Movie : DirectoryType.Movie;
+                atmpts++;
+                if (atmpts <=3)
+                goto Ser;
+            }
+           
+            throw new Exception("OOOOOOOOOPS");
         }
     }
 }

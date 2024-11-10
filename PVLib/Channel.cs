@@ -55,6 +55,7 @@ namespace PVLib
                 _=> new XmlSerializer(typeof(MovieChannel))
             };
             StreamReader sr = new StreamReader(path);
+            
             Channel channel = CType switch
             {
                 Channel_Type.TV_Like => (TV_LikeChannel)serializer.Deserialize(sr),

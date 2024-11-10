@@ -13,10 +13,12 @@ namespace PVLib
         public Rotation rotation = new Rotation();
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
         public MovieMode movieMode;
+        public bool FillTime;
         public override Channel_Type channel_Type => Channel_Type;
         string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
         public string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
-        Season[] seasons
+        public string ShortsDirectory => Path.Combine(HomeDirectory, "Shorts");
+        public Season[] seasons
         {
             get
             {
@@ -103,6 +105,20 @@ namespace PVLib
                 return null;
             }
         }
+        MovieDirectory Shorts
+        {
+            get
+            {
+                DirectoryInfo info = new(ShortsDirectory);
+                var allS = info.GetFiles();
+                MovieDirectory[] S = new MovieDirectory[allS.Length];
+                for (int i = 0; i < S.Length; i++)
+                {
+                    S[i] = SaveLoad<MovieDirectory>.Load(allS[i].FullName);
+                }
+                return S.Length > 0 ? S[new Random().Next(S.Length)] : null;
+            }
+        }
         public Time PrimeTime = new Time()
         {
             Hour = 8
@@ -166,6 +182,31 @@ namespace PVLib
                 else
                 {
                     rerunAlgs[new Random().Next(rerunAlgs.Length)].Invoke();
+                }
+                if (FillTime)
+                {
+                    var endT = schedule.slots[^1].EndTime;
+
+                    var next30minmark = new DateTime();
+                    try
+                    {
+                        next30minmark= (endT.Minute < 30) ? new DateTime(Y, M, D, endT.Hour, 30, 0) : new DateTime(Y, M, D, endT.Hour + 1, 0, 0);
+                    }
+                    catch
+                    {
+                        next30minmark = endT.Date;
+                        next30minmark = next30minmark.AddDays(1);
+                    }
+
+                    TimeSpan duration = next30minmark - endT;
+                    if (duration.Minutes < 21)
+                    {
+                        var siller = getFill(duration);
+                        for (int i = 0; i < siller.Length; i++)
+                        {
+                            schedule.slots.Add(new(siller[i],schedule.slots));
+                        }
+                    }
                 }
             }
             void GetRerun()
@@ -241,13 +282,45 @@ namespace PVLib
                 }
                 GetRerun();
             }
-
+            Rerun[] getFill(TimeSpan time)
+            {
+                var s = Shows;
+                List<Rerun> allR = new List<Rerun>();
+                for (int i = 0; i < s.Length; i++)
+                {
+                    allR.AddRange(s[i].shorts);
+                }
+                if(allR.Count < 1 & Shorts == null) return new Rerun[0];
+                List<Rerun> list = new List<Rerun>();
+                while (TotalTime()<time)
+                {
+                    Random random = new Random();
+                    if (random.Next(10) > 5 & allR.Count > 0)
+                    {
+                        list.Add(allR[random.Next(allR.Count)]);
+                    }
+                    else if(Shorts!= null)
+                    {
+                        list.Add(new TimeSlot(Shorts.NextEpisode()));
+                    }
+                }
+                return [.. list];
+                TimeSpan TotalTime()
+                {
+                    TimeSpan span = TimeSpan.Zero;
+                    for (int i = 0; i < list.Count; i++)
+                    {
+                        span+=list[i].Duration;
+                    }
+                    return span;
+                }
+            }
             SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
             Console.WriteLine($"{ChannelName} took {(endtime-Start).TotalSeconds} seconds");
         }
-
+        
         void OnMissingRerun(string epname)
         {
             var fi = new FileInfo(epname);
