@@ -1,0 +1,26 @@
+﻿<Page x:Class="PVChannelManager.SeasonEditor"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:PVChannelManager"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      Title="SeasonEditor">
+
+    <local:FillPanal Orientation="Horizontal">
+        <Rectangle/>
+        <StackPanel>
+            <TextBox x:Name="nbx"/>
+            <TextBlock Text="Start"/>
+            <DatePicker Name="strt"/>
+            <TextBlock Text="End"/>
+            <DatePicker Name="end"/>
+            <TextBlock Text="Specials"/>
+            <Button x:Name="AddSPecial" Content="Add" Click="AddSPecial_Click"/>
+            <WrapPanel Name="Specials" MaxHeight="30"/>
+            <Rectangle Height="20"/>
+        </StackPanel>
+        <Rectangle/>
+    </local:FillPanal>
+</Page>

@@ -34,7 +34,7 @@
         <Button Name="AddShorts" Content="Add Shorts directories" HorizontalAlignment="Left" Click="AddShorts_Click"/>
         <WrapPanel Name="ShortsList"/>
         <Rectangle Height="20"/>
-        <Button Name="AddSeasons" Content="Add Seasons" HorizontalAlignment="Left" />
+        <Button Name="AddSeasons" Content="Add Seasons" HorizontalAlignment="Left" Click="AddSeasons_Click" />
         <WrapPanel Name="SeasonsList"/>
     </StackPanel>
 </Page>

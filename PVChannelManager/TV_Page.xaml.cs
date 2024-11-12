@@ -72,6 +72,15 @@ namespace PVChannelManager
                 butt.Content = shrtsD[i].Name;
                 this.ShortsList.Children.Add(butt);
             }
+            SeasonsList.Children.Clear();
+            var Seas=subject.Seasons;
+            for (int i = 0; i < Seas.Length; i++)
+            {
+                var but = new OmniButton<Season>(Seas[i], EditSeason);
+                but.Content = Seas[i].Name;
+                SeasonsList.Children.Add(but);
+
+            }
         }
         void DeletShrtD(string shorts)
         {
@@ -108,7 +117,11 @@ namespace PVChannelManager
                 }
             }
         }
-
+        void EditSeason(Season season)
+        {
+            SeasonEditor seasonEditor = new(season ,subject.SeasonsDirectory);
+            MainPage.Instance.Content = seasonEditor;
+        }
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             SaveLoad<TV_LikeChannel>.Save(subject, Path.Combine(subject.HomeDirectory, "Channel.chan"));
@@ -145,6 +158,12 @@ namespace PVChannelManager
                 Load();
             }
             MainPage.Instance.Load();
+        }
+
+        private void AddSeasons_Click(object sender, RoutedEventArgs e)
+        {
+            SeasonEditor seasonEditor = new SeasonEditor(subject.SeasonsDirectory);
+            MainPage.Instance.Content = seasonEditor;
         }
     }
 }

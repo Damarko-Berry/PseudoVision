@@ -15,10 +15,10 @@ namespace PVLib
         public MovieMode movieMode;
         public bool FillTime;
         public override Channel_Type channel_Type => Channel_Type;
-        string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
+        public string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
         public string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
         public string ShortsDirectory => Path.Combine(HomeDirectory, "Shorts");
-        public Season[] seasons
+        public Season[] Seasons
         {
             get
             {
@@ -35,7 +35,7 @@ namespace PVLib
         }
         Season CurrentSeason()
         {
-            var seas = new List<Season>(seasons);
+            var seas = new List<Season>(Seasons);
             for (int i = 0; i < seas.Count; i++)
             {
                 if (!seas[i].Durring(DateTime.Now))
@@ -44,7 +44,10 @@ namespace PVLib
                     i--;
                 }
             }
-            if (seas.Count == 0) return null;
+            if (seas.Count == 0)
+            {
+                return null;
+            }
             return seas[new Random().Next(0, seas.Count)];
         }
         TimeSpan Reruntime
