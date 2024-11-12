@@ -29,14 +29,6 @@ namespace PVLib
                 {
                     return new(Path.Combine(HomeDirectory, "movies"));
                 }
-                if(Directory.Exists(Path.Combine(HomeDirectory, "Specials")))
-                {
-                    return new(Path.Combine(HomeDirectory, "Specials"));
-                }
-                if(Directory.Exists(Path.Combine(HomeDirectory, "specials")))
-                {
-                    return new(Path.Combine(HomeDirectory, "specials"));
-                }
                 return null;
             }
         }

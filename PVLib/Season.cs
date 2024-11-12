@@ -19,7 +19,7 @@ namespace PVLib
             DateTime et = End;
             return ((time >= st) && (time < et));
         }
-        public List<string> Specials;
+        public List<string> Specials = new();
         public string Something => (Specials.Count>0)? Specials[new Random((int)DateTime.Now.Ticks).Next(Specials.Count)]: string.Empty; 
         public Season() { }
         

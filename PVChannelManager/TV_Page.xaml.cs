@@ -119,8 +119,8 @@ namespace PVChannelManager
         }
         void EditSeason(Season season)
         {
-            SeasonEditor seasonEditor = new(season ,subject.SeasonsDirectory);
-            MainPage.Instance.Content = seasonEditor;
+            SeasonEditor seasonEditor = new(season ,subject.SeasonsDirectory, this);
+            MainWindow.Instance.Main.Content = seasonEditor;
         }
         private void Save_Click(object sender, RoutedEventArgs e)
         {
@@ -162,8 +162,8 @@ namespace PVChannelManager
 
         private void AddSeasons_Click(object sender, RoutedEventArgs e)
         {
-            SeasonEditor seasonEditor = new SeasonEditor(subject.SeasonsDirectory);
-            MainPage.Instance.Content = seasonEditor;
+            SeasonEditor seasonEditor = new SeasonEditor(subject.SeasonsDirectory, this);
+            MainWindow.Instance.Main.Content = seasonEditor;
         }
     }
 }
