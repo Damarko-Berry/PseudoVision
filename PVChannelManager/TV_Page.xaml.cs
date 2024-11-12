@@ -52,7 +52,7 @@ namespace PVChannelManager
             else if (t == 0) t = 12;
             Time.Text = $"{t}{a}";
         }
-        void Load(string A = "")
+        public void Load(string A = "")
         {
             this.Showlist.Children.Clear();
             var lit = subject.CTD;

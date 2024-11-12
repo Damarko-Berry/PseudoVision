@@ -77,6 +77,7 @@ namespace PVChannelManager
             subject.Name = nbx.Text;
             if(subject.Name.Trim() != string.Empty)
             SaveLoad<Season>.Save(subject, Path.Combine(Directory, subject.Name));
+            ((TV_Page)Previous).Load();
             MainWindow.Instance.Main.Content = Previous;
         }
     }
