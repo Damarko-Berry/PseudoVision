@@ -18,7 +18,7 @@
             <DatePicker Name="end"/>
             <TextBlock Text="Specials"/>
             <Button x:Name="AddSPecial" Content="Add" Click="AddSPecial_Click"/>
-            <WrapPanel Name="Specials" MaxHeight="30"/>
+            <WrapPanel Name="Specials" MaxHeight="30" />
             <Rectangle Height="20"/>
             <Button x:Name="savese" Content="Save" VerticalAlignment="Bottom" Click="savese_Click"/>
         </StackPanel>

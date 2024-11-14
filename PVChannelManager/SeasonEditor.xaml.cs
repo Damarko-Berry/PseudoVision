@@ -65,10 +65,16 @@ namespace PVChannelManager
             Specials.Children.Clear();
             for (int i = 0; i < subject.Specials.Count; i++)
             {
-                var butt = new OmniButton<int>(i, subject.Specials.RemoveAt);
+                var butt = new OmniButton<int>(i, Remove);
                 butt.Content = new FileInfo(subject.Specials[i]).Name;
+                butt.MaxWidth = 100;
                 Specials.Children.Add( butt );
             }
+        }
+        void Remove(int index)
+        {
+            subject.Specials.RemoveAt(index);
+            load();
         }
         private void savese_Click(object sender, RoutedEventArgs e)
         {

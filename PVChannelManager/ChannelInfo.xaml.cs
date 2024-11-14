@@ -130,7 +130,10 @@ namespace PVChannelManager
             {
                 string ChanName = subject.ChannelName;
                 Directory.Delete(Path.Combine(MainWindow.Channels, ChanName), true);
-                Directory.Delete(Path.Combine(MainWindow.Schedules, ChanName), true);
+                if (Directory.Exists(Path.Combine(MainWindow.Schedules, ChanName)))
+                {
+                    Directory.Delete(Path.Combine(MainWindow.Schedules, ChanName), true);
+                }
                 MainPage.Instance.Load();
             }
         }
