@@ -33,9 +33,9 @@ namespace PVLib
                 return seasons.ToArray();
             }
         }
-        Season CurrentSeason()
+        Season CurrentSeason(Season[] seasons)
         {
-            var seas = new List<Season>(Seasons);
+            var seas = new List<Season>(seasons);
             for (int i = 0; i < seas.Count; i++)
             {
                 if (!seas[i].Durring(DateTime.Now))
@@ -50,18 +50,14 @@ namespace PVLib
             }
             return seas[new Random().Next(0, seas.Count)];
         }
-        TimeSpan Reruntime
+        TimeSpan Reruntime(Rerun[]Rs)
         {
-            get
-            {
-                var Rs = reruns;
                 TimeSpan time = new TimeSpan();
-                for (int i = 0; i < reruns.Length; i++)
+                for (int i = 0; i < Rs.Length; i++)
                 {
                     time += Rs[i].Duration;
                 }
                 return time;
-            }
         }
         double RerunTimeThreshhold
         {
@@ -149,21 +145,33 @@ namespace PVLib
             if (CTD.Length <= 0) return;
             if (Shows.Length <= 0) return;
             DateTime Start= DateTime.Now;
-            Schedule schedule = new Schedule();
-            if (Reruntime.TotalHours < RerunTimeThreshhold)
+            Schedule schedule = new();
+            var seas = Seasons;
+            var StaticRRs = reruns;
+            List<Rerun> allR = new List<Rerun>();
+            if (FillTime)
+            {
+                var s = Shows;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    allR.AddRange(s[i].shorts);
+                }
+            }
+            if (Reruntime(StaticRRs).TotalHours < RerunTimeThreshhold)
             {
                 rotation.CreateNewRotation(Shows);
             }
-            var RR = new List<Rerun>(reruns);
+            var RR = new List<Rerun>(StaticRRs);
             Action[] rerunAlgs = [GetRerun, getSpecial, PlayMovie];
             while (schedule.ScheduleDuration.TotalHours < FULLDAY)
             {
-                if (Reruntime.TotalHours < RerunTimeThreshhold)
+                if (Reruntime(StaticRRs).TotalHours < RerunTimeThreshhold)
                 {
                     var ep = rotation.GetNextEp(this);
                     if (ep != string.Empty)
                     {
                         Newep(ep);
+                        StaticRRs = reruns;
                     }
                     else
                     {
@@ -212,12 +220,20 @@ namespace PVLib
                     }
                 }
             }
+            void Newep(string e)
+            {
+                schedule.slots.Add(new(e, schedule.slots));
+
+                Directory.CreateDirectory(RerunDirectory);
+                FileInfo file = new FileInfo(schedule.slots[^1].Media);
+                SaveLoad<Rerun>.Save(new(schedule.slots[^1]), Path.Combine(RerunDirectory, $"{file.Name}.rrn"));
+            }
             void GetRerun()
             {
                 Random rnd = new();
                 if (RR.Count == 0)
                 {
-                    RR.AddRange(reruns);
+                    RR.AddRange(StaticRRs);
                 }
                 ChoooseR:
                 var i = rnd.Next(RR.Count);
@@ -227,7 +243,7 @@ namespace PVLib
                     RR.Remove(RR[i]);
                     goto ChoooseR;
                 }
-                Rerun M = new Rerun();
+                Rerun M = new();
                 if(movieMode == MovieMode.WithReruns)
                 {
                     if (MovieDirectory != null)
@@ -243,17 +259,9 @@ namespace PVLib
                 schedule.slots.Add(new(RR[i], schedule.slots));
                 RR.RemoveAt(i);
             }
-            void Newep(string e)
-            {
-                schedule.slots.Add(new(e, schedule.slots));
-
-                Directory.CreateDirectory(RerunDirectory);
-                FileInfo file = new FileInfo(schedule.slots[^1].Media);
-                SaveLoad<Rerun>.Save(new(schedule.slots[^1]), Path.Combine(RerunDirectory, $"{file.Name}.rrn"));
-            }
             void getSpecial()
             {
-                var s = CurrentSeason();
+                var s = CurrentSeason(seas);
                 if (s == null)
                 {
                     GetRerun();
@@ -287,12 +295,6 @@ namespace PVLib
             }
             Rerun[] getFill(TimeSpan time)
             {
-                var s = Shows;
-                List<Rerun> allR = new List<Rerun>();
-                for (int i = 0; i < s.Length; i++)
-                {
-                    allR.AddRange(s[i].shorts);
-                }
                 if(allR.Count < 1 & Shorts == null) return new Rerun[0];
                 List<Rerun> list = new List<Rerun>();
                 while (TotalTime()<time)
@@ -321,7 +323,7 @@ namespace PVLib
             SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
-            Console.WriteLine($"{ChannelName} took {(endtime-Start).TotalSeconds} seconds");
+            Console.WriteLine($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");
         }
         
         void OnMissingRerun(string epname)
