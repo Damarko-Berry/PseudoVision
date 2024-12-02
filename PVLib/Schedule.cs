@@ -11,7 +11,6 @@ namespace PVLib
         public bool isLive = false;
         List<segment> Segment = new();
         int CurrentSegment;
-        Dictionary<string, int> ClientProgress= new();
         public string Name { get; set; }
         string liveOutputDirectory => Path.Combine("output", Name, "segments");
         public string Manifest => File.ReadAllText(Path.Combine("output", Name, "index.m3u8"));
@@ -51,20 +50,14 @@ namespace PVLib
         }
         public async Task SendMedia(HttpListenerContext client)
         {
-            ClientProgress.TryAdd(client.Request.UserAgent, CurrentSegment);
-            FileStream fs = new(Segment[ClientProgress[client.Request.UserAgent]].path, FileMode.Open, FileAccess.Read);
+            var seg = client.Request.Url.AbsolutePath.Split('/');
+            FileStream fs = new(Path.Combine(liveOutputDirectory,seg[^1].Replace("/",string.Empty)), FileMode.Open, FileAccess.Read);
             
             try
             {
                 client.Response.ContentType = $"video/{info.Extension}";
                 client.Response.ContentLength64 = fs.Length;
                 await fs.CopyToAsync(client.Response.OutputStream);
-                int CI = ClientProgress[client.Request.UserAgent]+1;
-                if(CI > Segment.Count)
-                {
-                    CI = 0;
-                }
-                ClientProgress[client.Request.UserAgent] = CI + 1;
             }
             catch (Exception ex)
             {
@@ -77,7 +70,7 @@ namespace PVLib
 
         public async void StartCycle()
         {
-            isLive = false;
+            isLive = true;
             var ct = DateTime.Now;
             double timeleft = 0;
             for (CurrentSlot = 0; CurrentSlot < slots.Count; CurrentSlot++)
@@ -136,12 +129,11 @@ namespace PVLib
         async Task SegCyc(TimeSlot slot, TimeSpan sinceOGStart = new())
         {
             ProcessVideo(slot.Media);
-            
-            await Task.Delay(10*1000);
+            Console.WriteLine(slot.Media);
             int SS = 0;
             if (sinceOGStart.TotalSeconds > 20)
             {
-                while (Directory.GetFiles(liveOutputDirectory).Length <= 0)
+                while (Directory.GetFiles(liveOutputDirectory).Length <= 1)
                 {
                     await Task.Delay(1000);
                 }
@@ -155,10 +147,23 @@ namespace PVLib
                     }
                 }
             }
-            Console.WriteLine("Ready to stream");
-            for ( CurrentSegment= SS;  CurrentSegment< Directory.GetFiles(liveOutputDirectory).Length; CurrentSegment++)
+            var m3u = File.ReadAllLines(Path.Combine("output", Name, "index.m3u8"));
+            Segment.Clear();
+            for (int i = 0; i < m3u.Length; i++)
             {
-                var m3u = File.ReadAllLines(Path.Combine("output", Name, "index.m3u8"));
+                if (m3u[i].Contains("#EXTINF:"))
+                {
+                    var timeSegment = m3u[i].Split(':')[1];
+                    var second = int.Parse(timeSegment.Split('.')[0]);
+                    var millisecons = int.Parse(timeSegment.Split('.')[1].Replace(",", string.Empty).Replace(".", string.Empty));
+                    i++;
+                    Segment.Add(new(Path.Combine(liveOutputDirectory, m3u[i]), new TimeSpan(0, 0, 0, second, 0, millisecons)));
+                }
+            }
+            Console.WriteLine("Ready to stream");
+            for ( CurrentSegment= SS;  CurrentSegment< Segment.Count; CurrentSegment++)
+            {
+                m3u = File.ReadAllLines(Path.Combine("output", Name, "index.m3u8"));
                 Segment.Clear();
                 for (int i = 0; i < m3u.Length; i++)
                 {
@@ -171,7 +176,9 @@ namespace PVLib
                         Segment.Add(new(Path.Combine(liveOutputDirectory,m3u[i]),new TimeSpan(0, 0, 0,  second, 0, millisecons)));
                     }
                 }
-                int time = (int)Segment[CurrentSegment].duration.TotalMilliseconds-100;
+                int SL = Segment.Count-CurrentSegment;
+                Console.WriteLine($"Segments left ={SL}");
+                int time = (int)Segment[CurrentSegment].duration.TotalMilliseconds;
                 await Task.Delay(time);
             }
         }
@@ -181,7 +188,7 @@ namespace PVLib
             string playlist = Path.Combine("output",Name);
             Directory.CreateDirectory(liveOutputDirectory);
             filePath = "\""+filePath+"\"";
-            string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/[{Name}]seg%d.ts {playlist}/index.m3u8";
+            string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 4 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/[{Name}]seg%d.ts {playlist}/index.m3u8";
             await RunFFmpeg(ffmpegArgs); 
         }
         async Task RunFFmpeg(string arguments) 
