@@ -123,12 +123,35 @@ namespace PseudoVision
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                 response.OutputStream.Close();
             }
+            else if (request.Url.AbsolutePath.Contains("["))
+            {
+                string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
+                channame = request.Url.AbsolutePath.Split('[')[1].Split(']')[0].Replace("]",string.Empty).Trim();
+                Schedule Sched = (Schedule)Schedules[channame.ToLower()];
+                await Sched.SendMedia(context);
+            }
             else if (request.Url.AbsolutePath.Contains("/live/"))
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 Console.WriteLine($"Connecting {userip} to {channame}");
-                await Schedules[channame.ToLower()].SendMedia(response);
+                var Sched = Schedules[channame.ToLower()];
+                if(Sched.ScheduleType == Channel_Type.TV_Like)
+                {
+                    var TS = (Schedule)Sched;
+                    if (TS.isLive)
+                    {
+                        var des = TS.Manifest;
+                        byte[] buffer = Encoding.UTF8.GetBytes(des);
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentType = "application/vnd.apple.mpegurl";
+                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                        response.OutputStream.Close();
+                        return;
+                    }
+                }
+                await Sched.SendMedia(response);
             }
+            
             else if (request.Url.AbsolutePath.Contains("/archive/"))
             {
                 string[] URL = request.Url.AbsolutePath.Replace("/archive/", string.Empty).Split("/");
