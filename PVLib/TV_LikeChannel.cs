@@ -8,7 +8,7 @@ namespace PVLib
 {
     public class TV_LikeChannel : Channel
     {
-        
+        public bool Live;
         const double AVERAGEEPISODETIME = .35;
         public Rotation rotation = new Rotation();
         public Channel_Type Channel_Type = Channel_Type.TV_Like;

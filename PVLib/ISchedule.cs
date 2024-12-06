@@ -10,7 +10,7 @@ namespace PVLib
     public interface ISchedule
     {
         string Name { get; set; }
-        public async Task SendMedia(HttpListenerResponse client) { }
+        public async Task SendMedia(HttpListenerContext client) { }
         public Channel_Type ScheduleType { get; }
         public string GetContent(int index, string ip, int port);
     }

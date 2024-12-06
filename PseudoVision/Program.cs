@@ -67,8 +67,14 @@ namespace PseudoVision
                 if (chan.CTD.Length > 0)
                 {
                     var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}");
+                    bool live= false;
+                    if(chan.channel_Type == Channel_Type.TV_Like)
+                    {
+                        var TV = (TV_LikeChannel)chan;
+                        live = TV.Live;
+                    }
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?
-                        SaveLoad<Schedule>.Load(scdpath) :
+                        (live)?SaveLoad<HLSSchedule>.Load(scdpath): SaveLoad<Schedule>.Load(scdpath) :
                         SaveLoad<ShowList>.Load(scdpath);
                     sch.Name = chan.ChannelName.ToLower();
                     Schedules.Add(chan.ChannelName.ToLower(), sch);
@@ -135,21 +141,8 @@ namespace PseudoVision
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 Console.WriteLine($"Connecting {userip} to {channame}");
                 var Sched = Schedules[channame.ToLower()];
-                if(Sched.ScheduleType == Channel_Type.TV_Like)
-                {
-                    var TS = (Schedule)Sched;
-                    if (TS.isLive)
-                    {
-                        var des = TS.Manifest;
-                        byte[] buffer = Encoding.UTF8.GetBytes(des);
-                        response.ContentLength64 = buffer.Length;
-                        response.ContentType = "application/vnd.apple.mpegurl";
-                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                        response.OutputStream.Close();
-                        return;
-                    }
-                }
-                await Sched.SendMedia(response);
+                
+                await Sched.SendMedia(context);
             }
             
             else if (request.Url.AbsolutePath.Contains("/archive/"))

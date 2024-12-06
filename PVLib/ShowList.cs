@@ -29,7 +29,7 @@ namespace PVLib
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
-        public async Task SendMedia(HttpListenerResponse client)
+        public async Task SendMedia(HttpListenerContext client)
         {
             if (File.Exists(LastPLayed)) {
                 CurrentlyPlaying = SaveLoad<TimeSlot>.Load(LastPLayed);
@@ -55,9 +55,9 @@ namespace PVLib
             try
             {
                 Console.WriteLine(info.Name);
-                client.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
-                client.ContentLength64 = fs.Length;
-                await fs.CopyToAsync(client.OutputStream);
+                client.Response.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
+                client.Response.ContentLength64 = fs.Length;
+                await fs.CopyToAsync(client.Response.OutputStream);
             }
             catch (Exception ex)
             {
@@ -65,7 +65,7 @@ namespace PVLib
                 Console.WriteLine(ex.ToString());
             }
             fs.Close();
-            client.Close();
+            client.Response.Close();
         }
 
         public string GetContent(int s, string ip, int prt)
