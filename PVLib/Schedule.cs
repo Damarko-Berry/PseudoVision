@@ -8,11 +8,10 @@ namespace PVLib
     public class Schedule : ISchedule
     {
         public readonly List<TimeSlot> slots = new();
-        public bool isLive = false;
         
         public string Name { get; set; }
         int CurrentSlot;
-        public Channel_Type ScheduleType => Channel_Type.TV_Like;
+        public Schedule_Type ScheduleType => Schedule_Type.TV_Like;
         public TimeSlot Slot => slots[CurrentSlot];
         public TimeSpan ScheduleDuration
         {
@@ -48,7 +47,7 @@ namespace PVLib
         
         public async void StartCycle()
         {
-            isLive = true;
+           
             var ct = DateTime.Now;
             double timeleft = 0;
             for (CurrentSlot = 0; CurrentSlot < slots.Count; CurrentSlot++)
@@ -88,8 +87,20 @@ namespace PVLib
         {
 
         }
-
+        public Schedule(HLSSchedule schedule)
+        {
+            slots = schedule.slots;
+            Name = schedule.Name;
+        }
+        public static implicit operator Schedule(HLSSchedule schedule)
+        {
+            return new(schedule);
+        }
        
+        public static implicit operator HLSSchedule(Schedule schedule)
+        {
+            return new(schedule);
+        }
     }
    
 }

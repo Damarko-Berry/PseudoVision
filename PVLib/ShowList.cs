@@ -10,7 +10,7 @@ namespace PVLib
 {
     public class ShowList: ISchedule
     {
-        public Channel_Type ScheduleType => Channel_Type.Binge_Like;
+        public Schedule_Type ScheduleType => Schedule_Type.Binge_Like;
         public List<string> Shows = new();
         TimeSlot CurrentlyPlaying = new();
         Playlist GetPlaylist
@@ -21,7 +21,7 @@ namespace PVLib
                 {
                     return new(FileSystem.Archive(Name, DateTime.Now));
                 }
-                Directory.CreateDirectory(FileSystem.ArchiveDIrectory(Name));
+                Directory.CreateDirectory(FileSystem.ArchiveDirectory(Name));
                 return new();
             }
             

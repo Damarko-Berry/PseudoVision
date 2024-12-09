@@ -11,7 +11,7 @@ namespace PVLib
     {
         string Name { get; set; }
         public async Task SendMedia(HttpListenerContext client) { }
-        public Channel_Type ScheduleType { get; }
+        public Schedule_Type ScheduleType { get; }
         public string GetContent(int index, string ip, int port);
     }
 }

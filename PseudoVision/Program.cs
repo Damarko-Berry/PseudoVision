@@ -82,12 +82,22 @@ namespace PseudoVision
             }
             for (int i = 0; i < Schedules.Count; i++)
             {
-                if (Schedules.ElementAt(i).Value.ScheduleType == Channel_Type.TV_Like | Schedules.ElementAt(i).Value.ScheduleType == Channel_Type.Movies )
+                if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like | Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.LiveStream)
                 {
-                    var sch = (Schedule)Schedules.ElementAt(i).Value;
-                    sch.StartCycle();
-                    Playlist playlist = new(sch);
-                    string pth = FileSystem.ArchiveDIrectory(Channels.GetDirectories()[i].Name);
+                    Playlist playlist = null;
+                    if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like)
+                    {
+                        var sch = (Schedule)Schedules.ElementAt(i).Value;
+                        sch.StartCycle();
+                        playlist = new(sch);
+                    }
+                    else
+                    {
+                        var sch = (HLSSchedule)Schedules.ElementAt(i).Value;
+                        sch.StartCycle();
+                        playlist = new(sch);
+                    }
+                    string pth = FileSystem.ArchiveDirectory(Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
                     File.WriteAllText(FileSystem.Archive(Channels.GetDirectories()[i].Name, DateTime.Now), playlist.ToString());
                 }
@@ -133,7 +143,7 @@ namespace PseudoVision
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 channame = request.Url.AbsolutePath.Split('[')[1].Split(']')[0].Replace("]",string.Empty).Trim();
-                Schedule Sched = (Schedule)Schedules[channame.ToLower()];
+                var Sched = Schedules[channame.ToLower()];
                 await Sched.SendMedia(context);
             }
             else if (request.Url.AbsolutePath.Contains("/live/"))

@@ -145,7 +145,7 @@ namespace PVLib
             if (CTD.Length <= 0) return;
             if (Shows.Length <= 0) return;
             DateTime Start= DateTime.Now;
-            Schedule schedule = new();
+            var schedule = new Schedule();
             var seas = Seasons;
             var StaticRRs = reruns;
             List<Rerun> allR = new List<Rerun>();
@@ -320,7 +320,15 @@ namespace PVLib
                     return span;
                 }
             }
-            SaveSchedule(schedule,today);
+            if (Live)
+            {
+                HLSSchedule hls = schedule;
+                SaveSchedule(hls,today);
+            }
+            else
+            {
+                SaveSchedule(schedule,today);
+            }
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
             Console.WriteLine($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");

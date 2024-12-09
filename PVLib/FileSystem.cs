@@ -17,7 +17,7 @@ namespace PVLib
         public static string ChanSchedules(string cname)=> Path.Combine(Schedules, cname);
         public const string ShowEXT = "shw";
         public const string ScheduleEXT = "scd";
-        public static string ArchiveDIrectory(string chaname) => Path.Combine(Settings.CurrentSettings.Archive_Output, "PV-Archive", chaname);
-        public static string Archive(string chaname, DateTime date) => Path.Combine(ArchiveDIrectory(chaname), $"{date.Month}.{date.Day}.{date.Year}.{Settings.CurrentSettings.playlistFormat}");
+        public static string ArchiveDirectory(string chaname) => Path.Combine(Settings.CurrentSettings.Archive_Output, "PV-Archive", chaname);
+        public static string Archive(string chaname, DateTime date) => Path.Combine(ArchiveDirectory(chaname), $"{date.Month}.{date.Day}.{date.Year}.{Settings.CurrentSettings.playlistFormat}");
     }
 }
