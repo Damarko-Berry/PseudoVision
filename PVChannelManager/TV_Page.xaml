@@ -18,6 +18,7 @@
             </local:FillPanal>
             <local:FillPanal Orientation="Vertical">
                 <CheckBox Name="TimeFillCheck" Content="Fill Time" Checked="TimeFillCheck_Checked" Unchecked="TimeFillCheck_Unchecked"/>
+                <CheckBox Name="LiveStream" Content="Live" Checked="LiveStream_Checked" Unchecked="LiveStream_Unchecked"/>
             </local:FillPanal>
             <local:FillPanal>
                 <TextBlock Text="Movie Mode" TextAlignment="Center"/>

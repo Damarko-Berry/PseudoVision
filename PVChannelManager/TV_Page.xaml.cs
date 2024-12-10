@@ -27,6 +27,7 @@ namespace PVChannelManager
             MovieModeBox.ItemsSource = Enum.GetValues(typeof(MovieMode));
             MovieModeBox.SelectedIndex = (int)channel.movieMode;
             TimeFillCheck.IsChecked = channel.FillTime;
+            LiveStream.IsChecked = channel.Live;
             Load();
             init = false;
         }
@@ -153,6 +154,16 @@ namespace PVChannelManager
         {
             SeasonEditor seasonEditor = new SeasonEditor(subject.SeasonsDirectory, this);
             MainWindow.Instance.Main.Content = seasonEditor;
+        }
+
+        private void LiveStream_Checked(object sender, RoutedEventArgs e)
+        {
+            subject.Live = LiveStream.IsChecked.Value;
+        }
+
+        private void LiveStream_Unchecked(object sender, RoutedEventArgs e)
+        {
+            subject.Live = LiveStream.IsChecked.Value;
         }
     }
 }
