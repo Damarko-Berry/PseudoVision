@@ -136,7 +136,7 @@ namespace PVLib
             {
                 await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
                 CurrentSegment = CurrentSate().NextSegment(CurrentSegment);
-                if (CurrentSate().Segmentsleft(CurrentSegment) == 6 & timetilEnd().Minutes<1)
+                if (CurrentSate().Segmentsleft(CurrentSegment) == 16 & timetilEnd().Minutes<1)
                 {
                     CurrentSlot++;
                     if (CurrentSlot < slots.Count)

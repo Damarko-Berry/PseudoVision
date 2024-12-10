@@ -74,9 +74,13 @@ namespace PseudoVision
                         live = TV.Live;
                     }
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?
-                        (live)?SaveLoad<HLSSchedule>.Load(scdpath): SaveLoad<Schedule>.Load(scdpath) :
-                        SaveLoad<ShowList>.Load(scdpath);
+                       SaveLoad<Schedule>.Load(scdpath) : SaveLoad<ShowList>.Load(scdpath);
                     sch.Name = chan.ChannelName.ToLower();
+                    if (live)
+                    {
+                        HLSSchedule schedule = (Schedule)sch;
+                        sch = schedule;
+                    }
                     Schedules.Add(chan.ChannelName.ToLower(), sch);
                 }
             }

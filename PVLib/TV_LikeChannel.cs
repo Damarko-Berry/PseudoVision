@@ -320,15 +320,7 @@ namespace PVLib
                     return span;
                 }
             }
-            if (Live)
-            {
-                HLSSchedule hls = schedule;
-                SaveSchedule(hls,today);
-            }
-            else
-            {
-                SaveSchedule(schedule,today);
-            }
+            SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
             Console.WriteLine($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");
