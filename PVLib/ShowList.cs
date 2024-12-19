@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +69,37 @@ namespace PVLib
             client.Response.Close();
         }
 
+        public async Task SendMedia(string Request, NetworkStream stream)
+        {
+            if (File.Exists(LastPLayed))
+            {
+                CurrentlyPlaying = SaveLoad<TimeSlot>.Load(LastPLayed);
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
+            }
+            var P = GetPlaylist;
+            Random rnd = new Random();
+            int shw = rnd.Next(Shows.Count);
+            if (DateTime.Now > CurrentlyPlaying.EndTime)
+            {
+                Show show = SaveLoad<Show>.Load(Shows[shw]);
+                CurrentlyPlaying = new TimeSlot(show.NextEpisode());
+                P.Add(CurrentlyPlaying);
+                File.WriteAllText(FileSystem.Archive(Name, DateTime.Now), P.ToString());
+                SaveLoad<Show>.Save(show, Shows[shw]);
+            }
+            SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
+
+            byte[] fileBytes = await File.ReadAllBytesAsync(CurrentlyPlaying.Media);
+            using StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+            writer.WriteLine("HTTP/1.1 200 OK"); writer.WriteLine("Content-Type: video/mp4");
+            writer.WriteLine($"Content-Length: {fileBytes.Length}"); 
+            writer.WriteLine(); 
+            writer.Flush(); 
+            await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+        }
         public string GetContent(int s, string ip, int prt)
         {
             return $@"<item id=""{s}"" parentID=""0"" restricted=""false"">

@@ -18,6 +18,9 @@ namespace PVLib
         public string Archive_Output;
         public string redirectsite;
         public string VideoExtensions = string.Empty;
+        public string ffmpegCache = Directory.GetCurrentDirectory();
+
+        public LiveHandling liveHandling = LiveHandling.Storage_Saver;
         public string[] GetVideoExtensions
         {
             get
@@ -44,7 +47,8 @@ namespace PVLib
                     securityLevel = SecurityApplication.Never,
                     playlistFormat = PlaylistFormat.m3u,
                     VideoExtensions= string.Empty,
-                    IP = GetLocalIPAddress()
+                    IP = GetLocalIPAddress(),
+                    ffmpegCache = Directory.GetCurrentDirectory()
                 };
                 string GetLocalIPAddress()
                 {

@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PVLib", "PVLib\PVLib.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PVChannelManager", "PVChannelManager\PVChannelManager.csproj", "{212E5125-26ED-457A-9FD2-CD8CE3EB7684}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PVLite", "PVLite\PVLite.csproj", "{18C281B9-7D94-44A4-B2EF-07BCF95894AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{212E5125-26ED-457A-9FD2-CD8CE3EB7684}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{212E5125-26ED-457A-9FD2-CD8CE3EB7684}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{212E5125-26ED-457A-9FD2-CD8CE3EB7684}.Release|Any CPU.Build.0 = Release|Any CPU
+		{18C281B9-7D94-44A4-B2EF-07BCF95894AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{18C281B9-7D94-44A4-B2EF-07BCF95894AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{18C281B9-7D94-44A4-B2EF-07BCF95894AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{18C281B9-7D94-44A4-B2EF-07BCF95894AF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Net.Sockets;
 
 namespace PVLib
 {
@@ -14,7 +15,7 @@ namespace PVLib
         public HLSSchedule() { }
         segment CurrentSegment = null;
         int CurrentSlot;
-        
+        bool processing;
         
         public TimeSlot Slot => slots[CurrentSlot];
         public TimeSpan ScheduleDuration
@@ -83,6 +84,35 @@ namespace PVLib
             client.Response.Close();
             fs.Close();
         }
+
+        public async Task SendMedia(string Request, NetworkStream stream)
+        {
+            if (CurrentSegment == null) return;
+            StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+            if (!Request.Contains("["))
+            {
+                HLS hLS = CurrentSate();
+                hLS.SetOffset(CurrentSegment.path);
+                var des = hLS.ToString();
+                byte[] buffer = Encoding.UTF8.GetBytes(des);
+                writer.WriteLine("HTTP/1.1 200 OK"); 
+                writer.WriteLine("Content-Type: application/vnd.apple.mpegurl");
+                writer.WriteLine($"Content-Length: {buffer.Length}");
+                writer.WriteLine();
+                writer.Flush();
+                await stream.WriteAsync(buffer, 0, buffer.Length);
+                return;
+            }
+            var seg = Request.Split("/");
+            byte[] fileBytes = await File.ReadAllBytesAsync(Path.Combine(liveOutputDirectory, seg[^1].Replace("/", string.Empty)));
+            writer.WriteLine("HTTP/1.1 200 OK"); 
+            writer.WriteLine("Content-Type: video/mp4");
+            writer.WriteLine($"Content-Length: {fileBytes.Length}");
+            writer.WriteLine();
+            writer.Flush();
+            await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+        }
+
         public async Task StartCycle()
         {
             CleanUp();
@@ -105,6 +135,7 @@ namespace PVLib
             ProcessVideo(Slot.Media);
 
             await Task.Delay(5*1000);
+            Oops:
             DateTime StartTime = Slot.StartTime;
             var TargetOffset = DateTime.Now.Subtract(StartTime);
             var pLength = CurrentSate().Length;
@@ -122,7 +153,7 @@ namespace PVLib
             }
             CurrentSegment = CurrentSate().GetSegment(DateTime.Now.Subtract(StartTime));
             
-            if (timetilEnd().Seconds < 10)
+            if (timetilEnd().Seconds < 30)
             {
                 CurrentSlot++;
                 if (CurrentSlot < slots.Count)
@@ -135,12 +166,15 @@ namespace PVLib
             while(CurrentSegment != null)
             {
                 await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
-                CurrentSegment = CurrentSate().NextSegment(CurrentSegment);
-                if (CurrentSate().Segmentsleft(CurrentSegment) == 16 & timetilEnd().Minutes<1)
+                var segmentsLeft = CurrentSate().Segmentsleft(CurrentSegment);
+                var timeleft = timetilEnd().Minutes;
+                Console.WriteLine($"timeleft: {timeleft}\n currently processing: {processing}");
+                if (segmentsLeft < 16 & timeleft<1 & !processing)
                 {
                     CurrentSlot++;
                     if (CurrentSlot < slots.Count)
                     {
+                        Console.WriteLine($"Processing: {new FileInfo(Slot.Media).Name}");
                         ProcessVideo(Slot.Media);
                     }
                 }
@@ -149,11 +183,10 @@ namespace PVLib
                     CleanUp(CurrentSlot - 1);
                 }
                 Console.WriteLine("Segments left: "+CurrentSate().Segmentsleft(CurrentSegment));
+                CurrentSegment = CurrentSate().NextSegment(CurrentSegment);
             }
-            if ((CurrentSlot + 1) < slots.Count)
-            {
-                StartCycle();
-            }
+            if (processing) goto Oops;
+            
             TimeSpan timetilEnd()
             {
                 return Slot.EndTime - DateTime.Now;
@@ -162,10 +195,13 @@ namespace PVLib
 
         async Task ProcessVideo(string filePath)
         {
+            if (processing) return;
+            processing = true;
             Directory.CreateDirectory(liveOutputDirectory);
             filePath = "\"" + filePath + "\"";
             string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{CurrentSlot})[{Name}]seg%d.ts {ManifestOutputDirectory}/index({CurrentSlot}).m3u8";
             await RunFFmpeg(ffmpegArgs);
+            processing = false;
         }
         async Task RunFFmpeg(string arguments)
         {

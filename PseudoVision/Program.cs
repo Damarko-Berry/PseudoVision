@@ -2,6 +2,7 @@
 using System.Net.Sockets;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
+using static PVLib.Settings;
 
 namespace PseudoVision
 {
@@ -11,29 +12,29 @@ namespace PseudoVision
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static bool IsGening;
-        static UPNP upnp => Settings.CurrentSettings.upnp;
+        static UPNP upnp => CurrentSettings.upnp;
         static async Task Main(string[] args)
         {
             
             try
             {
-                Settings.CurrentSettings = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
+                CurrentSettings = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
             }
             catch
             {
-                Settings.CurrentSettings = Settings.Default;
+                CurrentSettings = Settings.Default;
             }
             string localIp = GetLocalIPAddress();
-            int prt = Settings.CurrentSettings.Port;
+            int prt = CurrentSettings.Port;
             CreateScheds();
             var PIP = await GetExternalIpAddress();
             Public_IP = PIP.ToString();
-            Task.Run(() => StartHttpServer(localIp, Settings.CurrentSettings.Port));
+            Task.Run(() => StartHttpServer(localIp, prt));
             Thread.Sleep(1000);
-            if(Settings.CurrentSettings.useUPNP)
+            if(CurrentSettings.useUPNP)
             {
                 //
-                upnp.Start(localIp, Settings.CurrentSettings.Port);
+                upnp.Start(localIp, prt);
             }
             waittilnextday();
             Console.WriteLine("Server is running. Press Enter to exit...");

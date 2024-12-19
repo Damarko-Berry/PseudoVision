@@ -12,8 +12,8 @@
     public enum Access {User, Modderator}
     public enum DeviceType { MediaServer, InternetGatewayDevice, lighting, reminder }
     public enum ServiceType { ContentDirectory, ConnectionManager }
-    public enum MovieMode { WithReruns, Sunday ,Monday, Tuesday, Wednesday, Thursday, Friday, Saturday} 
-    
+    public enum MovieMode { WithReruns, Sunday ,Monday, Tuesday, Wednesday, Thursday, Friday, Saturday}
+    public enum LiveHandling { Storage_Saver, CPU_Saver }
     public static class EnumTranslator<T>
     {
         public static T fromString(string str)

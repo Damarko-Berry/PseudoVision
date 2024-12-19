@@ -65,6 +65,7 @@ namespace PVLib
                 if (Body[i].path == segmentName)
                 {
                     Console.WriteLine(segmentName);
+                    timeSpan -= Body[i].duration;
                     break;
                 }
                 timeSpan+=Body[i].duration;

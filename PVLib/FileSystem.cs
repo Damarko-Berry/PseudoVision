@@ -8,7 +8,7 @@ namespace PVLib
 {
     public static class FileSystem
     {
-        static string Root = Directory.GetCurrentDirectory();
+        public static string Root => Directory.GetCurrentDirectory();
         public static string Channels => Path.Combine(Root, "Channels");
         public static string Schedules => Path.Combine(Root, "Schedules");
         public static string SettingsFile => Path.Combine(Root, "SettingsFile");

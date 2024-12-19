@@ -44,7 +44,25 @@ namespace PVLib
             client.Response.Close();
             fs.Close();
         }
-        
+
+        public async Task SendMedia(string Request, NetworkStream stream)
+        {
+            byte[] fileBytes = await File.ReadAllBytesAsync(Slot.Media);
+            try
+            {
+                StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+                writer.WriteLine("HTTP/1.1 200 OK"); writer.WriteLine("Content-Type: video/mp4");
+                writer.WriteLine($"Content-Length: {fileBytes.Length}");
+                writer.WriteLine();
+                writer.Flush();
+                await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+            }catch (Exception ex)
+            {
+                stream.Close();
+                Console.WriteLine(ex.ToString());
+            }
+            stream.Close();
+        }
         public async void StartCycle()
         {
            
