@@ -41,7 +41,7 @@ namespace PseudoVision
             Console.ReadLine();
         }
         
-        static async void waittilnextday()
+        static async Task waittilnextday()
         {
             while (true)
             {
@@ -129,7 +129,7 @@ namespace PseudoVision
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
             var userip = context.Request.RemoteEndPoint.Address.ToString();
-           
+            bool isPrivate = userip.StartsWith("192")| userip.StartsWith("172");
             Console.WriteLine(request.Url.AbsolutePath);
             while(IsGening)
             {
@@ -159,7 +159,6 @@ namespace PseudoVision
                 
                 await Sched.SendMedia(context);
             }
-            
             else if (request.Url.AbsolutePath.Contains("/archive/"))
             {
                 string[] URL = request.Url.AbsolutePath.Replace("/archive/", string.Empty).Split("/");
@@ -200,7 +199,7 @@ namespace PseudoVision
                 else if (request.Url.AbsolutePath.Contains("/watch"))
                 {
 
-                    bool isPrivate = userip.Contains("192");
+                    
                     string ChosenIP = isPrivate switch
                     {
                         true => ip,
@@ -212,10 +211,36 @@ namespace PseudoVision
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                     response.OutputStream.Close();
                 }
+                else if (request.Url.AbsolutePath.Contains("/stuff")| request.Url.AbsolutePath.Contains("/cds.xml"))
+                {
+                    
+                    var stuff = CDS(Schedules.Values.ToArray(), isPrivate);
+                        
+                    byte[] buffer = Encoding.UTF8.GetBytes(stuff);
+                    response.ContentLength64 = buffer.Length;
+                    response.ContentType = Text.Xml;
+
+                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                    response.Close();
+                    Console.WriteLine("Sent CDS");
+                }
             }
             
         } 
+        static string CDS(ISchedule[] schedules, bool isprivate)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(@"<?xml version=""1.0"" encoding=""UTF-8""?>");
+            sb.Append(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
 
+            for (int i = 0; i < schedules.Length; i++)
+            {
+                sb.Append(schedules[i].GetContent(i, (isprivate)?CurrentSettings.IP:Public_IP, CurrentSettings.Port));
+            }
+
+            sb.Append("</DIDL-Lite>");
+            return sb.ToString();
+        }
         static string GetLocalIPAddress()
         {
             if(Settings.CurrentSettings.IP != string.Empty)

@@ -30,45 +30,74 @@ namespace PVLib
                 return time;
             }
         }
+        int SlotsAvalible 
+        { 
+            get
+            {
+                int G = 0;
+                var HL = Directory.GetFiles(ManifestOutputDirectory,"index(*).m3u8");
+                for (int i = 0; i < HL.Length; i++)
+                {
+                    var H = HLS.Load(File.ReadAllText(HL[i]));
+                    if (File.Exists(Path.Combine(liveOutputDirectory, H.Body[^1].path)))
+                    {
+                        G++;
+                    }
+                }
+                return G;
+            } 
+        }
         public FileInfo info => new FileInfo(Slot.Media);
 
         public string Name { get; set; }
         string liveOutputDirectory => Path.Combine("output", Name, "segments");
         string ManifestOutputDirectory => Path.Combine("output", Name);
-        HLS CurrentSate()
+        HLS CurrentSate
         {
-            var Hs = new HLS();
-            var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
-            for (int i = 0; i < manifests.Length; i++)
+            get
             {
-                Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                var Hs = new HLS();
+                var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
+                for (int i = 0; i < manifests.Length; i++)
+                {
+                    Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                }
+
+                return Hs;
             }
-            return Hs;
         }
         public Schedule_Type ScheduleType => Schedule_Type.LiveStream;
 
-        public string GetContent(int index, string ip, int port)
+        public string GetContent(int index, string ip, int prt)
         {
-            throw new NotImplementedException();
+            return $@"<item id=""{index}"" parentID=""0"" restricted=""false"">
+                        <dc:title>{info.Name}</dc:title>
+                        <dc:creator>Unknown</dc:creator>
+                        <upnp:class>object.item.videoItem</upnp:class>
+                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                    </item>";
         }
 
         public async Task SendMedia(HttpListenerContext client)
         {
-            if(CurrentSegment == null) return;
-            if (!client.Request.Url.AbsolutePath.Contains("["))
+            if(CurrentSegment == null)
             {
-                HLS hLS= CurrentSate();
-                hLS.SetOffset(CurrentSegment.path);
-                var des = hLS.ToString();
-                byte[] buffer = Encoding.UTF8.GetBytes(des);
-                client.Response.ContentLength64 = buffer.Length;
-                client.Response.ContentType = "application/vnd.apple.mpegurl";
-                await client.Response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
                 client.Response.OutputStream.Close();
                 return;
             }
+            if (!client.Request.Url.AbsolutePath.Contains("["))
+            {
+                SendManifest(client);
+                return;
+            }
             var seg = client.Request.Url.AbsolutePath.Split("/");
-            FileStream fs = new(Path.Combine(liveOutputDirectory, seg[^1].Replace("/", string.Empty)), FileMode.Open, FileAccess.Read);
+            var pth = Path.Combine(liveOutputDirectory, seg[^1].Replace("/", string.Empty));
+            if (!File.Exists(pth))
+            {
+                SendManifest(client);
+                return;
+            }
+            FileStream fs = new(pth, FileMode.Open, FileAccess.Read);
 
             try
             {
@@ -84,14 +113,27 @@ namespace PVLib
             client.Response.Close();
             fs.Close();
         }
-
+        async void SendManifest(HttpListenerContext Context)
+        {
+            HLS hLS = CurrentSate;
+            hLS.SetOffset(CurrentSegment.path);
+            Console.WriteLine($"Target Duration: {hLS.targetDuration}");
+            var des =hLS.ToString(CurrentSegment);
+            
+            byte[] buffer = Encoding.UTF8.GetBytes(des);
+            HttpListenerResponse client = Context.Response;
+            client.ContentLength64 = buffer.Length;
+            client.ContentType = "application/vnd.apple.mpegurl";
+            await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            client.OutputStream.Close();
+        }
         public async Task SendMedia(string Request, NetworkStream stream)
         {
             if (CurrentSegment == null) return;
             StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
             if (!Request.Contains("["))
             {
-                HLS hLS = CurrentSate();
+                HLS hLS = CurrentSate;
                 hLS.SetOffset(CurrentSegment.path);
                 var des = hLS.ToString();
                 byte[] buffer = Encoding.UTF8.GetBytes(des);
@@ -100,7 +142,7 @@ namespace PVLib
                 writer.WriteLine($"Content-Length: {buffer.Length}");
                 writer.WriteLine();
                 writer.Flush();
-                await stream.WriteAsync(buffer, 0, buffer.Length);
+                await stream.WriteAsync(buffer);
                 return;
             }
             var seg = Request.Split("/");
@@ -110,11 +152,12 @@ namespace PVLib
             writer.WriteLine($"Content-Length: {fileBytes.Length}");
             writer.WriteLine();
             writer.Flush();
-            await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+            await stream.WriteAsync(fileBytes);
         }
 
         public async Task StartCycle()
         {
+
             CleanUp();
             await Task.Delay(200);
             var ct = DateTime.Now;
@@ -125,81 +168,105 @@ namespace PVLib
                     break;
                 }
             }
-            await SegCyc();
+            await TestSegCyc();
         }
         #region live
 
         async Task SegCyc()
         {
-            Again:
-            ProcessVideo(Slot.Media);
 
+            ProcessVideo(Slot.Media, CurrentSlot);
             await Task.Delay(5*1000);
             Oops:
             DateTime StartTime = Slot.StartTime;
             var TargetOffset = DateTime.Now.Subtract(StartTime);
-            var pLength = CurrentSate().Length;
+            var pLength = CurrentSate.Length;
             while (TargetOffset > pLength)
             {
                 await Task.Delay(500);
                 TargetOffset = DateTime.Now.Subtract(StartTime);
-                HLS G= CurrentSate();
-                pLength = G.Length;
+                pLength =CurrentSate.Length;
                 if (!Slot.Durring(DateTime.Now))
                 {
+
                     StartCycle();
                     return;
                 }
             }
-            CurrentSegment = CurrentSate().GetSegment(DateTime.Now.Subtract(StartTime));
+            CurrentSegment = CurrentSate.GetSegment(DateTime.Now.Subtract(StartTime));
+
+            ProcessNext();
             
-            if (timetilEnd().Seconds < 30)
-            {
-                CurrentSlot++;
-                if (CurrentSlot < slots.Count)
-                {
-                    ProcessVideo(Slot.Media);
-                }
-            }
-            Console.WriteLine($"{Name} is Ready: {CurrentSegment.path}");
             
             while(CurrentSegment != null)
             {
+                Console.WriteLine("current Segment: "+CurrentSegment.path);
                 await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
-                var segmentsLeft = CurrentSate().Segmentsleft(CurrentSegment);
-                var timeleft = timetilEnd().Minutes;
-                Console.WriteLine($"timeleft: {timeleft}\n currently processing: {processing}");
-                if (segmentsLeft < 16 & timeleft<1 & !processing)
-                {
-                    CurrentSlot++;
-                    if (CurrentSlot < slots.Count)
-                    {
-                        Console.WriteLine($"Processing: {new FileInfo(Slot.Media).Name}");
-                        ProcessVideo(Slot.Media);
-                    }
-                }
                 if (CurrentSegment.path.Contains("seg0"))
                 {
-                    CleanUp(CurrentSlot - 1);
+                    CurrentSlot++;
+                    CleanUp(CurrentSlot - 1, 30);
                 }
-                Console.WriteLine("Segments left: "+CurrentSate().Segmentsleft(CurrentSegment));
-                CurrentSegment = CurrentSate().NextSegment(CurrentSegment);
+                if (CurrentSegment.path.Contains("seg30"))
+                {
+                    CleanUp(CurrentSlot - 1, 0);
+                }
+                ProcessNext();
+                CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
             }
             if (processing) goto Oops;
-            
-            TimeSpan timetilEnd()
+        }
+        async Task TestSegCyc()
+        {
+
+            ProcessVideo(Slot.Media, CurrentSlot);
+            while (CurrentSate.Length.TotalMinutes < 1)
             {
-                return Slot.EndTime - DateTime.Now;
+                await Task.Delay(500);
+            }
+            CurrentSegment = CurrentSate.Body[0];
+
+            ProcessNext();
+
+        Oops:
+            while (CurrentSegment != null)
+            {
+                Console.WriteLine("current Segment: "+CurrentSegment.path);
+                await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
+                if (!processing)
+                {
+                    if (CurrentSegment.path.Contains("seg0"))
+                    {
+                        CurrentSlot++;
+                        //CleanUp(CurrentSlot - 1, 30);
+                    }
+                    if (CurrentSegment.path.Contains("seg30"))
+                    {
+                        CleanUp(CurrentSlot - 1, 0);
+                    }
+                }
+                ProcessNext();
+                CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
+            }
+            if (processing) goto Oops;
+        }
+
+
+        void ProcessNext()
+        {           
+            if(!processing & SlotsAvalible < 2 & CurrentSlot+1 < slots.Count)
+            {
+                ProcessVideo(slots[CurrentSlot + 1].Media, CurrentSlot + 1);
             }
         }
 
-        async Task ProcessVideo(string filePath)
+        async Task ProcessVideo(string filePath, int SlotNo)
         {
             if (processing) return;
             processing = true;
             Directory.CreateDirectory(liveOutputDirectory);
             filePath = "\"" + filePath + "\"";
-            string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{CurrentSlot})[{Name}]seg%d.ts {ManifestOutputDirectory}/index({CurrentSlot}).m3u8";
+            string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
             await RunFFmpeg(ffmpegArgs);
             processing = false;
         }
@@ -227,33 +294,35 @@ namespace PVLib
         }
 
         #endregion
-        void CleanUp(int slotNum)
+        async void CleanUp(int slotNum, int offset)
         {
-            try
+            if(!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))) return;
+            
+            var HLSO = HLS.Load(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
+            segment[] files = HLSO.Body.ToArray(); 
+            for (int i = 0; i < files.Length-offset; i++)
             {
-                File.Delete(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"));
-            }
-            catch
-            {
-
-            }
-            string[] files = Directory.GetFiles(liveOutputDirectory);
-            foreach (var item in files)
-            {
-                if (item.Contains($"(Slot{slotNum})"))
-                {
+                if(File.Exists(Path.Combine(liveOutputDirectory, files[i].path))){
                     try
                     {
-
-                        File.Delete(item);
-                    }catch(Exception ex)
+                        File.Delete(Path.Combine(liveOutputDirectory, files[i].path));
+                    }
+                    catch (Exception ex)
                     {
                         Console.WriteLine(ex.ToString());
-                    }
-
+                    } 
+                    await Task.Delay(1);
                 }
+                
             }
+            var vttfiles = Directory.GetFiles(ManifestOutputDirectory, "*.vtt");
             
+            for (int i = 0; i < vttfiles.Length; i++)
+            {
+                File.Delete(vttfiles[i]);
+            }
+            if(vttfiles.Length>0)
+            File.Delete(Path.Combine(ManifestOutputDirectory,$"index({slotNum})_vtt.m3u8"));
         }
         void CleanUp()
         {

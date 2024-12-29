@@ -1,9 +1,11 @@
 ﻿using Microsoft.Win32.SafeHandles;
 using PVLib;
+using System;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Reflection.Metadata;
+using System.Text;
 using static PVLib.Settings;
 
 namespace PVLite
@@ -11,7 +13,7 @@ namespace PVLite
     internal class Program
     {
         static TV_LikeChannel channel = null;
-        
+        static ISchedule schedule = null;
         static async Task Main(string[] args)
         {
             if (args.Length == 0)
@@ -25,6 +27,7 @@ namespace PVLite
                 {
                     CurrentSettings = Settings.Default;
                 }
+               
                 Directory.SetCurrentDirectory(@"C:\Users\marko\Videos\Media\PVL");
                 Set_Up();
                 Task.Run(() => Server());
@@ -39,36 +42,35 @@ namespace PVLite
             server.Start();
             while (true)
             {
+                
                 HandleClient(await server.AcceptTcpClientAsync());
             }
         }
 
-        static async void HandleClient(TcpClient client)
+        static async Task HandleClient(TcpClient client)
         {
             
-            using NetworkStream stream = client.GetStream();
-            using StreamReader reader = new StreamReader(stream);
-            using StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+            using NetworkStream ClientStream = client.GetStream();
+            byte[] bytes = new byte[client.ReceiveBufferSize];
+            int bytesRead;
+            StringBuilder messageBuilder = new StringBuilder();
+            while ((bytesRead = await ClientStream.ReadAsync(bytes, 0, bytes.Length)) != 0)
+            {
+                messageBuilder.Append(Encoding.ASCII.GetString(bytes, 0, bytesRead));
 
-            // Read the HTTP request
-            string request = await reader.ReadToEndAsync();
-            Console.WriteLine("Received request: " + request);
+                string request = messageBuilder.ToString().Split("\n")[0].Split(' ')[1].Trim();
+                Console.WriteLine(request);
 
-            // Skip the remaining request headers
-            while (!string.IsNullOrEmpty(await reader.ReadLineAsync())) { }
-
-            // Create a simple HTTP response
-            string response = "HTTP/1.1 200 OK\r\n" +
-                                "Content-Type: text/plain\r\n" +
-                                "Content-Length: 13\r\n" +
-                                "\r\n" +
-                                "Hello, World!";
-
-            // Write the HTTP response to the client
-            await writer.WriteAsync(response);
-            Console.WriteLine("Response sent.");
-
-            client.Close();
+                if (request == "/watch")
+                {
+                    await schedule.SendMedia(request, client.GetStream());
+                    return;
+                }
+                else
+                {
+                    client.Close();
+                }
+            }
         }
 
         static void Set_Up()
@@ -116,6 +118,14 @@ namespace PVLite
                 Scan4New();
             }
             channel.CreateNewSchedule(DateTime.Now);
+            var Da = DateTime.Now;
+            var M = Da.Date.Month;
+            var D = Da.Date.Day;
+            var Y = Da.Date.Year;
+            var scdpath = Path.Combine(FileSystem.ChanSchedules(channel.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}");
+            var sch = SaveLoad<Schedule>.Load(scdpath);
+            sch.StartCycle();
+            schedule = sch;
         }
 
         static void Scan4New()

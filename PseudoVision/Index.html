@@ -1,5 +1,6 @@
 <html>
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         #myVideo {
                 transform: translate(-50%, -50%);
@@ -8,56 +9,67 @@
                 left: 50%;
                 min-width: 100%;
                 max-height: 92%;
-                color: black
+                color: black;
         }
     </style>
 </head>
 <body style="background-color: black">
-    <video id="myVideo" controls loop autoplay src="REPLCACESRC" type="video/mp4">
-        Your browser does not support the video tag.
-    </video>
+    <video id="myVideo" controls loop autoplay></video>
     <input type="button" value="Previous Channel" onclick="prev()" />
     <input type="button" value="Next Channel" onclick="next()" />
 </body>
 <script>
-    var CN = -1;
-    var chnls = REPLACEME
-    var video = document.getElementsByTagName('video')[0];
-    video.onended = function (e) {
-        start();
-    }
-    async function start()
-    {
-        video.load();
-        video.src = chnls[CN];
-        await pause(10);
-        video.play();
-        console.log("PLAYING");
+    var CN = 0;
+    var chnls = REPLACEME; // Replace this placeholder with your array of channel URLs
+    var video = document.getElementById('myVideo');
+    var hlsConfig = {
+        maxBufferLength: 30, // Max buffer length in seconds
+        maxBufferSize: 60 * 1000 * 1000, // Max buffer size in bytes (60MB)
+        maxMaxBufferLength: 60, // Max length of buffer (in seconds)
+        maxBufferHole: 0.5, // Max hole size between buffered segments
+    };
+    var hls = new Hls(hlsConfig);
+    function loadChannel(url) {
+        if (Hls.isSupported()) {
+            hls.loadSource(url);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                video.play();
+                console.log("Playing HLS stream: " + url);
+            });
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url;
+            video.play();
+            console.log("Playing native HLS stream: " + url);
+        } else {
+            console.error("HLS is not supported in this browser.");
+        }
     }
 
-    async function pause(seconds)
-    {
-        return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+    async function start() {
+        if (chnls.length < 2) {
+            return
+        }
+
+        if (chnls.length > 0 && CN >= 0 && CN < chnls.length) {
+            loadChannel(chnls[CN]);
+        }
     }
 
     function next() {
-        console.log(chnls.length)
         if (chnls.length < 2) return;
-        CN++;
-        if (CN >= chnls.length) {
-            CN = 0;
-        }
+        CN = (CN + 1) % chnls.length;
         start();
     }
+
     function prev() {
-        console.log(chnls.length)
         if (chnls.length < 2) return;
-        CN--;
-        if (CN <= 0) {
-            CN = chnls.length-1;
-        }
+        CN = (CN - 1 + chnls.length) % chnls.length;
         start();
     }
-    next();
+
+    // Initialize the first channel
+    loadChannel("REPLCACESRC");
+
 </script>
 </html>

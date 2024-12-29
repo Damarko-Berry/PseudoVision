@@ -24,6 +24,31 @@ namespace PVLib
             } 
         }
         public List<segment> Body = new();
+        public int targetDuration
+        {
+            get
+            {
+                double[] TD= new double[Body.Count];
+                for (int i = 0; i < Body.Count; i++)
+                {
+                    TD[i] = Body[i].duration.TotalSeconds;
+                }
+                return (int)TD.Average();
+            }
+        }
+        string Header => $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:{targetDuration}\n#EXT-X-MEDIA-SEQUENCE:0";
+        string FullBody
+        {
+            get
+            {
+                string body = string.Empty;
+                for (int i = 0; i < Body.Count; i++)
+                {
+                    body += $"{Body[i]}\n";
+                }
+                return body;
+            }
+        }
 
         public static HLS operator +(HLS A, HLS B)
         {
@@ -64,14 +89,14 @@ namespace PVLib
             {
                 if (Body[i].path == segmentName)
                 {
-                    Console.WriteLine(segmentName);
+                    
                     timeSpan -= Body[i].duration;
                     break;
                 }
                 timeSpan+=Body[i].duration;
             }
             offset = timeSpan;
-            Console.WriteLine(offset);
+            
         }
         public segment NextSegment(segment current)
         {
@@ -121,13 +146,34 @@ namespace PVLib
         }
         public override string ToString()
         {
-            string header = $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:12\n#EXT-X-MEDIA-SEQUENCE:0";
+            return $"{Header}\n{FullBody}\n#EXT-X-ENDLIST";
+        }
+        public string ToString(segment segment)
+        {
+            
             string body = string.Empty;
-            for (int i = 0; i < Body.Count; i++)
+            bool SegmentFound = false;
+            TimeSpan Buffer = new();
+            int i = 0;
+            for (i = 0; i < Body.Count; i++)
             {
+                if (Body[i].Equals(segment))
+                {
+                    segment = Body[i];
+                    SegmentFound = true;
+                }
+                if (SegmentFound)
+                {
+                    Buffer += Body[i].duration;
+                    if(Buffer.TotalSeconds >30 )
+                    {
+                        Console.WriteLine($"Buffer is {Buffer.TotalSeconds}");
+                        break;
+                    }
+                }
                 body += $"{Body[i]}\n";
             }
-            return $"{header}\n{body}\n#EXT-X-ENDLIST";
+            return (i<Body.Count)?$"{Header}\n{body}\n": ToString();
         }
     }
 

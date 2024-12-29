@@ -33,7 +33,7 @@ namespace PVLib
             {
                 ServiceType = ServiceType.ContentDirectory,
                 SCPDURL ="cds.xml",
-                controlURL = "media",
+                controlURL = "stuff",
                 eventSubURL = "events"
             },
             new ServiceSchema()
@@ -51,43 +51,47 @@ namespace PVLib
         {
             get
             {
-                if(ServiceList.Count == 0) return string.Empty;
+                if (ServiceList.Count == 0) return string.Empty;
                 var Sch = "<serviceList>\n  ";
                 for (int i = 0; i < ServiceList.Count; i++)
                 {
-                    Sch += ServiceList[i].ToString()+"\n    ";
+                    Sch += ServiceList[i].ToString() + "\n    ";
                 }
-                Sch += @"</serviceList>"; 
+                Sch += @"</serviceList>";
                 return Sch;
             }
         }
         public override string ToString()
         {
             return $@"<?xml version='1.0'?>
-<root xmlns='urn:schemas-upnp-org:device-1-0'>
-  <specVersion>
-    <major>{Major}</major>
-    <minor>{Minor}</minor>
-  </specVersion>
-  <device>
-    <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
-    <friendlyName>{DeviceName}</friendlyName>
-    <manufacturer>{Manufacturer}</manufacturer>
-    <modelName>{ModelName}</modelName>
-    <modelNumber>{ModelNumber}</modelNumber>
-    <UDN>uuid:{UniqueID}</UDN>
-    <iconList>
-      <icon>
-        <mimetype>image/png</mimetype>
-        <width>48</width>
-        <height>48</height>
-        <depth>24</depth>
-        <url>/image/tv.png</url>
-      </icon>
-    </iconList>
-    {ServiceListSchemas}
-  </device>
-</root>";
+        <root xmlns='urn:schemas-upnp-org:device-1-0' xmlns:dlna='urn:schemas-dlna-org:device-1-0'>
+          <specVersion>
+            <major>{Major}</major>
+            <minor>{Minor}</minor>
+          </specVersion>
+          <device>
+            <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
+            <friendlyName>{DeviceName}</friendlyName>
+            <manufacturer>{Manufacturer}</manufacturer>
+            <manufacturerURL>http://www.yakwii.com</manufacturerURL>
+            <modelDescription>DLNA Media Server</modelDescription>
+            <modelName>{ModelName}</modelName>
+            <modelNumber>{ModelNumber}</modelNumber>
+            <modelURL>http://www.yakwii.com/model1</modelURL>
+            <serialNumber>123456789</serialNumber>
+            <UDN>uuid:{UniqueID}</UDN>
+            <iconList>
+              <icon>
+                <mimetype>image/png</mimetype>
+                <width>48</width>
+                <height>48</height>
+                <depth>24</depth>
+                <url>/image/tv.png</url>
+              </icon>
+            </iconList>
+            {ServiceListSchemas}
+          </device>
+        </root>";
         }
         
         public async void Start(string localIp, int port)
@@ -103,33 +107,51 @@ namespace PVLib
             ChannelList list = new();
             for (int i = 0; i < Medias.Length; i++)
             {
-                list.Add($"http://{IP}:{port}/live/{Medias[i].Name}");
+                list.Add(new ChannelRef(Medias[i].Name, IP, port));
             }
             xmlSerializer.Serialize(sw, list);
             return sw.ToString();
         }
         async Task SendSsdpAnnouncements(string localIp, int port)
         {
-            string ssdpNotifyTemplate = "NOTIFY * HTTP/1.1\r\n" +
-                                        "HOST: 239.255.255.250:1900\r\n" +
-                                        "CACHE-CONTROL: max-age=1800\r\n" +
-                                        $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
-                                        $"CHANNELS: http://{localIp}:{port}/media\r\n" +
-                                        "NT: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
-                                        "NTS: ssdp:all\r\n" +
-                                        "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                        $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                        "\r\n";
+            string standardSsdpNotifyTemplate = "NOTIFY * HTTP/1.1\r\n" +
+                                       "HOST: 239.255.255.250:1900\r\n" +
+                                       "CACHE-CONTROL: max-age=1800\r\n" +
+                                       $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                       "NT: urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                       "NTS: ssdp:alive\r\n" +
+                                       "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
+                                       $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                       "\r\n";
+
+            string customSsdpNotifyTemplate = "NOTIFY * HTTP/1.1\r\n" +
+                                              "HOST: 239.255.255.250:1900\r\n" +
+                                              "CACHE-CONTROL: max-age=1800\r\n" +
+                                              $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
+                                              $"CHANNELS: http://{localIp}:{port}/media\r\n" +
+                                              "NT: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
+                                              "NTS: ssdp:alive\r\n" +
+                                              "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
+                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              "\r\n";
+            
 
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse("239.255.255.250"), 1900);
             UdpClient client = new UdpClient();
-            byte[] buffer = Encoding.UTF8.GetBytes(ssdpNotifyTemplate);
+            byte[] standardBuffer = Encoding.UTF8.GetBytes(standardSsdpNotifyTemplate);
+            byte[] customBuffer = Encoding.UTF8.GetBytes(customSsdpNotifyTemplate);
+            
 
             while (true)
             {
-                Console.WriteLine("ssdp message sent");
-                client.Send(buffer, buffer.Length, endPoint);
+                // Send standard SSDP announcement
+                client.Send(standardBuffer, standardBuffer.Length, endPoint);
+                await Task.Delay(1000); // Short delay between announcements
+
+                // Send custom SSDP announcement
+                client.Send(customBuffer, customBuffer.Length, endPoint);
                 await Task.Delay(1000 * 30); // Send every 30 seconds
+                
             }
         }
 
@@ -149,31 +171,40 @@ namespace PVLib
 
                 if (request.Contains("M-SEARCH") && request.Contains("ssdp:discover"))
                 {
-                    string responseTemplate = !request.Contains("upnp:rootdevice") ? $"HTTP/1.1 200 OK\r\n" +
+                    List<string> responseTemplates = new List<string>();
+
+                    if (request.Contains("urn:PseudoVision:schemas-upnp-org:MediaServer:1"))
+                    {
+                        responseTemplates.Add($"HTTP/1.1 200 OK\r\n" +
                                               "CACHE-CONTROL: max-age=1800\r\n" +
                                               $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
                                               "EXT:\r\n" +
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
                                               $"CHANNELS: http://{localIp}:{port}/media\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              "ST: urn:PseudoVision:device:MediaServer:1\r\n" +
+                                              "ST: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
                                               $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
-                                              "\r\n" :
-                                              $"HTTP/1.1 200 OK\r\n" +
+                                              "\r\n");
+                    }
+
+                    if (request.Contains("upnp:rootdevice") || request.Contains("ssdp:all"))
+                    {
+                        responseTemplates.Add($"HTTP/1.1 200 OK\r\n" +
                                               "CACHE-CONTROL: max-age=1800\r\n" +
                                               $"DATE: {DateTime.UtcNow.ToString("r")}\r\n" +
                                               "EXT:\r\n" +
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
                                               "ST: upnp:rootdevice\r\n" +
-                                              $"USN: uuid:{UniqueID}::upnp:rootdevice\r\n" +
-                                              "\r\n";
-                    if (request.Contains("upnp:rootdevice"))
-                    {
-                        Console.WriteLine("ROOT");
+                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              "\r\n");
                     }
-                    byte[] responseData = Encoding.UTF8.GetBytes(responseTemplate);
-                    await client.SendAsync(responseData, responseData.Length, result.RemoteEndPoint);
+
+                    foreach (var responseTemplate in responseTemplates)
+                    {
+                        byte[] responseData = Encoding.UTF8.GetBytes(responseTemplate);
+                        await client.SendAsync(responseData, responseData.Length, result.RemoteEndPoint);
+                    }
                 }
             }
         }

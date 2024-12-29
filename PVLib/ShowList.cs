@@ -105,8 +105,8 @@ namespace PVLib
             return $@"<item id=""{s}"" parentID=""0"" restricted=""false"">
                         <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
-                        <upnp:class>object.item.videoItem.videoProgram</upnp:class>
-                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"">http://{ip}:{prt}/live/{Name}.mp4</res>
+                        <upnp:class>object.item.videoItem.videoItem</upnp:class>
+                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
                     </item>";
         }
 
