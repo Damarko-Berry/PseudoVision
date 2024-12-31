@@ -167,7 +167,7 @@ namespace PVLib
 
         public async Task StartCycle()
         {
-            //CleanUp();
+            CleanUp();
             await Task.Delay(200);
             for (CurrentSlot = 0; CurrentSlot<slots.Count; CurrentSlot++)
             {
@@ -177,7 +177,7 @@ namespace PVLib
                     break;
                 }
             }
-            await SegCyc();
+            await TestSegCyc();
         }
         #region live
 
@@ -369,36 +369,14 @@ namespace PVLib
         }
         void CleanUp()
         {
-            TerminateProcess("ffmpeg");
+           
             if (Directory.Exists(liveOutputDirectory))
             {
                 Directory.Delete(ManifestOutputDirectory,true);
             }
         }
        
-        void TerminateProcess(string processName)
-        {
-            
-            Process[] processes = Process.GetProcessesByName(processName);
 
-            
-            if (processes.Length > 0)
-            {
-                foreach (Process process in processes)
-                {
-                    try
-                    {
-                        process.Kill();
-                        Console.WriteLine($"Terminated process {processName} with PID {process.Id}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error terminating process {processName}: {ex.Message}");
-                    }
-                }
-            }
-            
-        }
         public TimeSpan TimeLeftInDay
         {
             get

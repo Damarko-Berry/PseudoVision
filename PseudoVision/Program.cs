@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
@@ -15,7 +16,7 @@ namespace PseudoVision
         static UPNP upnp => CurrentSettings.upnp;
         static async Task Main(string[] args)
         {
-            
+            TerminateProcess("ffmpeg");
             try
             {
                 CurrentSettings = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
@@ -260,7 +261,29 @@ namespace PseudoVision
             }
             throw new Exception("Local IP Address Not Found!");
         }
-        
+        static void TerminateProcess(string processName)
+        {
+
+            Process[] processes = Process.GetProcessesByName(processName);
+
+
+            if (processes.Length > 0)
+            {
+                foreach (Process process in processes)
+                {
+                    try
+                    {
+                        process.Kill();
+                        Console.WriteLine($"Terminated process {processName} with PID {process.Id}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error terminating process {processName}: {ex.Message}");
+                    }
+                }
+            }
+
+        }
         static IPAddress GetIPAddress()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
