@@ -43,11 +43,10 @@ namespace PseudoVision
         
         static async Task waittilnextday()
         {
-            while (true)
+            while (Schedules.Count>0)
             {
                 var waittime = (DateTime.Today.AddDays(1) - DateTime.Now);
                 await Task.Delay((int)waittime.TotalMilliseconds);
-                CreateScheds();
             }
         }
 
@@ -59,7 +58,6 @@ namespace PseudoVision
             var M = Da.Date.Month;
             var D = Da.Date.Day;
             var Y = Da.Date.Year;
-            Schedules.Clear();
             var CDs = Channels.GetDirectories();
             for (int i = 0; i < CDs.Length; i++)
             {
@@ -82,24 +80,25 @@ namespace PseudoVision
                         HLSSchedule schedule = (Schedule)sch;
                         sch = schedule;
                     }
+                    sch.AllSchedules = Schedules;
+                    sch.StartCycle();
                     Schedules.Add(chan.ChannelName.ToLower(), sch);
                 }
             }
             for (int i = 0; i < Schedules.Count; i++)
             {
+                
                 if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like | Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.LiveStream)
                 {
                     Playlist playlist = null;
                     if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like)
                     {
                         var sch = (Schedule)Schedules.ElementAt(i).Value;
-                        sch.StartCycle();
                         playlist = new(sch);
                     }
                     else
                     {
                         var sch = (HLSSchedule)Schedules.ElementAt(i).Value;
-                        sch.StartCycle();
                         playlist = new(sch);
                     }
                     string pth = FileSystem.ArchiveDirectory(Channels.GetDirectories()[i].Name);
@@ -231,14 +230,18 @@ namespace PseudoVision
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(@"<?xml version=""1.0"" encoding=""UTF-8""?>");
-            sb.Append(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
-
+            sb.AppendLine(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
+            sb.AppendLine($@"<container id=""0"" parentID=""-1"" restricted=""false"" updateID=""{UPNP.Update}"">");
+            sb.AppendLine($@"<dc:title>Media Server</dc:title>");
+            sb.AppendLine($@"<dc:creator>{upnp.DeviceName}</dc:creator>");
+            sb.AppendLine($@"<upnp:class>object.container</upnp:class>");
             for (int i = 0; i < schedules.Length; i++)
             {
-                sb.Append(schedules[i].GetContent(i, (isprivate)?CurrentSettings.IP:Public_IP, CurrentSettings.Port));
+                sb.AppendLine(schedules[i].GetContent(i, (isprivate)?CurrentSettings.IP:Public_IP, CurrentSettings.Port));
             }
 
-            sb.Append("</DIDL-Lite>");
+            sb.AppendLine($@"</container>");
+            sb.AppendLine("</DIDL-Lite>");
             return sb.ToString();
         }
         static string GetLocalIPAddress()

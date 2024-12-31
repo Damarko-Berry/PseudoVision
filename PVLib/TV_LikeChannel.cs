@@ -9,15 +9,26 @@ namespace PVLib
     public class TV_LikeChannel : Channel
     {
         public bool Live;
+        
         const double AVERAGEEPISODETIME = .35;
+        
         public Rotation rotation = new Rotation();
+        
         public Channel_Type Channel_Type = Channel_Type.TV_Like;
+        
         public MovieMode movieMode;
+        
+
         public bool FillTime;
+        
         public override Channel_Type channel_Type => Channel_Type;
+        
         public string SeasonsDirectory => Path.Combine(HomeDirectory, "Seasons");
+        
         public string RerunDirectory => Path.Combine(HomeDirectory, "Reruns");
+        
         public string ShortsDirectory => Path.Combine(HomeDirectory, "Shorts");
+        
         public Season[] Seasons
         {
             get
@@ -33,6 +44,7 @@ namespace PVLib
                 return seasons.ToArray();
             }
         }
+        
         Season CurrentSeason(Season[] seasons)
         {
             var seas = new List<Season>(seasons);
@@ -50,6 +62,7 @@ namespace PVLib
             }
             return seas[new Random().Next(0, seas.Count)];
         }
+        
         TimeSpan Reruntime(Rerun[]Rs)
         {
                 TimeSpan time = new TimeSpan();
@@ -59,6 +72,7 @@ namespace PVLib
                 }
                 return time;
         }
+        
         double RerunTimeThreshhold
         {
             get
@@ -74,6 +88,7 @@ namespace PVLib
                 return time > FULLDAY ? FULLDAY : time;
             }
         }
+        
         public Show[] Shows
         {
             get
@@ -87,6 +102,7 @@ namespace PVLib
                 return [.. list];
             }
         }
+        
         public MovieDirectory MovieDirectory
         {
             get
@@ -104,6 +120,7 @@ namespace PVLib
                 return null;
             }
         }
+        
         MovieDirectory Shorts
         {
             get
@@ -118,10 +135,12 @@ namespace PVLib
                 return S.Length > 0 ? S[new Random().Next(S.Length)] : null;
             }
         }
+        
         public Time PrimeTime = new Time()
         {
             Hour = 8
         };
+        
         public Rerun[] reruns
         {
             get
@@ -136,6 +155,7 @@ namespace PVLib
                 return [.. rrs];
             }
         }
+        
         public override void CreateNewSchedule(DateTime today)
         {
             var M = today.Date.Month;
@@ -331,6 +351,7 @@ namespace PVLib
             var fi = new FileInfo(epname);
             File.Delete(Path.Combine(RerunDirectory, $"{fi.Name}.rrn"));
         }
+        
         public override void Cancel(string name)
         {
             base.Cancel(name);
@@ -345,6 +366,7 @@ namespace PVLib
                 }
             }
         }
+        
         void UpdateSeasons()
         {
             var SeD = new DirectoryInfo(SeasonsDirectory).GetFiles();

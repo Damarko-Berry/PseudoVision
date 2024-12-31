@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Xml.Serialization;
 
 
 namespace PVLib
@@ -12,7 +13,22 @@ namespace PVLib
         public string Name { get; set; }
         int CurrentSlot;
         public Schedule_Type ScheduleType => Schedule_Type.TV_Like;
-        public TimeSlot Slot => slots[CurrentSlot];
+        public TimeSlot Slot 
+        { 
+            get 
+            {
+                try
+                {
+                    return slots[CurrentSlot];
+                }
+                catch
+                {
+                    Random random = new((int)DateTime.Now.Ticks);
+                    int i = random.Next(0, slots.Count);
+                    return slots[i];
+                } 
+            } 
+        }
         public TimeSpan ScheduleDuration
         {
             get
@@ -26,6 +42,9 @@ namespace PVLib
             }
         }
         public FileInfo info => new FileInfo(Slot.Media);
+        [XmlIgnore]
+        public Dictionary<string, ISchedule> AllSchedules { get; set; }
+
         public async Task SendMedia(HttpListenerContext client)
         {
             
@@ -84,11 +103,23 @@ namespace PVLib
             {
                 CurrentSlot++;
                 UPNP.Update++;
-                
+                if(CurrentSlot+1 == slots.Count)
+                {
+                    DateTime tmrw = DateTime.Now.AddDays(1);
+                    var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+                    chan.CreateNewSchedule(tmrw);
+                    if(chan.ScheduleExists(tmrw))
+                    {
+                        var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
+                        Schedule sch = SaveLoad<Schedule>.Load(scdpath);
+                        slots.AddRange(sch.slots);
+                    }
+                }
                 await Task.Delay(TimeSpan.FromMilliseconds(timeleft));
             }
             Random random = new((int)DateTime.Now.Ticks);
             CurrentSlot = random.Next(0, slots.Count);
+            AllSchedules.Remove(Name);
         }
 
         public string GetContent(int index, string ip, int prt)

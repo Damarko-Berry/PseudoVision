@@ -6,6 +6,8 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
+using static System.Reflection.Metadata.BlobBuilder;
 
 namespace PVLib
 {
@@ -30,6 +32,9 @@ namespace PVLib
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
+        [XmlIgnore]
+        public Dictionary<string, ISchedule> AllSchedules { get; set; }
+
         public async Task SendMedia(HttpListenerContext client)
         {
             if (File.Exists(LastPLayed)) {
@@ -37,6 +42,7 @@ namespace PVLib
             }
             else
             {
+                UPNP.Update++;
                 Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
             }
             var P = GetPlaylist;
@@ -48,6 +54,7 @@ namespace PVLib
                 CurrentlyPlaying = new TimeSlot(show.NextEpisode());
                 P.Add(CurrentlyPlaying);
                 File.WriteAllText(FileSystem.Archive(Name, DateTime.Now), P.ToString());
+                UPNP.Update++;
                 SaveLoad<Show>.Save(show, Shows[shw]);
             }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
@@ -77,6 +84,7 @@ namespace PVLib
             }
             else
             {
+                UPNP.Update++;
                 Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
             }
             var P = GetPlaylist;
@@ -89,6 +97,7 @@ namespace PVLib
                 P.Add(CurrentlyPlaying);
                 File.WriteAllText(FileSystem.Archive(Name, DateTime.Now), P.ToString());
                 SaveLoad<Show>.Save(show, Shows[shw]);
+                UPNP.Update++;
             }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
 
@@ -109,7 +118,33 @@ namespace PVLib
                         <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
                     </item>";
         }
-
+        public async Task StartCycle()
+        {
+            TimeSpan FiveMin= new(0, 5, 0);
+        StartUp:
+            await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
+            DateTime tmrw = DateTime.Now.AddDays(1);
+            var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+            chan.CreateNewSchedule(tmrw);
+            await Task.Delay(TimeLeftInDay);
+            if (chan.ScheduleExists(tmrw))
+            {
+                var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
+                Shows = SaveLoad<ShowList>.Load(scdpath).Shows;
+                goto StartUp;
+            }
+            AllSchedules.Remove(Name);
+        }
+        TimeSpan TimeLeftInDay
+        {
+            get
+            {
+                DateTime now = DateTime.Now;
+                DateTime endOfDay = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
+                TimeSpan timeLeft = endOfDay - now;
+                return timeLeft;
+            }
+        }
         public ShowList() { }
         public ShowList(DirectoryInfo ShowDirectory)
         {

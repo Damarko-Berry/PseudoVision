@@ -12,7 +12,7 @@ namespace PVLib
     public struct Rotation
     {
         public List<ShowRef> ShowList;
-        ShowRef this[ShowRef show]
+        internal ShowRef this[ShowRef show]
         {
             set 
             {
@@ -75,7 +75,7 @@ namespace PVLib
             {
                 if (ShowList[i].DayToPlay == day) {
                     shwrf = ShowList[i];
-                    v = SaveLoad<Show>.Load( Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
+                    v = SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
                     break;
                 }
             }

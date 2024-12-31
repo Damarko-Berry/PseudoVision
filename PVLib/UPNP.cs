@@ -44,9 +44,6 @@ namespace PVLib
                 eventSubURL = "events"
             },
         };
-        [XmlIgnore]
-        public List<ISchedule> ScheduleList = new();
-       
         string ServiceListSchemas
         {
             get

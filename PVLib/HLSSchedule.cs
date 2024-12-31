@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Net.Sockets;
+using System.Xml.Serialization;
 
 namespace PVLib
 {
@@ -73,9 +74,9 @@ namespace PVLib
         {
             return $@"<item id=""{index}"" parentID=""0"" restricted=""false"">
                         <dc:title>{info.Name}</dc:title>
-                        <dc:creator>Unknown</dc:creator>
+                        <dc:creator>My boy</dc:creator>
                         <upnp:class>object.item.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                        <res protocolInfo=""http-get:*:application/vnd.apple.mpegurl:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
                     </item>";
         }
 
@@ -170,6 +171,7 @@ namespace PVLib
             await Task.Delay(200);
             for (CurrentSlot = 0; CurrentSlot<slots.Count; CurrentSlot++)
             {
+                UPNP.Update++;
                 if (Slot.Durring(DateTime.Now))
                 {
                     break;
@@ -213,28 +215,22 @@ namespace PVLib
             while(CurrentSegment != null)
             {
                 Console.WriteLine("current Segment: "+CurrentSegment.path);
-                await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
+                await Task.Delay(CurrentSegment.duration);
                 if (CurrentSegment.path.Contains("seg0"))
                 {
-                    CurrentSlot++;
+                    Increment();
                     CleanUp(CurrentSlot - 1, 30);
                 }
                 if (CurrentSegment.path.Contains("seg10"))
                 {
                     CleanUp(CurrentSlot - 1, 0);
                 }
-                if (TimeLeftInDay.TotalHours < TV_LikeChannel.FULLDAY)
-                {
-                    LastManifest = CurrentSate;
-                    TerminateProcess("ffmpeg");
-                    processing = false;
-                    break;
-                }
                 ProcessNext();
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
             }
             if (processing) goto Oops;
-            await Task.Delay((int)TimeLeftInDay.TotalMilliseconds);
+            await Task.Delay(TimeLeftInDay);
+            AllSchedules.Remove(Name);
             CleanUp(CurrentSlot, 0);
         }
         async Task TestSegCyc()
@@ -258,8 +254,8 @@ namespace PVLib
                 {
                     if (CurrentSegment.path.Contains("seg0"))
                     {
-                        CurrentSlot++;
-                        //CleanUp(CurrentSlot - 1, 30);
+                        Increment();
+                        CleanUp(CurrentSlot - 1, 30);
                     }
                     if (CurrentSegment.path.Contains("seg30"))
                     {
@@ -271,8 +267,24 @@ namespace PVLib
             }
             if (processing) goto Oops;
         }
-
-
+        
+        void Increment()
+        {
+            UPNP.Update++;
+            CurrentSlot++;
+            if (CurrentSlot + 1 == slots.Count)
+            {
+                DateTime tmrw = DateTime.Now.AddDays(1);
+                var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+                chan.CreateNewSchedule(tmrw);
+                if (chan.ScheduleExists(tmrw))
+                {
+                    var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
+                    Schedule sch = SaveLoad<Schedule>.Load(scdpath);
+                    slots.AddRange(sch.slots);
+                }
+            }
+        }
         void ProcessNext()
         {           
             if(!processing & SlotsAvalible < 2 & CurrentSlot+1 < slots.Count)
@@ -397,6 +409,9 @@ namespace PVLib
                 return timeLeft;
             }
         }
+        [XmlIgnore]
+        public Dictionary<string, ISchedule> AllSchedules { get; set; }
+
         public HLSSchedule(Schedule schedule)
         {
             slots = schedule.slots;
