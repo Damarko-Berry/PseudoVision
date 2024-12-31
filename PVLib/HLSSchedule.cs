@@ -16,6 +16,7 @@ namespace PVLib
         segment CurrentSegment = null;
         int CurrentSlot;
         bool processing;
+        DateTime StartTime = DateTime.Now;
         
         public TimeSlot Slot => slots[CurrentSlot];
         public TimeSpan ScheduleDuration
@@ -66,6 +67,7 @@ namespace PVLib
                 return Hs;
             }
         }
+        HLS LastManifest=null;
         public Schedule_Type ScheduleType => Schedule_Type.LiveStream;
 
         public string GetContent(int index, string ip, int prt)
@@ -115,11 +117,19 @@ namespace PVLib
         }
         async void SendManifest(HttpListenerContext Context)
         {
-            HLS hLS = CurrentSate;
-            hLS.SetOffset(CurrentSegment.path);
-            Console.WriteLine($"Target Duration: {hLS.targetDuration}");
-            var des =hLS.ToString(CurrentSegment);
-            
+            HLS hLS = new();
+            string des = "";
+            try
+            {
+                hLS = CurrentSate;
+                hLS.SetOffset(CurrentSegment.path);
+                des = hLS.ToString(CurrentSegment);
+            }
+            catch (Exception ex)
+            {
+                hLS = LastManifest;
+                des = hLS.ToString();
+            }
             byte[] buffer = Encoding.UTF8.GetBytes(des);
             HttpListenerResponse client = Context.Response;
             client.ContentLength64 = buffer.Length;
@@ -157,8 +167,8 @@ namespace PVLib
 
         public async Task StartCycle()
         {
-
-            CleanUp();
+            //CleanUp();
+            StartTime = DateTime.Now;
             await Task.Delay(200);
             var ct = DateTime.Now;
             for (CurrentSlot = 0; CurrentSlot<slots.Count; CurrentSlot++)
@@ -168,7 +178,7 @@ namespace PVLib
                     break;
                 }
             }
-            await TestSegCyc();
+            await SegCyc();
         }
         #region live
 
@@ -188,8 +198,13 @@ namespace PVLib
                 pLength =CurrentSate.Length;
                 if (!Slot.Durring(DateTime.Now))
                 {
-
+                    CleanUp();
                     StartCycle();
+                    return;
+                }
+                if (TimeLeftInDay.TotalMinutes < 6)
+                {
+                    LastManifest = CurrentSate;
                     return;
                 }
             }
@@ -207,14 +222,23 @@ namespace PVLib
                     CurrentSlot++;
                     CleanUp(CurrentSlot - 1, 30);
                 }
-                if (CurrentSegment.path.Contains("seg30"))
+                if (CurrentSegment.path.Contains("seg10"))
                 {
                     CleanUp(CurrentSlot - 1, 0);
+                }
+                if (TimeLeftInDay.TotalHours < TV_LikeChannel.FULLDAY)
+                {
+                    LastManifest = CurrentSate;
+                    TerminateProcess("ffmpeg");
+                    processing = false;
+                    break;
                 }
                 ProcessNext();
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
             }
             if (processing) goto Oops;
+            await Task.Delay((int)TimeLeftInDay.TotalMilliseconds);
+            CleanUp(CurrentSlot, 0);
         }
         async Task TestSegCyc()
         {
@@ -266,7 +290,17 @@ namespace PVLib
             processing = true;
             Directory.CreateDirectory(liveOutputDirectory);
             filePath = "\"" + filePath + "\"";
-            string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
+            string ffmpegArgs;
+
+            if (slots[SlotNo].Duration > TimeLeftInDay)
+            {
+                ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" -t {(int)TimeLeftInDay.TotalSeconds} {ManifestOutputDirectory}/index({SlotNo}).m3u8";
+            }
+            else
+            {
+                ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
+            }
+
             await RunFFmpeg(ffmpegArgs);
             processing = false;
         }
@@ -355,6 +389,16 @@ namespace PVLib
                 }
             }
             
+        }
+        public TimeSpan TimeLeftInDay
+        {
+            get
+            {
+                DateTime now = DateTime.Now;
+                DateTime endOfDay = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
+                TimeSpan timeLeft = endOfDay - now;
+                return timeLeft;
+            }
         }
         public HLSSchedule(Schedule schedule)
         {

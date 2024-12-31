@@ -9,7 +9,7 @@ namespace PVLib
 {
     public class HLS
     {
-        public TimeSpan offset;
+        TimeSpan offset;
         public TimeSpan Length 
         { 
             get
@@ -36,14 +36,20 @@ namespace PVLib
                 return (int)TD.Average();
             }
         }
-        string Header => $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:{targetDuration}\n#EXT-X-MEDIA-SEQUENCE:0";
+        string Header => $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:{targetDuration}";
         string FullBody
         {
             get
             {
+                int MediaSequence = 0;
                 string body = string.Empty;
                 for (int i = 0; i < Body.Count; i++)
                 {
+                    if (Body[i].path.Contains("seg0"))
+                    {
+                        body += $"#EXT-X-MEDIA-SEQUENCE:{MediaSequence}\n";
+                    }
+                        MediaSequence++;
                     body += $"{Body[i]}\n";
                 }
                 return body;
@@ -146,6 +152,7 @@ namespace PVLib
         }
         public override string ToString()
         {
+            
             return $"{Header}\n{FullBody}\n#EXT-X-ENDLIST";
         }
         public string ToString(segment segment)
@@ -154,6 +161,7 @@ namespace PVLib
             string body = string.Empty;
             bool SegmentFound = false;
             TimeSpan Buffer = new();
+            int MediaSequence = 0;
             int i = 0;
             for (i = 0; i < Body.Count; i++)
             {
@@ -165,12 +173,21 @@ namespace PVLib
                 if (SegmentFound)
                 {
                     Buffer += Body[i].duration;
-                    if(Buffer.TotalSeconds >30 )
+                    if (Buffer.TotalSeconds > 30)
                     {
                         Console.WriteLine($"Buffer is {Buffer.TotalSeconds}");
                         break;
                     }
                 }
+                if (Body[i].path.Contains("seg0"))
+                {
+                    if (i > 0)
+                    {
+                        body += "#EXT-X-DISCONTINUITY\n";
+                    }
+                    body += $"#EXT-X-MEDIA-SEQUENCE:{MediaSequence}\n";
+                }
+                MediaSequence++;
                 body += $"{Body[i]}\n";
             }
             return (i<Body.Count)?$"{Header}\n{body}\n": ToString();
