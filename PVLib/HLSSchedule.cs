@@ -16,7 +16,6 @@ namespace PVLib
         segment CurrentSegment = null;
         int CurrentSlot;
         bool processing;
-        DateTime StartTime = DateTime.Now;
         
         public TimeSlot Slot => slots[CurrentSlot];
         public TimeSpan ScheduleDuration
@@ -168,12 +167,10 @@ namespace PVLib
         public async Task StartCycle()
         {
             //CleanUp();
-            StartTime = DateTime.Now;
             await Task.Delay(200);
-            var ct = DateTime.Now;
             for (CurrentSlot = 0; CurrentSlot<slots.Count; CurrentSlot++)
             {
-                if (Slot.Durring(ct))
+                if (Slot.Durring(DateTime.Now))
                 {
                     break;
                 }
