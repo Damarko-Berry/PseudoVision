@@ -348,7 +348,7 @@ namespace PVLib
         #endregion
         async void CleanUp(int slotNum, int offset)
         {
-            if (!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))| DateTime.Now.Subtract(new TimeSpan(0,0,30)) > (DateTime)CurrentlyPlaying.StartTime |clean) return;
+            if (!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))| DateTime.Now.Subtract(new TimeSpan(0,0,45)) < (DateTime)CurrentlyPlaying.StartTime |clean) return;
             try
             {
                 clean = true;
