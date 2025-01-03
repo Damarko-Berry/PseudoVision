@@ -8,7 +8,6 @@ namespace PVLib
 {
     public class TV_LikeChannel : Channel
     {
-        public bool Live;
         
         const double AVERAGEEPISODETIME = .35;
         

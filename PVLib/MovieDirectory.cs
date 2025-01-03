@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using WMPLib;
 
 namespace PVLib
 {
@@ -22,6 +23,20 @@ namespace PVLib
                     VF.AddRange(directoryInfo.GetFiles("*" + ValidExtensions[i], SearchOption.AllDirectories));
                 }
                 return [.. VF];
+            }
+        }
+        public override TimeSpan Duration
+        {
+            get
+            {
+                TimeSpan durr = new();
+                for (int i = 0; i < Content.Length; i++)
+                {
+                    var player = new WindowsMediaPlayer();
+                    var clip = player.newMedia(Content[i].FullName);
+                    durr += TimeSpan.FromSeconds(clip.duration);
+                }
+                return durr;
             }
         }
 

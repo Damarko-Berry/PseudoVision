@@ -7,7 +7,7 @@ using static PVLib.Settings;
 
 namespace PseudoVision
 {
-    internal class Program
+    public class Program
     {
 
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
@@ -67,23 +67,25 @@ namespace PseudoVision
                 if (chan.CTD.Length > 0)
                 {
                     var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{M}.{D}.{Y}.{FileSystem.ScheduleEXT}");
-                    bool live= false;
-                    if(chan.channel_Type == Channel_Type.TV_Like)
-                    {
-                        var TV = (TV_LikeChannel)chan;
-                        live = TV.Live;
-                    }
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?
                        SaveLoad<Schedule>.Load(scdpath) : SaveLoad<ShowList>.Load(scdpath);
                     sch.Name = chan.ChannelName.ToLower();
-                    if (live)
+                    if (chan.Live)
                     {
-                        HLSSchedule schedule = (Schedule)sch;
-                        sch = schedule;
+                        if (chan.channel_Type == Channel_Type.TV_Like)
+                        {
+                            HLSSchedule schedule = (Schedule)sch;
+                            sch = schedule;
+                        }
+                        else
+                        {
+                            BingeHLS schedule = new((ShowList)sch);
+                            sch = schedule;
+                        }
                     }
+                    Schedules.Add(chan.ChannelName.ToLower(), sch);
                     sch.AllSchedules = Schedules;
                     sch.StartCycle();
-                    Schedules.Add(chan.ChannelName.ToLower(), sch);
                 }
             }
             for (int i = 0; i < Schedules.Count; i++)

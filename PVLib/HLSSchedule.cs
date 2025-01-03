@@ -19,18 +19,7 @@ namespace PVLib
         bool processing;
         
         public TimeSlot Slot => slots[CurrentSlot];
-        public TimeSpan ScheduleDuration
-        {
-            get
-            {
-                TimeSpan time = new TimeSpan();
-                for (int i = 0; i < slots.Count; i++)
-                {
-                    time += slots[i].Duration;
-                }
-                return time;
-            }
-        }
+        
         int SlotsAvalible 
         { 
             get
@@ -53,21 +42,7 @@ namespace PVLib
         public string Name { get; set; }
         string liveOutputDirectory => Path.Combine("output", Name, "segments");
         string ManifestOutputDirectory => Path.Combine("output", Name);
-        HLS CurrentSate
-        {
-            get
-            {
-                var Hs = new HLS();
-                var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
-                for (int i = 0; i < manifests.Length; i++)
-                {
-                    Hs += HLS.Load(File.ReadAllText(manifests[i]));
-                }
-
-                return Hs;
-            }
-        }
-        HLS LastManifest=null;
+        HLS CurrentSate=null;
         public Schedule_Type ScheduleType => Schedule_Type.LiveStream;
 
         public string GetContent(int index, string ip, int prt)
@@ -119,17 +94,11 @@ namespace PVLib
         {
             HLS hLS = new();
             string des = "";
-            try
-            {
-                hLS = CurrentSate;
-                hLS.SetOffset(CurrentSegment.path);
-                des = hLS.ToString(CurrentSegment);
-            }
-            catch (Exception ex)
-            {
-                hLS = LastManifest;
-                des = hLS.ToString();
-            }
+            hLS = CurrentSate;
+                
+            hLS.SetOffset(CurrentSegment.path);
+            des = hLS.ToString(CurrentSegment);
+            
             byte[] buffer = Encoding.UTF8.GetBytes(des);
             HttpListenerResponse client = Context.Response;
             client.ContentLength64 = buffer.Length;
@@ -177,16 +146,43 @@ namespace PVLib
                     break;
                 }
             }
-            await TestSegCyc();
+            
+            await SegCyc();
         }
         #region live
+        async void UpdateCurrentState(CancellationToken Toolong)
+        {
+            while(AllSchedules.ContainsKey(Name)&!Toolong.IsCancellationRequested)
+            {
+                
+                var Hs = new HLS();
+                var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
+                for (int i = 0; i < manifests.Length; i++)
+                {
+                    Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                }
+                CurrentSate = Hs;
+                if (CurrentSegment == null)
+                {
+                    await Task.Delay(500);
+                }
+                else
+                {
+                    await Task.Delay(CurrentSegment.duration);
+                }
+            }
+            Console.WriteLine("UpdateCurrentState has ended");
+        }
 
         async Task SegCyc()
         {
 
             ProcessVideo(Slot.Media, CurrentSlot);
             await Task.Delay(5*1000);
-            Oops:
+            CancellationTokenSource cts = new();
+            var Toolong = cts.Token;
+            UpdateCurrentState(Toolong);
+        Oops:
             DateTime StartTime = Slot.StartTime;
             var TargetOffset = DateTime.Now.Subtract(StartTime);
             var pLength = CurrentSate.Length;
@@ -197,18 +193,13 @@ namespace PVLib
                 pLength =CurrentSate.Length;
                 if (!Slot.Durring(DateTime.Now))
                 {
+                    cts.Cancel();
                     CleanUp();
                     StartCycle();
                     return;
                 }
-                if (TimeLeftInDay.TotalMinutes < 6)
-                {
-                    LastManifest = CurrentSate;
-                    return;
-                }
             }
             CurrentSegment = CurrentSate.GetSegment(DateTime.Now.Subtract(StartTime));
-
             ProcessNext();
             
             
@@ -221,15 +212,17 @@ namespace PVLib
                     Increment();
                     CleanUp(CurrentSlot - 1, 30);
                 }
-                if (CurrentSegment.path.Contains("seg10"))
+                if (CurrentSegment.path.Contains("seg3"))
                 {
                     CleanUp(CurrentSlot - 1, 0);
                 }
                 ProcessNext();
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
+                
             }
             if (processing) goto Oops;
             await Task.Delay(TimeLeftInDay);
+            cts.Cancel();
             AllSchedules.Remove(Name);
             CleanUp(CurrentSlot, 0);
         }
@@ -237,12 +230,14 @@ namespace PVLib
         {
 
             ProcessVideo(Slot.Media, CurrentSlot);
+            CancellationTokenSource cts = new();
+            var Toolong = cts.Token;
+            UpdateCurrentState(Toolong);
             while (CurrentSate.Length.TotalMinutes < 1)
             {
                 await Task.Delay(500);
             }
             CurrentSegment = CurrentSate.Body[0];
-
             ProcessNext();
 
         Oops:
@@ -257,15 +252,17 @@ namespace PVLib
                         Increment();
                         CleanUp(CurrentSlot - 1, 30);
                     }
-                    if (CurrentSegment.path.Contains("seg30"))
+                    if (CurrentSegment.path.Contains("seg3"))
                     {
                         CleanUp(CurrentSlot - 1, 0);
                     }
                 }
                 ProcessNext();
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
+
             }
             if (processing) goto Oops;
+            cts.Cancel();
         }
         
         void Increment()

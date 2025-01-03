@@ -29,7 +29,6 @@ namespace PVLib
         {
             if (ScheduleExists(today))
             {
-                Console.WriteLine("Shedeule already exist for today");
                 return;
             }
             CheckForFin();
@@ -59,6 +58,5 @@ namespace PVLib
         }
 
         public override bool isSupported(DirectoryType type) => type == DirectoryType.Show;
-        
     }
 }

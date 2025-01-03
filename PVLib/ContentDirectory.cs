@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.Xml;
+using WMPLib;
 
 namespace PVLib
 {
@@ -54,6 +55,7 @@ namespace PVLib
         public DirectoryType dirtype => DDetector(HomeDirectoryInfo);
         internal abstract FileInfo[] Content {  get; }
         public virtual int Length => Content.Length;
+        public abstract TimeSpan Duration { get; }
         public abstract string NextEpisode();
         public static ContentDirectory Load(string path)
         {

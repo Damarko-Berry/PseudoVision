@@ -7,6 +7,7 @@ namespace PVLib
 {
     public abstract class Channel
     {
+        public bool Live;
         public const double FULLDAY = 23.9;
         public string ChannelName => new DirectoryInfo(HomeDirectory).Name;
         public string HomeDirectory;
@@ -22,6 +23,7 @@ namespace PVLib
                 for (int i = 0; i < S.Length; i++)
                 {
                     S[i] = ContentDirectory.Load(allS[i].FullName);
+
                 }
                 return S;
             }
