@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 
 namespace PVLib
 {
-    public class Schedule : ISchedule
+    public class Schedule : PVObject, ISchedule
     {
         public readonly List<TimeSlot> slots = new();
         
@@ -76,7 +76,7 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
             finally
             {
@@ -136,7 +136,7 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
             finally
             {
@@ -187,7 +187,7 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
         }
         public string GetContent(int index, string ip, int prt)

@@ -33,10 +33,9 @@ namespace PVLib
             }
             CheckForFin();
             if (Shows.Length <= 0) return;
-            Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
             ShowList showList = new(new(ShowDirectory));
             SaveSchedule(showList, today);
-            Console.WriteLine($"Scheduling process for {ChannelName} ended: {DateTime.Now}");
+            
         }
         void CheckForFin()
         {

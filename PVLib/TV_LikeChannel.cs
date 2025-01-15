@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace PVLib
 {
@@ -157,6 +158,7 @@ namespace PVLib
         
         public override void CreateNewSchedule(DateTime today)
         {
+            ConsoleLog.Cycle(ChannelName);
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
@@ -342,7 +344,7 @@ namespace PVLib
             SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
-            Console.WriteLine($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");
+            ConsoleLog.writeMessage($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");
         }
         
         void OnMissingRerun(string epname)

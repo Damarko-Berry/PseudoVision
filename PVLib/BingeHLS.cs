@@ -11,7 +11,7 @@ using System.Diagnostics;
 
 namespace PVLib
 {
-    public class BingeHLS : ISchedule
+    public class BingeHLS : PVObject, ISchedule
     {
         public Schedule_Type ScheduleType => Schedule_Type.Binge_Like;
         public List<string> Shows = new();
@@ -39,6 +39,7 @@ namespace PVLib
         public Dictionary<string, ISchedule> AllSchedules { get; set; }
         public void selectMedia()
         {
+            ConsoleLog.Cycle(Name);
             if (File.Exists(LastPLayed))
             {
                 CurrentlyPlaying = SaveLoad<TimeSlot>.Load(LastPLayed);
@@ -69,6 +70,8 @@ namespace PVLib
         CancellationTokenSource cts = new();
         public async Task SendMedia(HttpListenerContext client)
         {
+            ConsoleLog.Cycle(Name);
+
             if (CurrentSegment == null)
             {
                 client.Response.OutputStream.Close();
@@ -97,52 +100,69 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
             fs.Close();
         }
         async void SendManifest(HttpListenerContext Context)
         {
+            ConsoleLog.Cycle(Name);
+
             HLS hLS = new();
             string des = "";
             hLS = CurrentSate;
 
             hLS.SetOffset(CurrentSegment.path);
             des = hLS.ToString(CurrentSegment);
-
-            byte[] buffer = Encoding.UTF8.GetBytes(des);
-            HttpListenerResponse client = Context.Response;
-            client.ContentLength64 = buffer.Length;
-            client.ContentType = "application/vnd.apple.mpegurl";
-            await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            try
+            {
+                byte[] buffer = Encoding.UTF8.GetBytes(des);
+                HttpListenerResponse client = Context.Response;
+                client.ContentLength64 = buffer.Length;
+                client.ContentType = "application/vnd.apple.mpegurl";
+                await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.writeError(ex.ToString());
+            }
         }
         public async Task SendMedia(string Request, NetworkStream stream)
         {
+            ConsoleLog.Cycle(Name);
+
             if (CurrentSegment == null) return;
            
             StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
-            if (!Request.Contains("["))
+            try
             {
-                HLS hLS = CurrentSate;
-                hLS.SetOffset(CurrentSegment.path);
-                var des = hLS.ToString();
-                byte[] buffer = Encoding.UTF8.GetBytes(des);
+                if (!Request.Contains("["))
+                {
+                    HLS hLS = CurrentSate;
+                    hLS.SetOffset(CurrentSegment.path);
+                    var des = hLS.ToString();
+                    byte[] buffer = Encoding.UTF8.GetBytes(des);
+                    writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine("Content-Type: application/vnd.apple.mpegurl");
+                    writer.WriteLine($"Content-Length: {buffer.Length}");
+                    writer.WriteLine();
+                    writer.Flush();
+                    await stream.WriteAsync(buffer);
+                    return;
+                }
+                var seg = Request.Split("/");
+                byte[] fileBytes = await File.ReadAllBytesAsync(Path.Combine(liveOutputDirectory, seg[^1].Replace("/", string.Empty)));
                 writer.WriteLine("HTTP/1.1 200 OK");
-                writer.WriteLine("Content-Type: application/vnd.apple.mpegurl");
-                writer.WriteLine($"Content-Length: {buffer.Length}");
+                writer.WriteLine("Content-Type: video/mp4");
+                writer.WriteLine($"Content-Length: {fileBytes.Length}");
                 writer.WriteLine();
                 writer.Flush();
-                await stream.WriteAsync(buffer);
-                return;
+                await stream.WriteAsync(fileBytes);
             }
-            var seg = Request.Split("/");
-            byte[] fileBytes = await File.ReadAllBytesAsync(Path.Combine(liveOutputDirectory, seg[^1].Replace("/", string.Empty)));
-            writer.WriteLine("HTTP/1.1 200 OK");
-            writer.WriteLine("Content-Type: video/mp4");
-            writer.WriteLine($"Content-Length: {fileBytes.Length}");
-            writer.WriteLine();
-            writer.Flush();
-            await stream.WriteAsync(fileBytes);
+            catch (Exception ex)
+            {
+                ConsoleLog.writeError(ex.ToString());
+            }
         }
 
         public string GetContent(int s, string ip, int prt)
@@ -251,7 +271,7 @@ namespace PVLib
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    ConsoleLog.writeError(ex.ToString());
                 }
                 if (CurrentSegment == null)
                 {
@@ -262,7 +282,7 @@ namespace PVLib
                     await Task.Delay(CurrentSegment.duration*.5);
                 }
             }
-            Console.WriteLine("UpdateCurrentState has ended");
+            ConsoleLog.writeMessage("UpdateCurrentState has ended");
         }
         bool clean = false;
         async Task SegCyc()
@@ -281,7 +301,6 @@ namespace PVLib
         
             while (CurrentSegment != null & AllSchedules.ContainsKey(Name))
             {
-                Console.WriteLine("current Segment: " + CurrentSegment.path);
                 await Task.Delay((int)CurrentSegment.duration.TotalMilliseconds);
 
                 CleanUp(CurrentSlot - 1, 0);
@@ -301,21 +320,14 @@ namespace PVLib
             var timeleftinslot = CurrentlyPlaying.EndTime - DateTime.Now;
             if (!processing & SlotsAvalible < 2 & timeleftinslot.TotalMinutes<=1)
             {
+                ConsoleLog.Cycle(Name);
                 DateTime NST = CurrentlyPlaying.EndTime;
-                Console.WriteLine("Processing Next");
+                ConsoleLog.writeMessage("Processing Next: "+ DateTime.Now);
                 CurrentSlot++;
                 selectMedia();
                 CurrentlyPlaying.StartTime = NST;
                 
                 ProcessVideo(CurrentlyPlaying.Media, CurrentSlot);
-            }
-            else
-            {
-                
-                Console.WriteLine("\n\nProssesing :"+processing);
-                Console.WriteLine("Slots Avalivble :"+SlotsAvalible);
-                Console.WriteLine("Clean :"+clean);
-                Console.WriteLine("Time Left :"+timeleftinslot+"\n\n");
             }
         }
 
@@ -334,9 +346,9 @@ namespace PVLib
 
                 subtitleCodec = cods[0].CodecName;
             }
-            catch 
+            catch (Exception ex)
             {
-                Console.WriteLine("No Subs");
+                ConsoleLog.writeError(ex.ToString());
             }
             string subtitleOption = subtitleCodec != null ? $"-c:s {subtitleCodec}" : string.Empty;
 
@@ -364,10 +376,10 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
 
-            Console.WriteLine("Processed");
+            ConsoleLog.writeMessage("Processed");
         }
 
         #endregion
@@ -391,7 +403,7 @@ namespace PVLib
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine(ex.ToString());
+                            ConsoleLog.writeError(ex.ToString());   
                         }   
                     }
                 }
@@ -404,11 +416,10 @@ namespace PVLib
                 }
                 if (vttfiles.Length > 0)
                     File.Delete(Path.Combine(ManifestOutputDirectory, $"index({slotNum})_vtt.m3u8"));
-                Console.WriteLine("Clean");
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
         }
         void CleanUp()

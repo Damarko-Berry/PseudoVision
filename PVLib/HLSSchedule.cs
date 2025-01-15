@@ -10,7 +10,7 @@ using System.Xml.Serialization;
 
 namespace PVLib
 {
-    public class HLSSchedule : ISchedule
+    public class HLSSchedule : PVObject, ISchedule
     {
         public readonly List<TimeSlot> slots = new();
         public HLSSchedule() { }
@@ -137,6 +137,7 @@ namespace PVLib
 
         public async Task StartCycle()
         {
+            ConsoleLog.Cycle(Name);
             CleanUp();
             await Task.Delay(200);
             while (!Slot.Durring(DateTime.Now))
@@ -202,7 +203,7 @@ namespace PVLib
             
             while(CurrentSegment != null)
             {
-                Console.WriteLine("current Segment: "+CurrentSegment.path);
+                ConsoleLog.writeMessage("current Segment: "+CurrentSegment.path);
                 await Task.Delay(CurrentSegment.duration);
                 if (CurrentSegment.path.Contains("seg0"))
                 {

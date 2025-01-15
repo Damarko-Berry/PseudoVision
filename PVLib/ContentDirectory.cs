@@ -9,7 +9,7 @@ using WMPLib;
 
 namespace PVLib
 {
-    public abstract class ContentDirectory
+    public abstract class ContentDirectory: PVObject
     {
         protected static string[] ValidExtensions
         {
@@ -74,7 +74,7 @@ namespace PVLib
                 sr.Close();
                 return channel;
             }
-            catch
+            catch (Exception ex)
             {
                 CType= (CType == DirectoryType.Movie) ? DirectoryType.Movie : DirectoryType.Movie;
                 atmpts++;

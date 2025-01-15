@@ -33,7 +33,6 @@ namespace PVLib
                 return;
             }
             if (movieDirectory == null) return;
-            Console.WriteLine($"Scheduling process for {ChannelName} started {DateTime.Now}");
             Schedule schedule = new Schedule();
             while(schedule.ScheduleDuration.TotalHours< FULLDAY)
             {
@@ -41,7 +40,6 @@ namespace PVLib
                 schedule.slots.Add(timeSlot);
             }
             SaveSchedule(schedule,today);
-            Console.WriteLine($"Scheduling process for {ChannelName} ended {DateTime.Now}");
         }
 
         public override bool isSupported(DirectoryType type)=> type == DirectoryType.Movie;

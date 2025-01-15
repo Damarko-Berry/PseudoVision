@@ -10,7 +10,7 @@ using static PVLib.Settings;
 
 namespace PVLite
 {
-    internal class Program
+    internal class Program 
     {
         static TV_LikeChannel channel = null;
         static ISchedule schedule = null;

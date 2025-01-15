@@ -7,7 +7,7 @@ using static PVLib.Settings;
 
 namespace PseudoVision
 {
-    public class Program
+    public class Program : PVObject
     {
 
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
@@ -16,6 +16,7 @@ namespace PseudoVision
         static UPNP upnp;
         static async Task Main(string[] args)
         {
+            MainLog.Cycle(Environment.MachineName);
             TerminateProcess("ffmpeg");
             try
             {
@@ -38,9 +39,8 @@ namespace PseudoVision
                 //
                 upnp.Start(localIp, prt);
             }
-            waittilnextday();
-            Console.WriteLine("Server is running. Press Enter to exit...");
-            Console.ReadLine();
+            MainLog.writeMessage("Server is running.");
+            await waittilnextday();
         }
         
         static async Task waittilnextday()
@@ -55,6 +55,7 @@ namespace PseudoVision
 
         static void CreateScheds()
         {
+            MainLog.Cycle(Environment.MachineName);
             DirectoryInfo Channels = new(FileSystem.Channels);
             IsGening = true;
             var Da = DateTime.Now; 
@@ -111,7 +112,7 @@ namespace PseudoVision
                     Directory.CreateDirectory(pth);
                     File.WriteAllText(FileSystem.Archive(Channels.GetDirectories()[i].Name, DateTime.Now), playlist.ToString());
                 }
-                Console.WriteLine(Schedules.ElementAt(i).Key);
+                MainLog.writeMessage(Schedules.ElementAt(i).Key);
             }
             IsGening = false;
         }
@@ -121,11 +122,11 @@ namespace PseudoVision
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add($"http://{localIp}:{port}/");
             listener.Start();
-            Console.WriteLine($"HTTP Server started at http://{localIp}:{port}/");
             
             while (true)
             {
                 HandleClient(await listener.GetContextAsync(), localIp, port);
+                MainLog.Cycle(Environment.MachineName);
             }
         }
         
@@ -138,7 +139,7 @@ namespace PseudoVision
 
             var userip = context.Request.RemoteEndPoint.Address.ToString();
             bool isPrivate = userip.StartsWith("192")| userip.StartsWith("172");
-            Console.WriteLine($"{request.Url.AbsolutePath}: {DateTime.Now}");
+            MainLog.writeMessage($"{request.Url.AbsolutePath}: {DateTime.Now}");
             while(IsGening)
             {
                 await Task.Delay(500);
@@ -168,7 +169,7 @@ namespace PseudoVision
                 {
                     channame = channame.Split(".")[0];
                 }
-                Console.WriteLine($"Connecting {userip} to {channame}");
+                MainLog.writeMessage($"Connecting {userip} to {channame}");
                 var Sched = Schedules[channame.ToLower()];
                 context.Response.Headers.Add("Connection", "keep-alive");
                 await Sched.SendMedia(context);
@@ -195,7 +196,7 @@ namespace PseudoVision
                     Directory.CreateDirectory(Path.Combine(FileSystem.Schedules, "PP"));
                     pP = new(context, URL[0].Replace("/", string.Empty), URL[1].Replace("/", string.Empty), URL[2].Replace("/", string.Empty), URL[3].Replace("/", string.Empty));
                 }
-                Console.WriteLine($"Connecting {context.Request.UserAgent} to {ppname}");
+                MainLog.writeMessage($"Connecting {context.Request.UserAgent} to {ppname}");
                 pP.SendMedia(response);
             }
             else if (UserAuthenticator.Auth(request,Settings.CurrentSettings.securityLevel))
@@ -228,7 +229,7 @@ namespace PseudoVision
                 else if (request.HttpMethod == "POST" && request.Headers["SOAPAction"] != null)
                 {
                     string soapAction = request.Headers["SOAPAction"].Trim('"');
-                    Console.WriteLine($"SOAPAction: {soapAction}");
+                    MainLog.writeMessage($"SOAPAction: {soapAction}");
 
                     if (soapAction == "urn:schemas-upnp-org:service:ContentDirectory:1#Browse")
                     {
@@ -298,7 +299,7 @@ namespace PseudoVision
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    MainLog.writeError(e.ToString());
                 }
             }
             sb.AppendLine($@"</container>");
@@ -334,11 +335,11 @@ namespace PseudoVision
                     try
                     {
                         process.Kill();
-                        Console.WriteLine($"Terminated process {processName} with PID {process.Id}");
+                        MainLog.writeMessage($"Terminated process {processName} with PID {process.Id}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error terminating process {processName}: {ex.Message}");
+                        MainLog.writeError($"Error terminating process {processName}: {ex.Message}");
                     }
                 }
             }

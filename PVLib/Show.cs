@@ -47,6 +47,7 @@ namespace PVLib
         int TotalEpsisodes => Length;
         public override string NextEpisode()
         {
+            ConsoleLog.Cycle(HomeDirectoryInfo.Name);
             if(Status == ShowStatus.Complete)
             {
                 return GetRerun();
@@ -70,6 +71,7 @@ namespace PVLib
         }
         string GetRerun()
         {
+            ConsoleLog.Cycle(HomeDirectoryInfo.Name);
             Random rnd = new Random();
             int ep = rnd.Next(TotalEpsisodes);
             return Content[ep].FullName;
@@ -78,6 +80,7 @@ namespace PVLib
         {
             get
             {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
                 var S = ShowStatus.New;
                 switch (EpisodeProgress)
                 {
@@ -125,6 +128,7 @@ namespace PVLib
         {
             get
             {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
                 List<FileInfo> VF = new();
                 
                 var td = new List<DirectoryInfo>(HomeDirectoryInfo.GetDirectories());
@@ -143,6 +147,7 @@ namespace PVLib
         {
             get
             {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
                 DirectoryInfo shortsdirectory = null;
                 if(HomeDirectoryInfo.GetDirectories("shorts").Length>0)
                 {
@@ -172,6 +177,7 @@ namespace PVLib
         {
             get
             {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
                 TimeSpan durr = new();
                 var player = new WindowsMediaPlayer();
                 string durs = string.Empty;

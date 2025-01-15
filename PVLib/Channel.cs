@@ -1,11 +1,12 @@
 ﻿using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Xml;
+using System.Xml.Linq;
 using System.Xml.Serialization;
 
 namespace PVLib
 {
-    public abstract class Channel
+    public abstract class Channel : PVObject
     {
         public bool Live;
         public const double FULLDAY = 23.9;
@@ -45,6 +46,8 @@ namespace PVLib
 
         public static Channel Load(string path)
         {
+            
+
             var doc = File.ReadAllText(path);
             XmlDocument xmlDoc = new XmlDocument();
             xmlDoc.LoadXml(doc);

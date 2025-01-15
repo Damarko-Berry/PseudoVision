@@ -11,7 +11,7 @@ using static System.Reflection.Metadata.BlobBuilder;
 
 namespace PVLib
 {
-    public class ShowList: ISchedule
+    public class ShowList: PVObject, ISchedule
     {
         public Schedule_Type ScheduleType => Schedule_Type.Binge_Like;
         public List<string> Shows = new();
