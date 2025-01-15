@@ -42,6 +42,7 @@ namespace PVLib
         public string name;
         public string IP;
         public int Port;
+        public bool Live;
 
         public ChannelRef(Channel chan)
         {

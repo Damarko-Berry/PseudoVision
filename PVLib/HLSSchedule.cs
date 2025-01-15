@@ -47,11 +47,11 @@ namespace PVLib
 
         public string GetContent(int index, string ip, int prt)
         {
-            return $@"<item id=""{index}"" parentID=""0"" restricted=""false"">
-                        <dc:title>{info.Name}</dc:title>
+            return $@"<item id=""{index+1}"" parentID=""0"" restricted=""false"">
+                        <dc:title>{Name}</dc:title>
                         <dc:creator>My boy</dc:creator>
                         <upnp:class>object.item.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:application/vnd.apple.mpegurl:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                        <res protocolInfo=""http-get:*:application/vnd.apple.mpegurl:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}{info.Extension}</res>
                     </item>";
         }
 
@@ -84,12 +84,13 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                fs.Close();
+                //fs.Close();
                 Console.WriteLine(ex.ToString());
             }
-            client.Response.Close();
+            //client.Response.Close();
             fs.Close();
         }
+        
         async void SendManifest(HttpListenerContext Context)
         {
             HLS hLS = new();
@@ -104,7 +105,7 @@ namespace PVLib
             client.ContentLength64 = buffer.Length;
             client.ContentType = "application/vnd.apple.mpegurl";
             await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-            client.OutputStream.Close();
+            //client.OutputStream.Close();
         }
         public async Task SendMedia(string Request, NetworkStream stream)
         {
@@ -138,15 +139,11 @@ namespace PVLib
         {
             CleanUp();
             await Task.Delay(200);
-            for (CurrentSlot = 0; CurrentSlot<slots.Count; CurrentSlot++)
+            while (!Slot.Durring(DateTime.Now))
             {
-                UPNP.Update++;
-                if (Slot.Durring(DateTime.Now))
-                {
-                    break;
-                }
+                Increment();
             }
-            
+
             await SegCyc();
         }
         #region live
@@ -272,11 +269,11 @@ namespace PVLib
             if (CurrentSlot + 1 == slots.Count)
             {
                 DateTime tmrw = DateTime.Now.AddDays(1);
-                var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+                var chan = Channel.Load(FileSystem.ChannleChan(Name));
                 chan.CreateNewSchedule(tmrw);
                 if (chan.ScheduleExists(tmrw))
                 {
-                    var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
+                    var scdpath = Path.Combine(FileSystem.ChannleChan(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
                     Schedule sch = SaveLoad<Schedule>.Load(scdpath);
                     slots.AddRange(sch.slots);
                 }

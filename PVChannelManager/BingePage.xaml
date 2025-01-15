@@ -10,11 +10,12 @@
 
     <local:FillPanal>
         <TextBlock x:Name="ChanName" FontSize="30" Text="Name" TextAlignment="Center"/>
-        <CheckBox Name="SendToNC" Content="Send to next Channel when finished" Checked="SendToNC_Checked" Unchecked="SendToNC_Unchecked" VerticalAlignment="Top"/>
+        <CheckBox Name="SendToNC" Content="Boomeranging" Checked="SendToNC_Checked" Unchecked="SendToNC_Unchecked" VerticalAlignment="Top"/>
         <StackPanel Orientation="Horizontal" Name="CJ" VerticalAlignment="Top">
             <TextBlock Text="Destination: "/>
             <ComboBox Name="ChannelList" SelectionChanged="ChannelList_SelectionChanged"/>
         </StackPanel>
+        <CheckBox Name="UslHLS" Content="Live" VerticalAlignment="Top" Checked="UslHLS_Checked" Unchecked="UslHLS_Unchecked"/>
         <Button x:Name="Add" Content="Add New Show" Click="Add_Click"/>
         <WrapPanel Name="AllShows"/>
         <Button x:Name="Save" Content="Save" Click="Save_Click"/>

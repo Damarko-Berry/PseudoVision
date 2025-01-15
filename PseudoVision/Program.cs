@@ -13,7 +13,7 @@ namespace PseudoVision
         static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static bool IsGening;
-        static UPNP upnp => CurrentSettings.upnp;
+        static UPNP upnp;
         static async Task Main(string[] args)
         {
             TerminateProcess("ffmpeg");
@@ -25,6 +25,7 @@ namespace PseudoVision
             {
                 CurrentSettings = Settings.Default;
             }
+            upnp = CurrentSettings.upnp;
             string localIp = GetLocalIPAddress();
             int prt = CurrentSettings.Port;
             CreateScheds();
@@ -48,6 +49,7 @@ namespace PseudoVision
             {
                 var waittime = (DateTime.Today.AddDays(1) - DateTime.Now);
                 await Task.Delay((int)waittime.TotalMilliseconds);
+                CreateScheds();
             }
         }
 
@@ -62,6 +64,7 @@ namespace PseudoVision
             var CDs = Channels.GetDirectories();
             for (int i = 0; i < CDs.Length; i++)
             {
+                if (Schedules.ContainsKey(CDs[i].Name)) continue;
                 Channel chan = Channel.Load(FileSystem.ChannleChan(CDs[i].Name));
                 chan.CreateNewSchedule(DateTime.Now);
                 if (chan.CTD.Length > 0)
@@ -130,35 +133,44 @@ namespace PseudoVision
         {
             HttpListenerRequest request = context.Request;
             HttpListenerResponse response = context.Response;
+
+            
+
             var userip = context.Request.RemoteEndPoint.Address.ToString();
             bool isPrivate = userip.StartsWith("192")| userip.StartsWith("172");
-            Console.WriteLine(request.Url.AbsolutePath);
+            Console.WriteLine($"{request.Url.AbsolutePath}: {DateTime.Now}");
             while(IsGening)
             {
                 await Task.Delay(500);
             }
             if (request.Url.AbsolutePath == "/description.xml")
             {
+
                 var des = upnp.ToString();
                 byte[] buffer = Encoding.UTF8.GetBytes(des);
                 response.ContentLength64 = buffer.Length;
                 response.ContentType = Text.Xml;
                 await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                response.OutputStream.Close();
+                //response.OutputStream.Close();
             }
             else if (request.Url.AbsolutePath.Contains("["))
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 channame = request.Url.AbsolutePath.Split('[')[1].Split(']')[0].Replace("]",string.Empty).Trim();
                 var Sched = Schedules[channame.ToLower()];
+                context.Response.Headers.Add("Connection", "keep-alive");
                 await Sched.SendMedia(context);
             }
             else if (request.Url.AbsolutePath.Contains("/live/"))
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
+                if (channame.Contains("."))
+                {
+                    channame = channame.Split(".")[0];
+                }
                 Console.WriteLine($"Connecting {userip} to {channame}");
                 var Sched = Schedules[channame.ToLower()];
-                
+                context.Response.Headers.Add("Connection", "keep-alive");
                 await Sched.SendMedia(context);
             }
             else if (request.Url.AbsolutePath.Contains("/archive/"))
@@ -196,7 +208,7 @@ namespace PseudoVision
                     response.ContentLength64 = buffer.Length;
                     response.ContentType = Text.Xml;
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    response.OutputStream.Close();
+                    //response.OutputStream.Close();
                 }
                 else if (request.Url.AbsolutePath.Contains("/watch"))
                 {
@@ -211,30 +223,54 @@ namespace PseudoVision
                     response.ContentLength64 = buffer.Length;
                     response.ContentType = Text.Html;
                     await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    response.OutputStream.Close();
+                    //response.OutputStream.Close();
                 }
-                else if (request.Url.AbsolutePath.Contains("/stuff")| request.Url.AbsolutePath.Contains("/cds.xml"))
+                else if (request.HttpMethod == "POST" && request.Headers["SOAPAction"] != null)
                 {
-                    
-                    var stuff = CDS(Schedules.Values.ToArray(), isPrivate);
-                        
-                    byte[] buffer = Encoding.UTF8.GetBytes(stuff);
-                    response.ContentLength64 = buffer.Length;
-                    response.ContentType = Text.Xml;
+                    string soapAction = request.Headers["SOAPAction"].Trim('"');
+                    Console.WriteLine($"SOAPAction: {soapAction}");
 
-                    await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-                    response.Close();
-                    Console.WriteLine("Sent CDS");
+                    if (soapAction == "urn:schemas-upnp-org:service:ContentDirectory:1#Browse")
+                    {
+                        // Handle the Browse action
+                        string contentDirectoryResponse = $@"<?xml version=""1.0"" ?>
+
+<SOAP-ENV:Envelope SOAP-ENV:encodingStyle=""http://schemas.xmlsoap.org/soap/encoding/"" xmlns:SOAP-ENV=""http://schemas.xmlsoap.org/soap/envelope/"">
+    <SOAP-ENV:Body>
+        <m:BrowseResponse xmlns:m=""urn:schemas-upnp-org:service:ContentDirectory:1"">
+          <Result dt:dt=""string"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">
+{GenerateContentDirectoryResponse()}
+          </Result>
+            <NumberReturned dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{Schedules.Count}</NumberReturned>
+            <TotalMatches dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{Schedules.Count}</TotalMatches>
+            <UpdateID dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{UPNP.Update}</UpdateID>
+        </m:BrowseResponse>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>";
+
+                        byte[] buffer = Encoding.UTF8.GetBytes(contentDirectoryResponse);
+                        response.ContentLength64 = buffer.Length;
+                        response.ContentType = "text/xml; charset=utf-8";
+                        response.Headers.Add("Server", "Custom-UPnP/1.0 UPnP/1.0 DLNADOC/1.50");
+                        response.Headers.Add("Cache-Control", "no-cache");
+                        response.Headers.Add("Connection", "close");
+                        await response.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+                        response.OutputStream.Close();
+                        return;
+                    }
                 }
             }
             
+
         } 
+
+
         static string CDS(ISchedule[] schedules, bool isprivate)
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append(@"<?xml version=""1.0"" encoding=""UTF-8""?>");
+            //sb.Append(@"<?xml version=""1.0"" encoding=""UTF-8""?>");
             sb.AppendLine(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
-            sb.AppendLine($@"<container id=""0"" parentID=""-1"" restricted=""false"" updateID=""{UPNP.Update}"">");
+            sb.AppendLine($@"<container id=""1"" parentID=""0"" restricted=""false"" updateID=""{UPNP.Update}"">");
             sb.AppendLine($@"<dc:title>Media Server</dc:title>");
             sb.AppendLine($@"<dc:creator>{upnp.DeviceName}</dc:creator>");
             sb.AppendLine($@"<upnp:class>object.container</upnp:class>");
@@ -243,6 +279,28 @@ namespace PseudoVision
                 sb.AppendLine(schedules[i].GetContent(i, (isprivate)?CurrentSettings.IP:Public_IP, CurrentSettings.Port));
             }
 
+            sb.AppendLine($@"</container>");
+            sb.AppendLine("</DIDL-Lite>");
+            return sb.ToString();
+        }
+        static string GenerateContentDirectoryResponse()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
+            sb.AppendLine($@"<container id=""0"" parentID=""-1"" restricted=""false"" childCount=""{Schedules.Count}"">");
+            sb.AppendLine($@"<dc:title>Media Server</dc:title>");
+            sb.AppendLine($@"<upnp:class>object.container</upnp:class>");
+            for (int i = 0; i < Schedules.Count; i++)
+            {
+                try
+                {
+                    sb.AppendLine(Schedules.ElementAt(i).Value.GetContent(i, CurrentSettings.IP, CurrentSettings.Port));
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
             sb.AppendLine($@"</container>");
             sb.AppendLine("</DIDL-Lite>");
             return sb.ToString();

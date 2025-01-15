@@ -126,10 +126,10 @@ namespace PVLib
                                               "CACHE-CONTROL: max-age=1800\r\n" +
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
                                               $"CHANNELS: http://{localIp}:{port}/media\r\n" +
-                                              "NT: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
+                                              $"NT: {SSDPTemplates.ServerSchema}\r\n" +
                                               "NTS: ssdp:alive\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              $"USN: uuid:{UniqueID}::{SSDPTemplates.ServerSchema}\r\n" +
                                               "\r\n";
             
 
@@ -170,7 +170,7 @@ namespace PVLib
                 {
                     List<string> responseTemplates = new List<string>();
 
-                    if (request.Contains("urn:PseudoVision:schemas-upnp-org:MediaServer:1"))
+                    if (request.Contains($"ST: {SSDPTemplates.ServerSchema}"))
                     {
                         responseTemplates.Add($"HTTP/1.1 200 OK\r\n" +
                                               "CACHE-CONTROL: max-age=1800\r\n" +
@@ -179,8 +179,8 @@ namespace PVLib
                                               $"LOCATION: http://{localIp}:{port}/description.xml\r\n" +
                                               $"CHANNELS: http://{localIp}:{port}/media\r\n" +
                                               "SERVER: Custom/1.0 UPnP/1.0 DLNADOC/1.50\r\n" +
-                                              "ST: urn:PseudoVision:schemas-upnp-org:MediaServer:1\r\n" +
-                                              $"USN: uuid:{UniqueID}::urn:schemas-upnp-org:device:MediaServer:1\r\n" +
+                                              $"ST: {SSDPTemplates.ClientSchema}\r\n" +
+                                              $"USN: uuid:{UniqueID}::{SSDPTemplates.ServerSchema}\r\n" +
                                               "\r\n");
                     }
 

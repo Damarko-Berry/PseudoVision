@@ -168,19 +168,30 @@ namespace PVLib
             }
         }
 
-        public override TimeSpan Duration {
+        public override TimeSpan Duration
+        {
             get
             {
                 TimeSpan durr = new();
+                var player = new WindowsMediaPlayer();
+                string durs = string.Empty;
                 for (int i = 0; i < Content.Length; i++)
                 {
-                    var player = new WindowsMediaPlayer();
                     var clip = player.newMedia(Content[i].FullName);
-                    durr += TimeSpan.FromSeconds(clip.duration);
+                    // Add milliseconds for better accuracy
+                    int hours = (int)(clip.duration / 3600);
+                    int minutes = (int)((clip.duration % 3600) / 60);
+                    int seconds = (int)(clip.duration % 60);
+                    int milliseconds = (int)((clip.duration - Math.Floor(clip.duration)) * 1000);
+                    var MT = new TimeSpan(0, hours, minutes, seconds, milliseconds);
+                    durs +=$"Ep{i+1}= Hours:{hours} Minutes:{minutes} Seconds:{seconds} Milliseconds:{milliseconds}\n";
+                    durr += MT;
                 }
+                
                 return durr;
             }
         }
+
 
         public void Reset()
         {

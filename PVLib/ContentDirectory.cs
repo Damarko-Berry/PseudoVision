@@ -15,7 +15,7 @@ namespace PVLib
         {
             get
             {
-                List<string> list = new List<string>([".mp4", ".MP4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" ]);
+                List<string> list = new List<string>([".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" ]);
                 if (Settings.CurrentSettings.GetVideoExtensions != null)
                 {
                     var SE = Settings.CurrentSettings.GetVideoExtensions;

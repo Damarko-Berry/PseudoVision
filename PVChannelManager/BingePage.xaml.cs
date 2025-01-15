@@ -29,7 +29,8 @@ namespace PVChannelManager
             channel = c;
             InitializeComponent();
             ChanName.Text = channel.ChannelName;
-            SendToNC.IsChecked = channel.SendToNextChanWhenFinished;
+            SendToNC.IsChecked = channel.Bommeranging;
+            UslHLS.IsChecked = channel.Live;
             ChannelList.ItemsSource = GetChannels();
             if (ChannelList.Items.Count > 0)
             {
@@ -59,13 +60,13 @@ namespace PVChannelManager
 
         private void SendToNC_Checked(object sender, RoutedEventArgs e)
         {
-            channel.SendToNextChanWhenFinished = true;
+            channel.Bommeranging = true;
             CJ.IsEnabled = true;
         }
 
         private void SendToNC_Unchecked(object sender, RoutedEventArgs e)
         {
-            channel.SendToNextChanWhenFinished = false;
+            channel.Bommeranging = false;
             CJ.IsEnabled = false;
         }
 
@@ -108,6 +109,8 @@ namespace PVChannelManager
                     {
                         Show show = new();
                         show.HomeDirectory = showinfo.FullName;
+                        var dur = show.Duration;
+                        MessageBox.Show($"Show Added: {showinfo.Name}\nDuration:\nDays: {dur.Days}, Hours: {dur.Hours}, Minutes: {dur.Minutes}, Seconds: {dur.Seconds}");
                         SaveLoad<Show>.Save(show, Path.Combine(channel.ShowDirectory, showinfo.Name + ".shw"));
                         LoadList();
                     }
@@ -117,6 +120,16 @@ namespace PVChannelManager
                     }
                 }
             }
+        }
+
+        private void UslHLS_Checked(object sender, RoutedEventArgs e)
+        {
+            channel.Live = true;
+        }
+
+        private void UslHLS_Unchecked(object sender, RoutedEventArgs e)
+        {
+            channel.Live = false;
         }
     }
 }

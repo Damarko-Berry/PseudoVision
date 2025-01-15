@@ -14,7 +14,8 @@
     public enum ServiceType { ContentDirectory, ConnectionManager }
     public enum MovieMode { WithReruns, Sunday ,Monday, Tuesday, Wednesday, Thursday, Friday, Saturday}
     public enum LiveHandling { Storage_Saver, CPU_Saver }
-    
+    public enum MessageType { Normal, Error }
+
     public static class EnumTranslator<T>
     {
         public static T fromString(string str)

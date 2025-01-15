@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+
+<SOAP-ENV:Envelope SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+
+
+    <SOAP-ENV:Body>
+
+
+        <m:BrowseResponse xmlns:m="urn:schemas-upnp-org:service:ContentDirectory:1">
+
+          <Result dt:dt="string" xmlns:dt="urn:schemas-microsoft-com:datatypes">
+            
+          </Result>
+            <NumberReturned dt:dt="ui4" xmlns:dt="urn:schemas-microsoft-com:datatypes">4</NumberReturned>
+
+            <TotalMatches dt:dt="ui4" xmlns:dt="urn:schemas-microsoft-com:datatypes">4</TotalMatches>
+
+            <UpdateID dt:dt="ui4" xmlns:dt="urn:schemas-microsoft-com:datatypes">15</UpdateID>
+
+        </m:BrowseResponse>
+
+    </SOAP-ENV:Body>
+
+</SOAP-ENV:Envelope>

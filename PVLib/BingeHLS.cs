@@ -18,6 +18,7 @@ namespace PVLib
         TimeSlot CurrentlyPlaying = new();
         int CurrentSlot = 0;
         HLS CurrentSate = null;
+        
         Playlist GetPlaylist
         {
             get
@@ -59,6 +60,10 @@ namespace PVLib
                 UPNP.Update++;
                 SaveLoad<Show>.Save(show, Shows[shw]);
             }
+            else
+            {
+                CurrentlyPlaying.StartTime = DateTime.Now;
+            }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
         }
         CancellationTokenSource cts = new();
@@ -69,6 +74,7 @@ namespace PVLib
                 client.Response.OutputStream.Close();
                 return;
             }
+            
             if (!client.Request.Url.AbsolutePath.Contains("["))
             {
                 SendManifest(client);
@@ -91,10 +97,8 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                fs.Close();
                 Console.WriteLine(ex.ToString());
             }
-            client.Response.Close();
             fs.Close();
         }
         async void SendManifest(HttpListenerContext Context)
@@ -111,11 +115,11 @@ namespace PVLib
             client.ContentLength64 = buffer.Length;
             client.ContentType = "application/vnd.apple.mpegurl";
             await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-            client.OutputStream.Close();
         }
         public async Task SendMedia(string Request, NetworkStream stream)
         {
             if (CurrentSegment == null) return;
+           
             StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
             if (!Request.Contains("["))
             {
@@ -143,11 +147,11 @@ namespace PVLib
 
         public string GetContent(int s, string ip, int prt)
         {
-            return $@"<item id=""{s}"" parentID=""0"" restricted=""false"">
+            return $@"<item id=""{s+1}"" parentID=""0"" restricted=""false"">
                         <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
                         <upnp:class>object.item.videoItem.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}{info.Extension}</res>
                     </item>";
         }
         public async Task StartCycle()
@@ -159,7 +163,7 @@ namespace PVLib
         StartUp:
             await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
             DateTime tmrw = DateTime.Now.Date.AddDays(1);
-            var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+            var chan = Channel.Load(FileSystem.ChannleChan(Name));
             chan.CreateNewSchedule(tmrw);
             await Task.Delay(TimeLeftInDay);
             if (chan.ScheduleExists(tmrw))
@@ -216,23 +220,46 @@ namespace PVLib
         async void UpdateCurrentState(CancellationToken Toolong)
         {
             CurrentSate = new HLS();
+            int C = 0;
             while (AllSchedules.ContainsKey(Name) & !Toolong.IsCancellationRequested)
             {
-
-                var Hs = new HLS();
-                var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
-                for (int i = 0; i < manifests.Length; i++)
+                
+                if (!processing)
                 {
-                    Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                    if (C > 0)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        C++;
+                    }
                 }
-                CurrentSate = Hs;
+                else
+                {
+                    C = 0;
+                }
+                try
+                {
+                    var Hs = new HLS();
+                    var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
+                    for (int i = 0; i < manifests.Length; i++)
+                    {
+                        Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                    }
+                    CurrentSate = Hs;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
                 if (CurrentSegment == null)
                 {
                     await Task.Delay(500);
                 }
                 else
                 {
-                    await Task.Delay(CurrentSegment.duration);
+                    await Task.Delay(CurrentSegment.duration*.5);
                 }
             }
             Console.WriteLine("UpdateCurrentState has ended");
@@ -272,15 +299,19 @@ namespace PVLib
         void ProcessNext()
         {
             var timeleftinslot = CurrentlyPlaying.EndTime - DateTime.Now;
-            if (!processing & SlotsAvalible < 2 & timeleftinslot.TotalMinutes<1)
+            if (!processing & SlotsAvalible < 2 & timeleftinslot.TotalMinutes<=1)
             {
+                DateTime NST = CurrentlyPlaying.EndTime;
                 Console.WriteLine("Processing Next");
                 CurrentSlot++;
                 selectMedia();
+                CurrentlyPlaying.StartTime = NST;
+                
                 ProcessVideo(CurrentlyPlaying.Media, CurrentSlot);
             }
             else
             {
+                
                 Console.WriteLine("\n\nProssesing :"+processing);
                 Console.WriteLine("Slots Avalivble :"+SlotsAvalible);
                 Console.WriteLine("Clean :"+clean);
@@ -294,13 +325,7 @@ namespace PVLib
             processing = true;
             Directory.CreateDirectory(liveOutputDirectory);
             var cods = ISchedule.GetSubtitleStreams(filePath);
-            for (int i = 0; i < cods.Count; i++)
-            {
-                Console.WriteLine(cods[i].Index);
-                Console.WriteLine(cods[i].CodecName);
-                Console.WriteLine(cods[i].Language);
-
-            }
+            
             string subtitleCodec = null;
 
             filePath = "\"" + filePath + "\"";
@@ -317,7 +342,7 @@ namespace PVLib
 
             string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
 
-            Console.WriteLine(ffmpegArgs);
+
             await RunFFmpeg(ffmpegArgs);
             clean = false;
             processing = false;
@@ -348,11 +373,12 @@ namespace PVLib
         #endregion
         async void CleanUp(int slotNum, int offset)
         {
+            await Task.Delay(2);
             if (!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))| DateTime.Now.Subtract(new TimeSpan(0,0,45)) < (DateTime)CurrentlyPlaying.StartTime |clean) return;
             try
             {
                 clean = true;
-                Console.WriteLine("Cleaning Up");
+                
                 var HLSO = HLS.Load(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
                 segment[] files = HLSO.Body.ToArray();
                 for (int i = 0; i < files.Length - offset; i++)
@@ -366,11 +392,10 @@ namespace PVLib
                         catch (Exception ex)
                         {
                             Console.WriteLine(ex.ToString());
-                        }
-                        await Task.Delay(1);
+                        }   
                     }
-
                 }
+                //File.Delete(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"));
                 var vttfiles = Directory.GetFiles(ManifestOutputDirectory, "*.vtt");
 
                 for (int i = 0; i < vttfiles.Length; i++)

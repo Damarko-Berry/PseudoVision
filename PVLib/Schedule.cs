@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using System.Xml.Serialization;
 
 
@@ -47,88 +48,155 @@ namespace PVLib
 
         public async Task SendMedia(HttpListenerContext client)
         {
-            
-            FileStream fs = new(Slot.Media, FileMode.Open, FileAccess.Read);
+            client.Response.Headers.Add("Accept-Ranges", "bytes");
+            using FileStream fs = new(Slot.Media, FileMode.Open, FileAccess.Read);
             try
             {
                 client.Response.ContentType = $"video/{info.Extension}";
                 client.Response.ContentLength64 = fs.Length;
-                await fs.CopyToAsync(client.Response.OutputStream);
+
+                if (client.Request.Headers["Range"] != null)
+                {
+                    var range = client.Request.Headers["Range"];
+                    var bytesRange = range.Replace("bytes=", "").Split('-');
+                    var from = long.Parse(bytesRange[0]);
+                    var to = bytesRange.Length > 1 && !string.IsNullOrEmpty(bytesRange[1]) ? long.Parse(bytesRange[1]) : fs.Length - 1;
+
+                    client.Response.StatusCode = 206;
+                    client.Response.Headers.Add("Content-Range", $"bytes {from}-{to}/{fs.Length}");
+                    client.Response.ContentLength64 = to - from + 1;
+
+                    fs.Seek(from, SeekOrigin.Begin);
+                    await fs.CopyToAsync(client.Response.OutputStream, (int)(to - from + 1));
+                }
+                else
+                {
+                    await fs.CopyToAsync(client.Response.OutputStream);
+                }
             }
             catch (Exception ex)
             {
-                fs.Close();
                 Console.WriteLine(ex.ToString());
             }
-            client.Response.Close();
-            fs.Close();
+            finally
+            {
+                client.Response.Close();
+            }
         }
 
-        public async Task SendMedia(string Request, NetworkStream stream)
+
+
+        public async Task SendMedia(string request, NetworkStream stream)
         {
-            byte[] fileBytes = await File.ReadAllBytesAsync(Slot.Media);
             try
             {
+                string filePath = Slot.Media;
+                long fileLength = info.Length;
+
                 StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
-                writer.WriteLine("HTTP/1.1 200 OK"); writer.WriteLine("Content-Type: video/mp4");
-                writer.WriteLine($"Content-Length: {fileBytes.Length}");
-                writer.WriteLine();
-                writer.Flush();
-                await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
-            }catch (Exception ex)
-            {
-                stream.Close();
-                Console.WriteLine(ex.ToString());
-            }
-            stream.Close();
-        }
-        public async void StartCycle()
-        {
-           
-            var ct = DateTime.Now;
-            double timeleft = 0;
-            for (CurrentSlot = 0; CurrentSlot < slots.Count; CurrentSlot++)
-            {
-                if (Slot.Durring(ct))
+
+                if (request.Contains("Range"))
                 {
-                    timeleft = (Slot.EndTime - ct).TotalMilliseconds;
-                    break;
+                    string rangeHeader = request.Substring(request.IndexOf("Range"));
+                    string range = rangeHeader.Split('=')[1].Split('-')[0];
+                    long start = long.Parse(range);
+                    long end = fileLength - 1;
+
+                    writer.WriteLine("HTTP/1.1 206 Partial Content");
+                    writer.WriteLine("Accept-Ranges: bytes");
+                    writer.WriteLine($"Content-Range: bytes {start}-{end}/{fileLength}");
+                    writer.WriteLine($"Content-Length: {end - start + 1}");
+                    writer.WriteLine($"Content-Type: video/{info.Extension}");
+                    writer.WriteLine();
+                    writer.Flush();
+
+                    using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read);
+                    fs.Seek(start, SeekOrigin.Begin);
+
+                    byte[] buffer = new byte[64 * 1024];
+                    int bytesRead;
+                    while ((bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length)) > 0 && start <= end)
+                    {
+                        await stream.WriteAsync(buffer, 0, bytesRead);
+                        start += bytesRead;
+                    }
+                }
+                else
+                {
+                    writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine("Accept-Ranges: bytes");
+                    writer.WriteLine($"Content-Length: {fileLength}");
+                    writer.WriteLine($"Content-Type: video/{info}");
+                    writer.WriteLine();
+                    writer.Flush();
+
+                    byte[] fileBytes = await File.ReadAllBytesAsync(filePath);
+                    await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+            finally
+            {
+                stream.Close();
+            }
+        }
 
+        public async Task StartCycle()
+        {
+           
+            while (!Slot.Durring(DateTime.Now))
+            {
+                itterate();
+            }
+
+            var timeleft = (Slot.EndTime - DateTime.Now);
             UPNP.Update++;
-            await Task.Delay(TimeSpan.FromMilliseconds(timeleft));
+            await Task.Delay(timeleft);
             
             while (CurrentSlot < slots.Count)
             {
-                CurrentSlot++;
-                UPNP.Update++;
-                if(CurrentSlot+1 == slots.Count)
+                itterate();
+                await Task.Delay(Slot.Duration);
+            }
+            Random random = new((int)DateTime.Now.Ticks);
+            CurrentSlot = random.Next(0, slots.Count);
+            AllSchedules.Remove(Name);
+        }
+        void itterate()
+        {
+            CurrentSlot++;
+            UPNP.Update++;
+            try
+            {
+                var NS = CurrentSlot + 1;
+                if (NS >= slots.Count)
                 {
                     DateTime tmrw = DateTime.Now.AddDays(1);
-                    var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+                    var chan = Channel.Load(FileSystem.ChannleChan(Name));
                     chan.CreateNewSchedule(tmrw);
-                    if(chan.ScheduleExists(tmrw))
+                    if (chan.ScheduleExists(tmrw))
                     {
                         var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
                         Schedule sch = SaveLoad<Schedule>.Load(scdpath);
                         slots.AddRange(sch.slots);
                     }
                 }
-                await Task.Delay(TimeSpan.FromMilliseconds(timeleft));
             }
-            Random random = new((int)DateTime.Now.Ticks);
-            CurrentSlot = random.Next(0, slots.Count);
-            AllSchedules.Remove(Name);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
         }
-
         public string GetContent(int index, string ip, int prt)
         {
-            return $@"<item id=""{index}"" parentID=""0"" restricted=""false"">
-                        <dc:title>{info.Name}</dc:title>
+            return $@"<item id=""{index+1}"" parentID=""0"" restricted=""false"">
+                        <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
                         <upnp:class>object.item.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}{info.Extension}</res>
                         <upnp:albumArtURI>http://{ip}:{prt}/thumbnails/{Name}.png</upnp:albumArtURI>
                     </item>";
         }

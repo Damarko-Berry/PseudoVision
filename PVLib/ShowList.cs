@@ -111,11 +111,11 @@ namespace PVLib
         }
         public string GetContent(int s, string ip, int prt)
         {
-            return $@"<item id=""{s}"" parentID=""0"" restricted=""false"">
+            return $@"<item id=""{s+1}"" parentID=""0"" restricted=""false"">
                         <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
                         <upnp:class>object.item.videoItem.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:video/{info.Extension}:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}</res>
+                        <res protocolInfo=""http-get:*:video/.mp4:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}.mp4</res>
                     </item>";
         }
         public async Task StartCycle()
@@ -124,12 +124,12 @@ namespace PVLib
         StartUp:
             await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
             DateTime tmrw = DateTime.Now.AddDays(1);
-            var chan = Channel.Load(FileSystem.ChanSchedules(Name));
+            var chan = Channel.Load(FileSystem.ChannleChan(Name));
             chan.CreateNewSchedule(tmrw);
             await Task.Delay(TimeLeftInDay);
             if (chan.ScheduleExists(tmrw))
             {
-                var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
+                var scdpath = Path.Combine(FileSystem.ChannleChan(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
                 Shows = SaveLoad<ShowList>.Load(scdpath).Shows;
                 goto StartUp;
             }

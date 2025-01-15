@@ -41,15 +41,15 @@ namespace PVLib
         {
             get
             {
-                int MediaSequence = 0;
+                
                 string body = string.Empty;
                 for (int i = 0; i < Body.Count; i++)
                 {
                     if (Body[i].path.Contains("seg0"))
                     {
-                        body += $"#EXT-X-MEDIA-SEQUENCE:{MediaSequence}\n";
+                        body += $"#EXT-X-MEDIA-SEQUENCE:{i}\n";
                     }
-                        MediaSequence++;
+                        
                     body += $"{Body[i]}\n";
                 }
                 return body;
@@ -161,7 +161,7 @@ namespace PVLib
             string body = string.Empty;
             bool SegmentFound = false;
             TimeSpan Buffer = new();
-            int MediaSequence = 0;
+            
             int i = 0;
             for (i = 0; i < Body.Count; i++)
             {
@@ -185,13 +185,15 @@ namespace PVLib
                     {
                         body += "#EXT-X-DISCONTINUITY\n";
                     }
-                    body += $"#EXT-X-MEDIA-SEQUENCE:{MediaSequence}\n";
+                    body += $"#EXT-X-MEDIA-SEQUENCE:{i}\n";
                 }
-                MediaSequence++;
+                
                 body += $"{Body[i]}\n";
             }
             return (i<Body.Count)?$"{Header}\n{body}\n": ToString();
         }
+
+
     }
 
     public class segment

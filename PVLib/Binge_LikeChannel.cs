@@ -8,7 +8,7 @@ namespace PVLib
 {
     public class Binge_LikeChannel : Channel
     {
-        public bool SendToNextChanWhenFinished;
+        public bool Bommeranging;
         public Show[] Shows
         {
             get
@@ -50,7 +50,7 @@ namespace PVLib
         void OnFinished(Show show)
         {
             Cancel(new FileInfo(show.HomeDirectory).Name);
-            if(SendToNextChanWhenFinished)
+            if(Bommeranging)
             {
                 Channel NC = Load(NextChan);
                 NC.AddShow(show);
