@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Xml;
 using System.Xml.Serialization;
-using System.Xml;
-using WMPLib;
+
 
 namespace PVLib
 {
-    public abstract class ContentDirectory: PVObject
+    public abstract class ContentDirectory : PVObject
     {
         protected static string[] ValidExtensions
         {
             get
             {
-                List<string> list = new List<string>([".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" ]);
+                List<string> list = new List<string>([".mp4", ".avi", ".mov", ".mkv", ".flv", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v"]);
                 if (Settings.CurrentSettings.GetVideoExtensions != null)
                 {
                     var SE = Settings.CurrentSettings.GetVideoExtensions;
@@ -34,7 +29,7 @@ namespace PVLib
             {
                 surfacefiles.AddRange(directory.GetFiles("*" + ValidExtensions[i], SearchOption.TopDirectoryOnly));
             }
-            if(surfacefiles.Count > 0)
+            if (surfacefiles.Count > 0)
             {
                 return DirectoryType.Movie;
             }
@@ -43,7 +38,7 @@ namespace PVLib
             {
                 deepfiles.AddRange(directory.GetFiles("*" + ValidExtensions[i], SearchOption.AllDirectories));
             }
-            if(deepfiles.Count > 0 & directory.GetDirectories().Length> 0)
+            if (deepfiles.Count > 0 & directory.GetDirectories().Length > 0)
             {
                 return DirectoryType.Show;
             }
@@ -51,9 +46,9 @@ namespace PVLib
         }
 
         public string HomeDirectory;
-        protected DirectoryInfo HomeDirectoryInfo=> new DirectoryInfo(HomeDirectory);
+        protected DirectoryInfo HomeDirectoryInfo => new DirectoryInfo(HomeDirectory);
         public DirectoryType dirtype => DDetector(HomeDirectoryInfo);
-        internal abstract FileInfo[] Content {  get; }
+        internal abstract FileInfo[] Content { get; }
         public virtual int Length => Content.Length;
         public abstract TimeSpan Duration { get; }
         public abstract string NextEpisode();
@@ -66,7 +61,7 @@ namespace PVLib
             var CType = DDetector(new(c[0].InnerText));
             int atmpts = 0;
         Ser:
-            try 
+            try
             {
                 XmlSerializer serializer = (CType == DirectoryType.Movie) ? new XmlSerializer(typeof(MovieDirectory)) : new XmlSerializer(typeof(Show));
                 StreamReader sr = new StreamReader(path);
@@ -76,12 +71,12 @@ namespace PVLib
             }
             catch (Exception ex)
             {
-                CType= (CType == DirectoryType.Movie) ? DirectoryType.Movie : DirectoryType.Movie;
+                CType = (CType == DirectoryType.Movie) ? DirectoryType.Movie : DirectoryType.Movie;
                 atmpts++;
-                if (atmpts <=3)
-                goto Ser;
+                if (atmpts <= 3)
+                    goto Ser;
             }
-           
+
             throw new Exception("OOOOOOOOOPS");
         }
     }

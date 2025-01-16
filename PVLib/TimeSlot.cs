@@ -1,4 +1,4 @@
-﻿using WMPLib;
+﻿
 
 namespace PVLib
 {
@@ -28,9 +28,8 @@ namespace PVLib
         public TimeSlot(string media, List<TimeSlot> slots)
         {
             Media = media;
-            var player = new WindowsMediaPlayer();
-            var clip = player.newMedia(media);
-            Duration = TimeSpan.FromSeconds(clip.duration);
+            
+            Duration = PVObject.GetMediaDuration(media);
             if (slots.Count <= 0)
             {
                 StartTime = DateTime.Today;
@@ -43,9 +42,7 @@ namespace PVLib
         public TimeSlot(string media)
         {
             Media = media;
-            var player = new WindowsMediaPlayer();
-            var clip = player.newMedia(media);
-            Duration = TimeSpan.FromSeconds(clip.duration);
+            Duration = PVObject.GetMediaDuration(media);
             StartTime = DateTime.Now;
         }
         public TimeSlot(Rerun media, List<TimeSlot> slots)

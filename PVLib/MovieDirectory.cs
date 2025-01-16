@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using WMPLib;
+
 
 namespace PVLib
 {
@@ -32,9 +32,7 @@ namespace PVLib
                 TimeSpan durr = new();
                 for (int i = 0; i < Content.Length; i++)
                 {
-                    var player = new WindowsMediaPlayer();
-                    var clip = player.newMedia(Content[i].FullName);
-                    durr += TimeSpan.FromSeconds(clip.duration);
+                    durr += GetMediaDuration(Content[i].FullName);
                 }
                 return durr;
             }

@@ -1,5 +1,5 @@
 ﻿using System.Xml.Serialization;
-using WMPLib;
+
 
 namespace PVLib
 {
@@ -179,21 +179,13 @@ namespace PVLib
             {
                 ConsoleLog.Cycle(HomeDirectoryInfo.Name);
                 TimeSpan durr = new();
-                var player = new WindowsMediaPlayer();
-                string durs = string.Empty;
                 for (int i = 0; i < Content.Length; i++)
                 {
-                    var clip = player.newMedia(Content[i].FullName);
-                    // Add milliseconds for better accuracy
-                    int hours = (int)(clip.duration / 3600);
-                    int minutes = (int)((clip.duration % 3600) / 60);
-                    int seconds = (int)(clip.duration % 60);
-                    int milliseconds = (int)((clip.duration - Math.Floor(clip.duration)) * 1000);
-                    var MT = new TimeSpan(0, hours, minutes, seconds, milliseconds);
-                    durs +=$"Ep{i+1}= Hours:{hours} Minutes:{minutes} Seconds:{seconds} Milliseconds:{milliseconds}\n";
+                    
+                    var MT = GetMediaDuration(Content[i].FullName);
+                    
                     durr += MT;
                 }
-                
                 return durr;
             }
         }

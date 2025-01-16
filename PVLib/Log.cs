@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -91,6 +92,40 @@ namespace PVLib
     {
         public Log ConsoleLog = new Log();
         public static Log MainLog = new Log();
+        public static TimeSpan GetMediaDuration(string media)
+        {
+            var ffmpegPath = FileSystem.FFMPEG;
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                Arguments = $"-i \"{media}\"",
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = new Process { StartInfo = startInfo })
+            {
+                process.Start();
+                string output = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                var durationMatch = System.Text.RegularExpressions.Regex.Match(output, @"Duration: (\d{2}):(\d{2}):(\d{2})\.(\d{2})");
+                if (durationMatch.Success)
+                {
+                    int hours = int.Parse(durationMatch.Groups[1].Value);
+                    int minutes = int.Parse(durationMatch.Groups[2].Value);
+                    int seconds = int.Parse(durationMatch.Groups[3].Value);
+                    int milliseconds = int.Parse(durationMatch.Groups[4].Value) * 10;
+
+                    return new TimeSpan(0, hours, minutes, seconds, milliseconds);
+                }
+                else
+                {
+                    throw new Exception("Could not determine media duration.");
+                }
+            }
+        }
 
     }
 }

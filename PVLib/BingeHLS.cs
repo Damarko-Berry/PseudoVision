@@ -365,7 +365,7 @@ namespace PVLib
             {
                 var startInfo = new ProcessStartInfo
                 {
-                    FileName = @"ffmpeg\ffmpeg.exe",
+                    FileName = FileSystem.FFMPEG,
                     Arguments = arguments,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
