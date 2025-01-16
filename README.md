@@ -29,7 +29,4 @@ Most of my HLS testing as been with VLC, so I know that VLC is compatable with t
 
 The mini web player that I created (`index.html`) is compatable.
 
-# Future Endeavors:
-My original hope was to get it worikng with DLNA. Still in the works. Also a Roku channel would be nice as well. *is in the works.*
-
 More details on the inner workings of each class and function will be in the Wiki.
