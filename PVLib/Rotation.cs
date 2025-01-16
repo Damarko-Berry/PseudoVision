@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace PVLib
@@ -35,6 +36,18 @@ namespace PVLib
                 }
                 return show; 
             }
+        }
+        internal Show GetShow(DayOfWeek day, TV_LikeChannel channel)
+        {
+            for (int i = 0; i < ShowList.Count; i++)
+            {
+                if (ShowList[i].DayToPlay == day)
+                {
+                    
+                    return SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name + ".shw"));
+                }
+            }
+            return null;
         }
         internal void CreateNewRotation(Show[] shows)
         {
@@ -119,7 +132,7 @@ namespace PVLib
             var AllShows = new List<Show>(shows);
             for (int i = 0; i < AllShows.Count; i++)
             {
-                if (AllShows[i].Status != ShowStatus.New)
+                if (AllShows[i].Status == ShowStatus.Complete | AlreadyInRotation(AllShows[i]))
                 {
                     AllShows.RemoveAt(i);
                     i--;
@@ -128,7 +141,7 @@ namespace PVLib
             if (AllShows.Count > 0)
             {
                 Random random = new Random();
-                this[show] = new(AllShows[random.Next(AllShows.Count)]);
+                this[show] = new(AllShows[random.Next(AllShows.Count)].HomeDirectory,show.DayToPlay);
             }
             else
             {

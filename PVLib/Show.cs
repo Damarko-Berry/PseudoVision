@@ -1,4 +1,5 @@
-﻿using System.Xml.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Xml.Serialization;
 
 
 namespace PVLib
@@ -15,7 +16,7 @@ namespace PVLib
                 if(MovieProgress == ShowStatus.Complete)return 0;
                 if(EpisodeProgress == ShowStatus.Complete)return -1;
                 if(TotalEpsisodes == 0)return -1;
-                return TotalEpsisodes / TotalMovies;
+                return (TotalEpsisodes / TotalMovies)-1;
             }
         }
         DirectoryInfo MovieDirectory
@@ -45,6 +46,16 @@ namespace PVLib
             }
         }
         int TotalEpsisodes => Length;
+
+        public int MediaLeft
+        {
+            get
+            {
+                int totalmedia = TotalEpsisodes + TotalMovies;
+                int TotalMediaplayed = CurrentEpisodeNumber + MovieNo;
+                return totalmedia-TotalMediaplayed;
+            }
+        }
         public override string NextEpisode()
         {
             ConsoleLog.Cycle(HomeDirectoryInfo.Name);
@@ -102,6 +113,10 @@ namespace PVLib
                         };
                         break;
                 }
+                if (TotalMovies <= 0)
+                {
+                    return EpisodeProgress;
+                }
                 return S;
             }
         }
@@ -143,6 +158,24 @@ namespace PVLib
                 return [.. VF];
             }
         }
+
+        internal FileInfo[] AllMovies
+        {
+            get
+            {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
+                List<FileInfo> VF = new();
+                if (MovieDirectory != null)
+                {
+                    var MovieDir = MovieDirectory;
+                    for (int j = 0; j < ValidExtensions.Length; j++)
+                        VF.AddRange(MovieDir.GetFiles("*" + ValidExtensions[j]));
+                }
+                return [.. VF];
+            }
+        }
+
+
         public Rerun[] shorts
         {
             get
@@ -183,6 +216,23 @@ namespace PVLib
                 {
                     
                     var MT = GetMediaDuration(Content[i].FullName);
+                    
+                    durr += MT;
+                }
+                return durr;
+            }
+        }
+
+        public TimeSpan FullDuration
+        {
+            get
+            {
+                ConsoleLog.Cycle(HomeDirectoryInfo.Name);
+                TimeSpan durr = new();
+                List<FileInfo> AC = [.. AllMovies ,.. Content];
+                for (int i = 0; i < AC.Count; i++)
+                { 
+                    var MT = GetMediaDuration(AC[i].FullName);
                     
                     durr += MT;
                 }

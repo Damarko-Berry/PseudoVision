@@ -181,6 +181,10 @@ namespace PVLib
                     {
                         var scdpath = Path.Combine(FileSystem.ChanSchedules(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
                         Schedule sch = SaveLoad<Schedule>.Load(scdpath);
+                        if (sch.slots[0] == slots[^1])
+                        {
+                            sch.slots.RemoveAt(0);
+                        }
                         slots.AddRange(sch.slots);
                     }
                 }

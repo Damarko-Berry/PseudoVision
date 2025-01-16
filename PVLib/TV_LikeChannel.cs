@@ -182,6 +182,13 @@ namespace PVLib
             {
                 rotation.CreateNewRotation(Shows);
             }
+            if (rotation.GetShow(today.DayOfWeek, this).MediaLeft == 1)
+            {
+                generateMarathon(rotation.GetShow(today.DayOfWeek, this), today);
+                DateTime ET = DateTime.Now;
+                ConsoleLog.writeMessage($"{ChannelName}: {(ET - Start).TotalSeconds} seconds");
+                return;
+            }
             var RR = new List<Rerun>(StaticRRs);
             Action[] rerunAlgs = [GetRerun, getSpecial, PlayMovie];
             while (schedule.ScheduleDuration.TotalHours < FULLDAY)
@@ -346,7 +353,61 @@ namespace PVLib
             DateTime endtime = DateTime.Now;
             ConsoleLog.writeMessage($"{ChannelName}: {(endtime-Start).TotalSeconds} seconds");
         }
-        
+        public void generateMarathon(Show show, DateTime today)
+        {
+            TimeSpan duration  = show.FullDuration;
+            var finaldur = GetMediaDuration(show.Content[^1].FullName);
+            duration -= finaldur;
+            show.Reset();
+            //set estimated start time
+            var EstimatedEndTime = today.Date.AddHours(PrimeTime.Hour);
+            var EstimatedStartTime = EstimatedEndTime - duration;
+            
+            while (EstimatedStartTime < today.Date)
+            {
+                EstimatedEndTime = EstimatedEndTime.AddDays(1);
+                EstimatedStartTime = EstimatedEndTime - duration;
+            }
+            var day = today.Date;
+            var StaticRRs = reruns;
+            TimeSlot OverlayingSlot = new TimeSlot();
+            var estimatedCurrentTime = day;
+        Startday:
+            Schedule schedule = new Schedule();
+            while (schedule.ScheduleDuration.TotalHours < 24)
+            {
+                if (OverlayingSlot.Media != null)
+                {
+                    schedule.slots.Add(new(OverlayingSlot.Media, day, OverlayingSlot.EndTime-day));
+                    OverlayingSlot = new();
+                }
+                if( (estimatedCurrentTime>= EstimatedStartTime & estimatedCurrentTime <= EstimatedEndTime)| show.Status == ShowStatus.Ongoing)
+                {
+                    var NE = new TimeSlot(show.NextEpisode(), schedule.slots);
+                    schedule.slots.Add(NE);
+                    if(NE.EndTime.Day != NE.StartTime.Day)
+                    {
+                        OverlayingSlot = NE;
+                    }
+                    estimatedCurrentTime += NE.Duration;
+                }
+                else
+                {
+                    var RR = new TimeSlot(StaticRRs[new Random().Next(StaticRRs.Length)], schedule.slots);
+                    schedule.slots.Add(RR);
+                    estimatedCurrentTime += RR.Duration;
+                }
+            }
+
+            SaveSchedule(schedule, day);
+            if (show.Status != ShowStatus.Complete)
+            {
+                day = day.AddDays(1);
+                goto Startday;
+            }
+            rotation.GetNextEp(today.DayOfWeek, this);
+            SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
+        }
         void OnMissingRerun(string epname)
         {
             var fi = new FileInfo(epname);

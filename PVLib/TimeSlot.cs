@@ -1,5 +1,7 @@
 ﻿
 
+using System.Net.Http.Headers;
+
 namespace PVLib
 {
     public struct TimeSlot
@@ -58,6 +60,21 @@ namespace PVLib
             {
                 StartTime = slots[^1].EndTime;
             }
+        }
+        public TimeSlot(string media, DateTime ST, TimeSpan fixedur)
+        {
+            Media = media;
+            Duration = fixedur;
+            StartTime = ST;
+        }
+        public static bool operator ==(TimeSlot a, TimeSlot b)
+        {
+            return a.Media == b.Media & a.EndTime == b.EndTime;
+        }
+
+        public static bool operator !=(TimeSlot a, TimeSlot b)
+        {
+            return !(a == b);
         }
     }
 }

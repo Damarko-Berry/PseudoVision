@@ -56,6 +56,7 @@ namespace PVLib
         }
 
         public async Task SendMedia(HttpListenerContext client)
+        
         {
             if(CurrentSegment == null)
             {
@@ -91,22 +92,7 @@ namespace PVLib
             fs.Close();
         }
         
-        async void SendManifest(HttpListenerContext Context)
-        {
-            HLS hLS = new();
-            string des = "";
-            hLS = CurrentSate;
-                
-            hLS.SetOffset(CurrentSegment.path);
-            des = hLS.ToString(CurrentSegment);
-            
-            byte[] buffer = Encoding.UTF8.GetBytes(des);
-            HttpListenerResponse client = Context.Response;
-            client.ContentLength64 = buffer.Length;
-            client.ContentType = "application/vnd.apple.mpegurl";
-            await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
-            //client.OutputStream.Close();
-        }
+        
         public async Task SendMedia(string Request, NetworkStream stream)
         {
             if (CurrentSegment == null) return;
@@ -276,6 +262,10 @@ namespace PVLib
                 {
                     var scdpath = Path.Combine(FileSystem.ChannleChan(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
                     Schedule sch = SaveLoad<Schedule>.Load(scdpath);
+                    if (sch.slots[0] == slots[^1])
+                    {
+                        sch.slots.RemoveAt(0);
+                    }
                     slots.AddRange(sch.slots);
                 }
             }
@@ -296,14 +286,7 @@ namespace PVLib
             filePath = "\"" + filePath + "\"";
             string ffmpegArgs;
 
-            if (slots[SlotNo].Duration > TimeLeftInDay)
-            {
-                ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" -t {(int)TimeLeftInDay.TotalSeconds} {ManifestOutputDirectory}/index({SlotNo}).m3u8";
-            }
-            else
-            {
-                ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
-            }
+            ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" -t {slots[SlotNo].Duration.TotalSeconds} {ManifestOutputDirectory}/index({SlotNo}).m3u8";
 
             await RunFFmpeg(ffmpegArgs);
             processing = false;
@@ -331,6 +314,24 @@ namespace PVLib
             Console.WriteLine("Processed");
         }
 
+
+
+        async void SendManifest(HttpListenerContext Context)
+        {
+            HLS hLS = new();
+            string des = "";
+            hLS = CurrentSate;
+
+            hLS.SetOffset(CurrentSegment.path);
+            des = hLS.ToString(CurrentSegment);
+
+            byte[] buffer = Encoding.UTF8.GetBytes(des);
+            HttpListenerResponse client = Context.Response;
+            client.ContentLength64 = buffer.Length;
+            client.ContentType = "application/vnd.apple.mpegurl";
+            await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            //client.OutputStream.Close();
+        }
         #endregion
         async void CleanUp(int slotNum, int offset)
         {

@@ -11,11 +11,6 @@ namespace PVLib
         public string Directory;
         public string name => new DirectoryInfo(Directory).Name;
         public DayOfWeek DayToPlay;
-        public ShowRef(Show show)
-        {
-            Directory = show.HomeDirectory;
-            DayToPlay = DateTime.Now.DayOfWeek;
-        }
         public ShowRef(string directory, DayOfWeek dayToPlay)
         {
             Directory = directory;
