@@ -158,13 +158,11 @@ namespace PVLib
         
         public override void CreateNewSchedule(DateTime today)
         {
+            if (ScheduleExists(today)|Shows.Length <= 0) return;
             ConsoleLog.Cycle(ChannelName);
             var M = today.Date.Month;
             var D = today.Date.Day;
             var Y = today.Date.Year;
-            if (ScheduleExists(today)) return;
-            if (CTD.Length <= 0) return;
-            if (Shows.Length <= 0) return;
             DateTime Start= DateTime.Now;
             var schedule = new Schedule();
             var seas = Seasons;
