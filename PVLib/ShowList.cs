@@ -58,25 +58,43 @@ namespace PVLib
                 SaveLoad<Show>.Save(show, Shows[shw]);
             }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
-
+            client.Response.Headers.Add("Accept-Ranges", "bytes");
             FileStream fs = new FileStream(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
             try
             {
-                Console.WriteLine(info.Name);
-                client.Response.ContentType = $"video/{info.Name.Replace(info.Extension, string.Empty)}";
+                client.Response.ContentType = $"video/{info.Extension}";
                 client.Response.ContentLength64 = fs.Length;
-                await fs.CopyToAsync(client.Response.OutputStream);
+
+                if (client.Request.Headers["Range"] != null)
+                {
+                    var range = client.Request.Headers["Range"];
+                    var bytesRange = range.Replace("bytes=", "").Split('-');
+                    var from = long.Parse(bytesRange[0]);
+                    var to = bytesRange.Length > 1 && !string.IsNullOrEmpty(bytesRange[1]) ? long.Parse(bytesRange[1]) : fs.Length - 1;
+
+                    client.Response.StatusCode = 206;
+                    client.Response.Headers.Add("Content-Range", $"bytes {from}-{to}/{fs.Length}");
+                    client.Response.ContentLength64 = to - from + 1;
+
+                    fs.Seek(from, SeekOrigin.Begin);
+                    await fs.CopyToAsync(client.Response.OutputStream, (int)(to - from + 1));
+                }
+                else
+                {
+                    await fs.CopyToAsync(client.Response.OutputStream);
+                }
             }
             catch (Exception ex)
             {
-                fs.Close();
-                Console.WriteLine(ex.ToString());
+                ConsoleLog.writeError(ex.ToString());
             }
-            fs.Close();
-            client.Response.Close();
+            finally
+            {
+                client.Response.Close();
+            }
         }
 
-        public async Task SendMedia(string Request, NetworkStream stream)
+        public async Task SendMedia(string request, NetworkStream stream)
         {
             if (File.Exists(LastPLayed))
             {
@@ -101,13 +119,60 @@ namespace PVLib
             }
             SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
 
-            byte[] fileBytes = await File.ReadAllBytesAsync(CurrentlyPlaying.Media);
-            using StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
-            writer.WriteLine("HTTP/1.1 200 OK"); writer.WriteLine("Content-Type: video/mp4");
-            writer.WriteLine($"Content-Length: {fileBytes.Length}"); 
-            writer.WriteLine(); 
-            writer.Flush(); 
-            await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+            try
+            {
+                string filePath = CurrentlyPlaying.Media;
+                long fileLength = info.Length;
+
+                StreamWriter writer = new StreamWriter(stream) { AutoFlush = true };
+
+                if (request.Contains("Range"))
+                {
+                    string rangeHeader = request.Substring(request.IndexOf("Range"));
+                    string range = rangeHeader.Split('=')[1].Split('-')[0];
+                    long start = long.Parse(range);
+                    long end = fileLength - 1;
+
+                    writer.WriteLine("HTTP/1.1 206 Partial Content");
+                    writer.WriteLine("Accept-Ranges: bytes");
+                    writer.WriteLine($"Content-Range: bytes {start}-{end}/{fileLength}");
+                    writer.WriteLine($"Content-Length: {end - start + 1}");
+                    writer.WriteLine($"Content-Type: video/{info.Extension}");
+                    writer.WriteLine();
+                    writer.Flush();
+
+                    using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read);
+                    fs.Seek(start, SeekOrigin.Begin);
+
+                    byte[] buffer = new byte[64 * 1024];
+                    int bytesRead;
+                    while ((bytesRead = await fs.ReadAsync(buffer, 0, buffer.Length)) > 0 && start <= end)
+                    {
+                        await stream.WriteAsync(buffer, 0, bytesRead);
+                        start += bytesRead;
+                    }
+                }
+                else
+                {
+                    writer.WriteLine("HTTP/1.1 200 OK");
+                    writer.WriteLine("Accept-Ranges: bytes");
+                    writer.WriteLine($"Content-Length: {fileLength}");
+                    writer.WriteLine($"Content-Type: video/{info}");
+                    writer.WriteLine();
+                    writer.Flush();
+
+                    byte[] fileBytes = await File.ReadAllBytesAsync(filePath);
+                    await stream.WriteAsync(fileBytes, 0, fileBytes.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.writeError(ex.ToString());
+            }
+            finally
+            {
+                stream.Close();
+            }
         }
         public string GetContent(int s, string ip, int prt)
         {
