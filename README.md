@@ -7,7 +7,7 @@ _Due to the way that I set up HLS, TV_Like channels that use HLS can take severa
 ## Clients
 I've started on an ["Official client"](https://github.com/Damarko-Berry/PV_Client)
 
-Which I have running on a rasberrypi for testing. Clone that repo and compile. You may need [PVLib](https://github.com/Damarko-Berry/PseudoVision/releases/download/1.0.0/PVLib.zip) 
+Which I have running on a rasberrypi for testing. Clone that repo and compile. You may need [PVLib](https://github.com/Damarko-Berry/PseudoVision/releases/download/1.0.1/PVLib.zip) 
 
 Other working clients are any Videoplayer that's able to stream via HTTP.
 
