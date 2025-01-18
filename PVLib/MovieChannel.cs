@@ -36,7 +36,7 @@ namespace PVLib
             Schedule schedule = new Schedule();
             while(schedule.ScheduleDuration.TotalHours< FULLDAY)
             {
-                TimeSlot timeSlot = new(movieDirectory.NextEpisode(), schedule.slots);
+                TimeSlot timeSlot = new(movieDirectory.NextEpisode(), schedule.slots, today);
                 schedule.slots.Add(timeSlot);
             }
             SaveSchedule(schedule,today);
