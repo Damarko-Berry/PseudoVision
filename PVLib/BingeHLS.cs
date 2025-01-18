@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using static System.Reflection.Metadata.BlobBuilder;
 using System.Diagnostics;
+using static PVLib.ISchedule;
 
 namespace PVLib
 {
@@ -35,8 +36,6 @@ namespace PVLib
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
-        [XmlIgnore]
-        public Dictionary<string, ISchedule> AllSchedules { get; set; }
         public void selectMedia()
         {
             ConsoleLog.Cycle(Name);
@@ -108,8 +107,8 @@ namespace PVLib
         {
             ConsoleLog.Cycle(Name);
 
-            HLS hLS = new();
-            string des = "";
+            HLS hLS;
+            string des;
             hLS = CurrentSate;
 
             hLS.SetOffset(CurrentSegment.path);

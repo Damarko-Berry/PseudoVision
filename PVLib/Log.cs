@@ -85,6 +85,7 @@ namespace PVLib
             Message = message;
             messageType = messageTypes;
             timeOnly = TimeOnly.FromDateTime(DateTime.Now);
+            Console.WriteLine(message);
         }
     }
 

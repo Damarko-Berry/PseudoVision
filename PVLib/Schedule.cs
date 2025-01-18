@@ -3,13 +3,14 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Xml.Serialization;
+using static PVLib.ISchedule;
 
 
 namespace PVLib
 {
     public class Schedule : PVObject, ISchedule
     {
-        public readonly List<TimeSlot> slots = new();
+        public List<TimeSlot> slots = new();
         
         public string Name { get; set; }
         int CurrentSlot;
@@ -43,8 +44,6 @@ namespace PVLib
             }
         }
         public FileInfo info => new FileInfo(Slot.Media);
-        [XmlIgnore]
-        public Dictionary<string, ISchedule> AllSchedules { get; set; }
 
         public async Task SendMedia(HttpListenerContext client)
         {

@@ -4,13 +4,13 @@ using System.Net.Sockets;
 using System.Text;
 using static System.Net.Mime.MediaTypeNames;
 using static PVLib.Settings;
+using static PVLib.ISchedule;
 
 namespace PseudoVision
 {
     public class Program : PVObject
     {
 
-        static Dictionary<string,ISchedule> Schedules = new Dictionary<string,ISchedule>();
         static string Public_IP;
         static bool IsGening;
         static UPNP upnp;
@@ -45,7 +45,7 @@ namespace PseudoVision
         
         static async Task waittilnextday()
         {
-            while (Schedules.Count>0)
+            while (AllSchedules.Count>0)
             {
                 var waittime = (DateTime.Today.AddDays(1) - DateTime.Now);
                 await Task.Delay((int)waittime.TotalMilliseconds);
@@ -65,7 +65,7 @@ namespace PseudoVision
             var CDs = Channels.GetDirectories();
             for (int i = 0; i < CDs.Length; i++)
             {
-                if (Schedules.ContainsKey(CDs[i].Name)) continue;
+                if (AllSchedules.ContainsKey(CDs[i].Name)) continue;
                 Channel chan = Channel.Load(FileSystem.ChannleChan(CDs[i].Name));
                 chan.CreateNewSchedule(DateTime.Now);
                 if (chan.CTD.Length > 0)
@@ -87,32 +87,31 @@ namespace PseudoVision
                             sch = schedule;
                         }
                     }
-                    Schedules.Add(chan.ChannelName.ToLower(), sch);
-                    sch.AllSchedules = Schedules;
+                    AllSchedules.Add(chan.ChannelName.ToLower(), sch);
                     sch.StartCycle();
                 }
             }
-            for (int i = 0; i < Schedules.Count; i++)
+            for (int i = 0; i < AllSchedules.Count; i++)
             {
                 
-                if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like | Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.LiveStream)
+                if (AllSchedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like | AllSchedules.ElementAt(i).Value.ScheduleType == Schedule_Type.LiveStream)
                 {
                     Playlist playlist = null;
-                    if (Schedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like)
+                    if (AllSchedules.ElementAt(i).Value.ScheduleType == Schedule_Type.TV_Like)
                     {
-                        var sch = (Schedule)Schedules.ElementAt(i).Value;
+                        var sch = (Schedule)AllSchedules.ElementAt(i).Value;
                         playlist = new(sch);
                     }
                     else
                     {
-                        var sch = (HLSSchedule)Schedules.ElementAt(i).Value;
+                        var sch = (HLSSchedule)AllSchedules.ElementAt(i).Value;
                         playlist = new(sch);
                     }
                     string pth = FileSystem.ArchiveDirectory(Channels.GetDirectories()[i].Name);
                     Directory.CreateDirectory(pth);
                     File.WriteAllText(FileSystem.Archive(Channels.GetDirectories()[i].Name, DateTime.Now), playlist.ToString());
                 }
-                MainLog.writeMessage(Schedules.ElementAt(i).Key);
+                MainLog.writeMessage(AllSchedules.ElementAt(i).Key);
             }
             IsGening = false;
         }
@@ -158,7 +157,7 @@ namespace PseudoVision
             {
                 string channame = request.Url.AbsolutePath.Replace("/live/", string.Empty);
                 channame = request.Url.AbsolutePath.Split('[')[1].Split(']')[0].Replace("]",string.Empty).Trim();
-                var Sched = Schedules[channame.ToLower()];
+                var Sched = AllSchedules[channame.ToLower()];
                 context.Response.Headers.Add("Connection", "keep-alive");
                 await Sched.SendMedia(context);
             }
@@ -170,7 +169,7 @@ namespace PseudoVision
                     channame = channame.Split(".")[0];
                 }
                 MainLog.writeMessage($"Connecting {userip} to {channame}");
-                var Sched = Schedules[channame.ToLower()];
+                var Sched = AllSchedules[channame.ToLower()];
                 context.Response.Headers.Add("Connection", "keep-alive");
                 await Sched.SendMedia(context);
             }
@@ -203,7 +202,7 @@ namespace PseudoVision
             {    
                 if (request.Url.AbsolutePath == "/media")
                 {
-                    var sc = Schedules.Values.ToArray();
+                    var sc = AllSchedules.Values.ToArray();
                     var Re = upnp.Media(sc, ip, prt);
                     byte[] buffer = Encoding.UTF8.GetBytes(Re);
                     response.ContentLength64 = buffer.Length;
@@ -242,8 +241,8 @@ namespace PseudoVision
           <Result dt:dt=""string"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">
 {GenerateContentDirectoryResponse()}
           </Result>
-            <NumberReturned dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{Schedules.Count}</NumberReturned>
-            <TotalMatches dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{Schedules.Count}</TotalMatches>
+            <NumberReturned dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{AllSchedules.Count}</NumberReturned>
+            <TotalMatches dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{AllSchedules.Count}</TotalMatches>
             <UpdateID dt:dt=""ui4"" xmlns:dt=""urn:schemas-microsoft-com:datatypes"">{UPNP.Update}</UpdateID>
         </m:BrowseResponse>
     </SOAP-ENV:Body>
@@ -288,14 +287,14 @@ namespace PseudoVision
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine(@"<DIDL-Lite xmlns:dc=""http://purl.org/dc/elements/1.1/"" xmlns:upnp=""urn:schemas-upnp-org:metadata-1-0/upnp/"" xmlns=""urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"">");
-            sb.AppendLine($@"<container id=""0"" parentID=""-1"" restricted=""false"" childCount=""{Schedules.Count}"">");
+            sb.AppendLine($@"<container id=""0"" parentID=""-1"" restricted=""false"" childCount=""{AllSchedules.Count}"">");
             sb.AppendLine($@"<dc:title>Media Server</dc:title>");
             sb.AppendLine($@"<upnp:class>object.container</upnp:class>");
-            for (int i = 0; i < Schedules.Count; i++)
+            for (int i = 0; i < AllSchedules.Count; i++)
             {
                 try
                 {
-                    sb.AppendLine(Schedules.ElementAt(i).Value.GetContent(i, CurrentSettings.IP, CurrentSettings.Port));
+                    sb.AppendLine(AllSchedules.ElementAt(i).Value.GetContent(i, CurrentSettings.IP, CurrentSettings.Port));
                 }
                 catch (Exception e)
                 {
@@ -365,13 +364,13 @@ namespace PseudoVision
 
             var WP = File.ReadAllText("Index.html");
             var arr = "[";
-            for (int i = 0; i < Schedules.Count; i++)
+            for (int i = 0; i < AllSchedules.Count; i++)
             {
-                var lnk = $"http://{localip}:{port}/live/{Schedules.ElementAt(i).Key}";
+                var lnk = $"http://{localip}:{port}/live/{AllSchedules.ElementAt(i).Key}";
                 arr += $@"""{lnk}"",";
             }
             arr += "];";
-            return WP.Replace("REPLACEME", arr).Replace("REPLCACESRC", $"http://{localip}:{port}/live/{Schedules.ElementAt(0).Key}");
+            return WP.Replace("REPLACEME", arr).Replace("REPLCACESRC", $"http://{localip}:{port}/live/{AllSchedules.ElementAt(0).Key}");
         }
         
         static async Task<IPAddress?> GetExternalIpAddress()

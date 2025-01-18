@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Xml.Serialization;
+using static PVLib.ISchedule;
 
 namespace PVLib
 {
@@ -383,8 +384,6 @@ namespace PVLib
                 return timeLeft;
             }
         }
-        [XmlIgnore]
-        public Dictionary<string, ISchedule> AllSchedules { get; set; }
 
         public HLSSchedule(Schedule schedule)
         {

@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using static System.Reflection.Metadata.BlobBuilder;
+using static PVLib.ISchedule;
+
 
 namespace PVLib
 {
@@ -32,8 +34,6 @@ namespace PVLib
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
         public string Name { get; set; }
-        [XmlIgnore]
-        public Dictionary<string, ISchedule> AllSchedules { get; set; }
 
         public async Task SendMedia(HttpListenerContext client)
         {

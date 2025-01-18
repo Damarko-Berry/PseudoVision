@@ -15,7 +15,7 @@ namespace PVLib
     {
         string Name { get; set; }
         [XmlIgnore]
-        public Dictionary<string ,ISchedule> AllSchedules { get; set; }
+        public static Dictionary<string, ISchedule> AllSchedules = new();
         public async Task SendMedia(HttpListenerContext client) { }
         public async Task SendMedia(string Request, NetworkStream stream) { }
         public async Task StartCycle() { }

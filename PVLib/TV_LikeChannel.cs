@@ -220,6 +220,7 @@ namespace PVLib
                 {
                     rerunAlgs[new Random().Next(rerunAlgs.Length)].Invoke();
                 }
+
                 if (FillTime)
                 {
                     var endT = schedule.slots[^1].EndTime;
@@ -241,14 +242,14 @@ namespace PVLib
                         var siller = getFill(duration);
                         for (int i = 0; i < siller.Length; i++)
                         {
-                            schedule.slots.Add(new(siller[i],schedule.slots));
+                            schedule.slots.Add(new(siller[i],schedule.slots, today));
                         }
                     }
                 }
             }
             void Newep(string e)
             {
-                schedule.slots.Add(new(e, schedule.slots));
+                schedule.slots.Add(new(e, schedule.slots, today));
 
                 Directory.CreateDirectory(RerunDirectory);
                 FileInfo file = new FileInfo(schedule.slots[^1].Media);
@@ -274,15 +275,14 @@ namespace PVLib
                 {
                     if (MovieDirectory != null)
                     {
-                        M = new Rerun(new TimeSlot(MovieDirectory.NextEpisode()));
                         if (new Random().Next(100) > 50)
                         {
-                            schedule.slots.Add(new(M, schedule.slots));
+                            schedule.slots.Add(new(MovieDirectory.NextEpisode(), schedule.slots, today));
                             return;
                         }
                     }
                 }
-                schedule.slots.Add(new(RR[i], schedule.slots));
+                schedule.slots.Add(new(RR[i], schedule.slots, today));
                 RR.RemoveAt(i);
             }
             void getSpecial()
@@ -296,7 +296,7 @@ namespace PVLib
                 int TR = (int)(s.SpecialThreshold * 100);
                 if (s.Specials.Count > 0)
                 {
-                    schedule.slots.Add(new(s.Something, schedule.slots));
+                    schedule.slots.Add(new(s.Something, schedule.slots, today));
                 }
                 else
                 {
@@ -312,7 +312,7 @@ namespace PVLib
                     {
                         if (m.Length > 0)
                         {
-                            schedule.slots.Add(new(m.NextEpisode(), schedule.slots));
+                            schedule.slots.Add(new(m.NextEpisode(), schedule.slots, today));
                             return;
                         }
                     }
@@ -381,7 +381,7 @@ namespace PVLib
                 }
                 if( (estimatedCurrentTime>= EstimatedStartTime & estimatedCurrentTime <= EstimatedEndTime)| show.Status == ShowStatus.Ongoing)
                 {
-                    var NE = new TimeSlot(show.NextEpisode(), schedule.slots);
+                    var NE = new TimeSlot(show.NextEpisode(), schedule.slots, day.Date);
                     schedule.slots.Add(NE);
                     if(NE.EndTime.Day != NE.StartTime.Day)
                     {
@@ -391,7 +391,7 @@ namespace PVLib
                 }
                 else
                 {
-                    var RR = new TimeSlot(StaticRRs[new Random().Next(StaticRRs.Length)], schedule.slots);
+                    var RR = new TimeSlot(StaticRRs[new Random().Next(StaticRRs.Length)], schedule.slots, day.Date);
                     schedule.slots.Add(RR);
                     estimatedCurrentTime += RR.Duration;
                 }
