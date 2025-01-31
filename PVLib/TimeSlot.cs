@@ -27,7 +27,7 @@ namespace PVLib
             DateTime et = EndTime;
             return ((time >= st) && (time < et));
         }
-
+        public TimeSpan Age => DateTime.Now - (DateTime)StartTime;
         public override bool Equals(object? obj)
         {
             return obj is TimeSlot slot &&

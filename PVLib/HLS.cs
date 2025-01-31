@@ -10,6 +10,7 @@ namespace PVLib
     public class HLS
     {
         TimeSpan offset;
+        public bool isfinised;
         public TimeSpan Length 
         { 
             get
@@ -23,6 +24,7 @@ namespace PVLib
                 return time;
             } 
         }
+
         public List<segment> Body = new();
         public int targetDuration
         {
@@ -62,7 +64,7 @@ namespace PVLib
             return A;
         }
 
-        public static HLS Load(string text)
+        public static HLS Parse(string text)
         {
             HLS A = new HLS();
             var m3u = text.Split("\n");
@@ -85,6 +87,7 @@ namespace PVLib
                     A.offset = new(0, 0, 0, second, 0, millisecons);
                 }
             }
+            A.isfinised = text.Contains("#EXT-X-ENDLIST");
             return A;
         }
 
@@ -185,6 +188,7 @@ namespace PVLib
                     {
                         body += "#EXT-X-DISCONTINUITY\n";
                     }
+
                     body += $"#EXT-X-MEDIA-SEQUENCE:{i}\n";
                 }
                 
@@ -193,7 +197,7 @@ namespace PVLib
             return (i<Body.Count)?$"{Header}\n{body}\n": ToString();
         }
 
-
+        
     }
 
     public class segment

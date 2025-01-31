@@ -44,6 +44,7 @@ namespace PVLib
                 return seasons.ToArray();
             }
         }
+
         
         Season CurrentSeason(Season[] seasons)
         {
@@ -180,13 +181,15 @@ namespace PVLib
             {
                 rotation.CreateNewRotation(Shows);
             }
-            if (rotation.GetShow(today.DayOfWeek, this).MediaLeft == 1)
-            {
-                generateMarathon(rotation.GetShow(today.DayOfWeek, this), today);
-                DateTime ET = DateTime.Now;
-                ConsoleLog.writeMessage($"{ChannelName}: {(ET - Start).TotalSeconds} seconds");
-                return;
-            }
+            var TShow = rotation.GetShow(today.DayOfWeek, this);
+            if (TShow!=null)
+                if (TShow.MediaLeft == 1)
+                {
+                    generateMarathon(TShow, today);
+                    DateTime ET = DateTime.Now;
+                    ConsoleLog.writeMessage($"{ChannelName}: {(ET - Start).TotalSeconds} seconds");
+                    return;
+                }
             var RR = new List<Rerun>(StaticRRs);
             Action[] rerunAlgs = [GetRerun, getSpecial, PlayMovie];
             while (schedule.ScheduleDuration.TotalHours < FULLDAY)
@@ -443,5 +446,10 @@ namespace PVLib
         }
 
         public override bool isSupported(DirectoryType type) => type == DirectoryType.Movie | type == DirectoryType.Show;
+
+        public override TimeSlot CreateSlot(DateTime now)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

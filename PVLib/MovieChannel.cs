@@ -42,6 +42,11 @@ namespace PVLib
             SaveSchedule(schedule,today);
         }
 
+        public override TimeSlot CreateSlot(DateTime now)
+        {
+            throw new NotImplementedException();
+        }
+
         public override bool isSupported(DirectoryType type)=> type == DirectoryType.Movie;
     }
 }

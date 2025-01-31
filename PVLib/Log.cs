@@ -16,8 +16,8 @@ namespace PVLib
         {
             if (logging) return;
             logging = true;
-            Directory.CreateDirectory(Path.Combine(FileSystem.Root, "Logs",name, "Errors"));
-            Directory.CreateDirectory(Path.Combine(FileSystem.Root, "Logs",name, "Message"));
+            Directory.CreateDirectory(Path.Combine( "Logs",name, "Errors"));
+            Directory.CreateDirectory(Path.Combine("Logs",name, "Message"));
             while (logging)
             {
                 TimeStarted = TimeOnly.FromDateTime(DateTime.Now);
@@ -34,7 +34,7 @@ namespace PVLib
                         {
                             erors += error.message+"\n\n-----\n\n";
                         }
-                        File.WriteAllText(Path.Combine(FileSystem.Root, "Logs", name, "Errors", $"{TimeStarted.Hour}.{TimeStarted.Minute}.{TimeStarted.Second}.log"), erors);
+                        File.WriteAllText(Path.Combine("Logs", name, "Errors", $"{TimeStarted.Hour}.{TimeStarted.Minute}.{TimeStarted.Second}.log"), erors);
                     }
                     if (messages.Any())
                     {
@@ -43,9 +43,10 @@ namespace PVLib
                         {
                             mesag += message.message + "\n\n-----\n\n";
                         }
-                        File.WriteAllText(Path.Combine(FileSystem.Root, "Logs", name, "Message", $"{TimeStarted.Hour}.{TimeStarted.Minute}.{TimeStarted.Second}.log"), mesag);
+                        File.WriteAllText(Path.Combine("Logs", name, "Message", $"{TimeStarted.Hour}.{TimeStarted.Minute}.{TimeStarted.Second}.log"), mesag);
                     }
                     logs.Clear();
+                    Console.Clear();
                 }
                 else
                 {

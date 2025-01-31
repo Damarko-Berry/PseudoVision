@@ -8,11 +8,11 @@ namespace PVLib
 {
     public static class FileSystem
     {
-        public static string Root = Directory.GetCurrentDirectory();
-        public static string FFMPEG => Path.Combine(Root,"ffmpeg","ffmpeg.exe");
-        public static string Channels => Path.Combine(Root, "Channels");
-        public static string Schedules => Path.Combine(Root, "Schedules");
-        public static string SettingsFile => Path.Combine(Root, "SettingsFile");
+        //public static string Root = Directory.GetCurrentDirectory();
+        public static string FFMPEG => Path.Combine("ffmpeg","ffmpeg.exe");
+        public static string Channels => Path.Combine("Channels");
+        public static string Schedules => Path.Combine("Schedules");
+        public static string SettingsFile => Path.Combine("SettingsFile");
         public static string ChannleChan(string cname)=> Path.Combine(Channels, cname, "Channel.chan");
         public static string Seasons(string cname)=> Path.Combine(Channels, cname, "Seasons");
         public static string ChanSchedules(string cname)=> Path.Combine(Schedules, cname);

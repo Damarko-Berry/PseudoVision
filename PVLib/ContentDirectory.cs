@@ -46,7 +46,8 @@ namespace PVLib
         }
 
         public string HomeDirectory;
-        protected DirectoryInfo HomeDirectoryInfo => new DirectoryInfo(HomeDirectory);
+        public string GetHomeDirectory=> Settings.CurrentSettings.Portable? HomeDirectory.Replace(Directory.GetDirectoryRoot(HomeDirectory), Directory.GetDirectoryRoot(Directory.GetCurrentDirectory())):HomeDirectory;
+        protected DirectoryInfo HomeDirectoryInfo => new DirectoryInfo(GetHomeDirectory);
         public DirectoryType dirtype => DDetector(HomeDirectoryInfo);
         internal abstract FileInfo[] Content { get; }
         public virtual int Length => Content.Length;

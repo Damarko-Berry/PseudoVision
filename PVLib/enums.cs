@@ -2,7 +2,7 @@
 {
     public enum ShowStatus { New, Ongoing, Complete }
     public enum Channel_Type { TV_Like, Binge_Like, Movies }
-    public enum Schedule_Type { TV_Like, Binge_Like, LiveStream}
+    public enum Schedule_Type { TV_Like, Binge_Like, LiveStream, PerRequest}
     public enum DirectoryType { Movie, Show}
     public enum PlaylistFormat { m3u, pls }
     /// <summary>

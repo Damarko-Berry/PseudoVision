@@ -17,7 +17,13 @@ namespace PVLib
         public HLSSchedule() { }
         segment CurrentSegment = null;
         int CurrentSlot;
+        /// <summary>
+        /// This keeps track of the current slot for segment naming purposes. After 24hours old slots that are more than a day old are removed from the Timeslot list.
+        /// At that point, Current Slot and CurrentSlotNo will be different.
+        /// </summary>
+        int CurrentSlotNo;
         bool processing;
+        
         
         public TimeSlot Slot => slots[CurrentSlot];
         
@@ -29,7 +35,7 @@ namespace PVLib
                 var HL = Directory.GetFiles(ManifestOutputDirectory,"index(*).m3u8");
                 for (int i = 0; i < HL.Length; i++)
                 {
-                    var H = HLS.Load(File.ReadAllText(HL[i]));
+                    var H = HLS.Parse(File.ReadAllText(HL[i]));
                     if (File.Exists(Path.Combine(liveOutputDirectory, H.Body[^1].path)))
                     {
                         G++;
@@ -44,6 +50,7 @@ namespace PVLib
         string liveOutputDirectory => Path.Combine("output", Name, "segments");
         string ManifestOutputDirectory => Path.Combine("output", Name);
         HLS CurrentSate=null;
+        Dictionary<string,HLS> FinishedHLSManifests = new();
         public Schedule_Type ScheduleType => Schedule_Type.LiveStream;
 
         public string GetContent(int index, string ip, int prt)
@@ -57,7 +64,6 @@ namespace PVLib
         }
 
         public async Task SendMedia(HttpListenerContext client)
-        
         {
             if(CurrentSegment == null)
             {
@@ -132,7 +138,12 @@ namespace PVLib
                 Increment();
             }
 
+#if DEBUG
+            await TestSegCyc();
+#else
+                
             await SegCyc();
+#endif
         }
         #region live
         async void UpdateCurrentState(CancellationToken Toolong)
@@ -144,7 +155,18 @@ namespace PVLib
                 var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
                 for (int i = 0; i < manifests.Length; i++)
                 {
-                    Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                    if (FinishedHLSManifests.ContainsKey(manifests[i]))
+                    {
+                        Hs += FinishedHLSManifests[manifests[i]];
+                    }
+                    else
+                    {
+                        var nls = HLS.Parse(File.ReadAllText(manifests[i]));
+                        if (nls.isfinised){
+                            FinishedHLSManifests.Add(manifests[i], nls);
+                        }
+                        Hs += nls;
+                    }
                 }
                 CurrentSate = Hs;
                 if (CurrentSegment == null)
@@ -195,11 +217,11 @@ namespace PVLib
                 if (CurrentSegment.path.Contains("seg0"))
                 {
                     Increment();
-                    CleanUp(CurrentSlot - 1, 30);
+                    CleanUp(CurrentSlotNo - 1, 30);
                 }
                 if (CurrentSegment.path.Contains("seg3"))
                 {
-                    CleanUp(CurrentSlot - 1, 0);
+                    CleanUp(CurrentSlotNo - 1, 0);
                 }
                 ProcessNext();
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
@@ -235,11 +257,11 @@ namespace PVLib
                     if (CurrentSegment.path.Contains("seg0"))
                     {
                         Increment();
-                        CleanUp(CurrentSlot - 1, 30);
+                        CleanUp(CurrentSlotNo - 1, 30);
                     }
-                    if (CurrentSegment.path.Contains("seg3"))
+                    if (CurrentSegment.path.Contains("seg10"))
                     {
-                        CleanUp(CurrentSlot - 1, 0);
+                        CleanUp(CurrentSlotNo - 1, 0);
                     }
                 }
                 ProcessNext();
@@ -254,6 +276,15 @@ namespace PVLib
         {
             UPNP.Update++;
             CurrentSlot++;
+            try
+            {
+                CurrentSlotNo++;
+
+            }
+            catch
+            {
+                CurrentSlotNo = 0;
+            }
             if (CurrentSlot + 1 == slots.Count)
             {
                 DateTime tmrw = DateTime.Now.AddDays(1);
@@ -270,12 +301,22 @@ namespace PVLib
                     slots.AddRange(sch.slots);
                 }
             }
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i].Age.TotalDays > 1)
+                {
+                    slots.RemoveAt(i);
+                    CurrentSlot--;
+                    i--;
+                }
+            }
         }
         void ProcessNext()
         {           
             if(!processing & SlotsAvalible < 2 & CurrentSlot+1 < slots.Count)
             {
-                ProcessVideo(slots[CurrentSlot + 1].Media, CurrentSlot + 1);
+                ProcessVideo(slots[CurrentSlot + 1].Media, CurrentSlotNo + 1);
             }
         }
 
@@ -331,6 +372,7 @@ namespace PVLib
             client.ContentLength64 = buffer.Length;
             client.ContentType = "application/vnd.apple.mpegurl";
             await client.OutputStream.WriteAsync(buffer, 0, buffer.Length);
+            Console.WriteLine($"Manifest sent to: {Context.Request.UserHostAddress}");
             //client.OutputStream.Close();
         }
         #endregion
@@ -338,7 +380,7 @@ namespace PVLib
         {
             if(!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))) return;
             
-            var HLSO = HLS.Load(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
+            var HLSO = HLS.Parse(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
             segment[] files = HLSO.Body.ToArray(); 
             for (int i = 0; i < files.Length-offset; i++)
             {
@@ -354,6 +396,10 @@ namespace PVLib
                     await Task.Delay(1);
                 }
                 
+            }
+            if (offset <= 0)
+            {
+                File.Delete(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"));
             }
             var vttfiles = Directory.GetFiles(ManifestOutputDirectory, "*.vtt");
             

@@ -214,7 +214,7 @@ namespace PVLib
                 var HL = Directory.GetFiles(ManifestOutputDirectory, "index(*).m3u8");
                 for (int i = 0; i < HL.Length; i++)
                 {
-                    var H = HLS.Load(File.ReadAllText(HL[i]));
+                    var H = HLS.Parse(File.ReadAllText(HL[i]));
                     if (File.Exists(Path.Combine(liveOutputDirectory, H.Body[^1].path)))
                     {
                         G++;
@@ -264,7 +264,7 @@ namespace PVLib
                     var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
                     for (int i = 0; i < manifests.Length; i++)
                     {
-                        Hs += HLS.Load(File.ReadAllText(manifests[i]));
+                        Hs += HLS.Parse(File.ReadAllText(manifests[i]));
                     }
                     CurrentSate = Hs;
                 }
@@ -353,7 +353,6 @@ namespace PVLib
 
             string ffmpegArgs = $"-i {filePath} -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename {liveOutputDirectory}/(Slot{SlotNo})[{Name}]seg%d.ts -metadata title=\"{Name}\" {ManifestOutputDirectory}/index({SlotNo}).m3u8";
 
-
             await RunFFmpeg(ffmpegArgs);
             clean = false;
             processing = false;
@@ -390,7 +389,7 @@ namespace PVLib
             {
                 clean = true;
                 
-                var HLSO = HLS.Load(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
+                var HLSO = HLS.Parse(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8")));
                 segment[] files = HLSO.Body.ToArray();
                 for (int i = 0; i < files.Length - offset; i++)
                 {

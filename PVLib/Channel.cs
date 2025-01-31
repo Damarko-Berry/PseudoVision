@@ -43,7 +43,7 @@ namespace PVLib
         }
         public abstract bool isSupported(DirectoryType type);
         public Channel() { }
-
+        public abstract TimeSlot CreateSlot(DateTime now);
         public static Channel Load(string path)
         {
             

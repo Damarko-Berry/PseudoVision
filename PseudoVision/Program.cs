@@ -16,6 +16,9 @@ namespace PseudoVision
         static UPNP upnp;
         static async Task Main(string[] args)
         {
+#if DEBUG
+            Directory.SetCurrentDirectory(@"C:\Users\marko\source\repos\PseudoVision\PVChannelManager\bin\Release\net8.0-windows");
+#endif
             MainLog.Cycle(Environment.MachineName);
             TerminateProcess("ffmpeg");
             try
@@ -30,8 +33,15 @@ namespace PseudoVision
             string localIp = GetLocalIPAddress();
             int prt = CurrentSettings.Port;
             CreateScheds();
-            var PIP = await GetExternalIpAddress();
-            Public_IP = PIP.ToString();
+            try
+            {
+                var PIP = await GetExternalIpAddress();
+                Public_IP = PIP.ToString();
+            }
+            catch
+            {
+
+            }
             Task.Run(() => StartHttpServer(localIp, prt));
             Thread.Sleep(1000);
             if(CurrentSettings.useUPNP)

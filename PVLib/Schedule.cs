@@ -83,8 +83,6 @@ namespace PVLib
             }
         }
 
-
-
         public async Task SendMedia(string request, NetworkStream stream)
         {
             try
@@ -191,6 +189,15 @@ namespace PVLib
             catch (Exception ex)
             {
                 ConsoleLog.writeError(ex.ToString());
+            }
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i].Age.TotalDays > 1)
+                {
+                    slots.RemoveAt(i);
+                    CurrentSlot--;
+                    i--;
+                }
             }
         }
         public string GetContent(int index, string ip, int prt)

@@ -14,7 +14,6 @@ namespace PVLib
     public interface ISchedule
     {
         string Name { get; set; }
-        [XmlIgnore]
         public static Dictionary<string, ISchedule> AllSchedules = new();
         public async Task SendMedia(HttpListenerContext client) { }
         public async Task SendMedia(string Request, NetworkStream stream) { }

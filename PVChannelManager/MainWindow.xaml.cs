@@ -15,6 +15,9 @@ namespace PVChannelManager
 
         public MainWindow()
         {
+#if DEBUG
+            Directory.SetCurrentDirectory(@"C:\Users\marko\source\repos\PseudoVision\PVChannelManager\bin\Release\net8.0-windows");
+#endif
             InitializeComponent();
             Instance ??= this;
             Directory.CreateDirectory(Channels);

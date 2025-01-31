@@ -19,6 +19,7 @@ namespace PVLib
         public string redirectsite;
         public string VideoExtensions = string.Empty;
         public string ffmpegCache = Directory.GetCurrentDirectory();
+        public bool Portable;
 
         public LiveHandling liveHandling = LiveHandling.Storage_Saver;
         public string[] GetVideoExtensions

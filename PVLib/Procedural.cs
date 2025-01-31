@@ -1,24 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
-using static System.Reflection.Metadata.BlobBuilder;
+using System.Xml.Linq;
 using static PVLib.ISchedule;
-
 
 namespace PVLib
 {
-    public class ShowList: PVObject, ISchedule
+    internal class Procedural : PVObject ,ISchedule
     {
-        public Schedule_Type ScheduleType => Schedule_Type.Binge_Like;
-        public List<string> Shows = new();
-        int RotationPos = 0;
-        TimeSlot CurrentlyPlaying = new();
+        public string Name { get; set; }
+        TimeSlot CurrentlyPlaying;
+        FileInfo info => new FileInfo(CurrentlyPlaying.Media);
+        public string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         Playlist GetPlaylist
         {
             get
@@ -30,11 +27,8 @@ namespace PVLib
                 Directory.CreateDirectory(FileSystem.ArchiveDirectory(Name));
                 return new();
             }
-            
+
         }
-        string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
-        FileInfo info => new FileInfo(CurrentlyPlaying.Media);
-        public string Name { get; set; }
         void Itterate()
         {
             if (File.Exists(LastPLayed))
@@ -46,25 +40,34 @@ namespace PVLib
                 UPNP.Update++;
                 Directory.CreateDirectory(Path.Combine(FileSystem.ChanSchedules(Name), "Last Played"));
             }
-            var P = GetPlaylist;
 
             if (DateTime.Now > CurrentlyPlaying.EndTime)
             {
-                Show show = SaveLoad<Show>.Load(Shows[RotationPos]);
-                CurrentlyPlaying = new TimeSlot(show.NextEpisode());
+                var channel = SaveLoad<Channel>.Load(FileSystem.ChannleChan(Name));
+                CurrentlyPlaying = channel.CreateSlot(DateTime.Now);
+                var P = GetPlaylist;
                 P.Add(CurrentlyPlaying);
                 File.WriteAllText(FileSystem.Archive(Name, DateTime.Now), P.ToString());
                 UPNP.Update++;
-                SaveLoad<Show>.Save(show, Shows[RotationPos]);
-                RotationPos++;
-                if (RotationPos >= Shows.Count) RotationPos = 0;
                 SaveLoad<TimeSlot>.Save(CurrentlyPlaying, LastPLayed);
+                SaveLoad<Channel>.Save(channel, FileSystem.ChannleChan(Name));
             }
         }
+        public async Task StartCycle()
+        {
+            TimeSpan FiveMin = new(0, 5, 0);
+            Channel cn = SaveLoad<Channel>.Load(FileSystem.ChannleChan(Name));
+            while (cn.CTD.Length>0) {
+                await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
+                cn = SaveLoad<Channel>.Load(FileSystem.ChannleChan(Name));
+            }
+            AllSchedules.Remove(Name);
+        }
+
         public async Task SendMedia(HttpListenerContext client)
         {
             Itterate();
-            
+
             client.Response.Headers.Add("Accept-Ranges", "bytes");
             FileStream fs = new FileStream(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
             try
@@ -159,32 +162,19 @@ namespace PVLib
                 stream.Close();
             }
         }
-        public string GetContent(int s, string ip, int prt)
+
+        public Schedule_Type ScheduleType =>  Schedule_Type.PerRequest;
+
+        public string GetContent(int index, string ip, int port)
         {
-            return $@"<item id=""{s+1}"" parentID=""0"" restricted=""false"">
-                        <dc:title>{Name}</dc:title>
-                        <dc:creator>Unknown</dc:creator>
-                        <upnp:class>object.item.videoItem.videoItem</upnp:class>
-                        <res protocolInfo=""http-get:*:video/.mp4:*"" resolution=""1920x1080"">http://{ip}:{prt}/live/{Name}.mp4</res>
-                    </item>";
+            throw new NotImplementedException();
         }
-        public async Task StartCycle()
+
+        public Procedural(string name)
         {
-            TimeSpan FiveMin= new(0, 5, 0);
-        StartUp:
-            await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
-            DateTime tmrw = DateTime.Now.AddDays(1);
-            var chan = Channel.Load(FileSystem.ChannleChan(Name));
-            chan.CreateNewSchedule(tmrw);
-            await Task.Delay(TimeLeftInDay);
-            if (chan.ScheduleExists(tmrw))
-            {
-                var scdpath = Path.Combine(FileSystem.ChannleChan(chan.ChannelName), $"{tmrw.Month}.{tmrw.Day}.{tmrw.Year}.{FileSystem.ScheduleEXT}");
-                Shows = SaveLoad<ShowList>.Load(scdpath).Shows;
-                goto StartUp;
-            }
-            AllSchedules.Remove(Name);
+            Name = name;
         }
+
         TimeSpan TimeLeftInDay
         {
             get
@@ -193,28 +183,6 @@ namespace PVLib
                 DateTime endOfDay = new DateTime(now.Year, now.Month, now.Day, 23, 59, 59);
                 TimeSpan timeLeft = endOfDay - now;
                 return timeLeft;
-            }
-        }
-        public ShowList() { }
-        public ShowList(DirectoryInfo ShowDirectory)
-        {
-            var files = ShowDirectory.GetFiles();
-            Shuffle(files);
-            for (int i = 0; i < files.Length; i++)
-            {
-                Shows.Add(files[i].FullName);
-            }
-        }
-
-        static void Shuffle<T>(T[] array)
-        {
-            Random random = new Random();
-            for (int i = array.Length - 1; i > 0; i--)
-            {
-                int j = random.Next(0, i + 1);
-                T temp = array[i];
-                array[i] = array[j];
-                array[j] = temp;
             }
         }
     }

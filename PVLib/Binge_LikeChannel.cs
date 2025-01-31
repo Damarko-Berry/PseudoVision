@@ -57,5 +57,10 @@ namespace PVLib
         }
 
         public override bool isSupported(DirectoryType type) => type == DirectoryType.Show;
+
+        public override TimeSlot CreateSlot(DateTime now)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
