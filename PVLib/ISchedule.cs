@@ -24,7 +24,7 @@ namespace PVLib
         {
             List<SubtitleStream> subtitleStreams = new();
 
-            var ffprobePath = @"ffmpeg/ffprobe"; // Path to ffprobe executable
+            var ffprobePath = Path.Combine("ffmpeg","ffprobe"); // Path to ffprobe executable
             var arguments = $"-v error -select_streams s -show_entries stream=index,codec_name:stream_tags=language -of json \"{filePath}\"";
 
             ProcessStartInfo startInfo = new()

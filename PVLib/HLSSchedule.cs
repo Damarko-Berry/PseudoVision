@@ -50,7 +50,17 @@ namespace PVLib
         string liveOutputDirectory => Path.Combine("output", Name, "segments");
         string ManifestOutputDirectory => Path.Combine("output", Name);
         HLS CurrentSate=null;
-        Dictionary<string,HLS> FinishedHLSManifests = new();
+        HLS CurrentManifest
+        {
+            get {
+                if (File.Exists(Path.Combine(ManifestOutputDirectory, $"index({CurrentSlotNo}).m3u8")))
+                {
+                    return HLS.Parse(File.ReadAllText(Path.Combine(ManifestOutputDirectory, $"index({CurrentSlotNo}).m3u8")));
+                }
+                return null;
+            } 
+        }
+
         public Schedule_Type ScheduleType => Schedule_Type.LiveStream;
 
         public string GetContent(int index, string ip, int prt)
@@ -148,7 +158,8 @@ namespace PVLib
         #region live
         async void UpdateCurrentState(CancellationToken Toolong)
         {
-            while(AllSchedules.ContainsKey(Name)&!Toolong.IsCancellationRequested)
+            Dictionary<string, HLS> FinishedHLSManifests = new();
+            while (AllSchedules.ContainsKey(Name)&!Toolong.IsCancellationRequested)
             {
                 
                 var Hs = new HLS();
@@ -185,11 +196,11 @@ namespace PVLib
         {
 
             ProcessVideo(Slot.Media, CurrentSlot);
+        Oops:
             await Task.Delay(5*1000);
             CancellationTokenSource cts = new();
             var Toolong = cts.Token;
             UpdateCurrentState(Toolong);
-        Oops:
             DateTime StartTime = Slot.StartTime;
             var TargetOffset = DateTime.Now.Subtract(StartTime);
             var pLength = CurrentSate.Length;
@@ -217,9 +228,9 @@ namespace PVLib
                 if (CurrentSegment.path.Contains("seg0"))
                 {
                     Increment();
-                    CleanUp(CurrentSlotNo - 1, 30);
+                    CleanUp(CurrentSlotNo - 1, 50);
                 }
-                if (CurrentSegment.path.Contains("seg3"))
+                if (CurrentSegment.path.Contains($"seg{CurrentManifest.Body.Count/2}"))
                 {
                     CleanUp(CurrentSlotNo - 1, 0);
                 }
@@ -227,7 +238,10 @@ namespace PVLib
                 CurrentSegment = CurrentSate.NextSegment(CurrentSegment);
                 
             }
-            if (processing) goto Oops;
+            if (processing)
+            {
+                goto Oops;
+            }
             await Task.Delay(TimeLeftInDay);
             cts.Cancel();
             AllSchedules.Remove(Name);
@@ -237,6 +251,7 @@ namespace PVLib
         {
 
             ProcessVideo(Slot.Media, CurrentSlot);
+        Oops:
             CancellationTokenSource cts = new();
             var Toolong = cts.Token;
             UpdateCurrentState(Toolong);
@@ -247,7 +262,6 @@ namespace PVLib
             CurrentSegment = CurrentSate.Body[0];
             ProcessNext();
 
-        Oops:
             while (CurrentSegment != null)
             {
                 Console.WriteLine("current Segment: "+CurrentSegment.path);
@@ -356,8 +370,6 @@ namespace PVLib
             Console.WriteLine("Processed");
         }
 
-
-
         async void SendManifest(HttpListenerContext Context)
         {
             HLS hLS = new();
@@ -376,6 +388,7 @@ namespace PVLib
             //client.OutputStream.Close();
         }
         #endregion
+
         async void CleanUp(int slotNum, int offset)
         {
             if(!File.Exists(Path.Combine(ManifestOutputDirectory, $"index({slotNum}).m3u8"))) return;

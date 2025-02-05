@@ -240,6 +240,7 @@ namespace PVLib
         {
             CurrentSate = new HLS();
             int C = 0;
+            Dictionary<string, HLS> FinishedHLSManifests = new();
             while (AllSchedules.ContainsKey(Name) & !Toolong.IsCancellationRequested)
             {
                 
@@ -264,7 +265,19 @@ namespace PVLib
                     var manifests = Directory.GetFiles(ManifestOutputDirectory, @"index(*).m3u8");
                     for (int i = 0; i < manifests.Length; i++)
                     {
-                        Hs += HLS.Parse(File.ReadAllText(manifests[i]));
+                        if (FinishedHLSManifests.ContainsKey(manifests[i]))
+                        {
+                            Hs += FinishedHLSManifests[manifests[i]];
+                        }
+                        else
+                        {
+                            var nls = HLS.Parse(File.ReadAllText(manifests[i]));
+                            if (nls.isfinised)
+                            {
+                                FinishedHLSManifests.Add(manifests[i], nls);
+                            }
+                            Hs += nls;
+                        }
                     }
                     CurrentSate = Hs;
                 }
