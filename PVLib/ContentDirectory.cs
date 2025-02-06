@@ -1,4 +1,5 @@
-﻿using System.Xml;
+﻿using System.Text.Json;
+using System.Xml;
 using System.Xml.Serialization;
 
 
@@ -80,5 +81,10 @@ namespace PVLib
 
             throw new Exception("OOOOOOOOOPS");
         }
+
+        public Metadata GetMetadata()
+        {
+            return JsonSerializer.Deserialize<Metadata>(Path.Combine(HomeDirectory, "metedata"));
+        }   
     }
 }

@@ -31,7 +31,6 @@ namespace PVLib
                 Directory.CreateDirectory(FileSystem.ArchiveDirectory(Name));
                 return new();
             }
-
         }
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
