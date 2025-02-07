@@ -54,6 +54,7 @@ namespace PVLib
                 TargetGender = GenderDemographic.Any,
                 Directors = new string[] { "Various" },
                 Studios = new string[] { "Various" },
+                PremireDate = DateTime.MinValue,
             };
         }
     }
