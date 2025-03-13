@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace PVLib
 {
-    public class HLS
+    public class HLS: PVObject
     {
         TimeSpan offset;
         public bool isfinised;
@@ -26,6 +26,7 @@ namespace PVLib
         }
 
         public List<segment> Body = new();
+        int staringIndex = 0;
         public int targetDuration
         {
             get
@@ -38,7 +39,8 @@ namespace PVLib
                 return (int)TD.Average();
             }
         }
-        string Header => $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:{targetDuration}";
+        public string Header => $"#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-START:TIME-OFFSET={offset.TotalSeconds},PRECISE=YES\n#EXT-X-TARGETDURATION:{targetDuration}";
+        public static string Footer => "#EXT-X-ENDLIST";
         string FullBody
         {
             get
@@ -49,7 +51,7 @@ namespace PVLib
                 {
                     if (Body[i].path.Contains("seg0"))
                     {
-                        body += $"#EXT-X-MEDIA-SEQUENCE:{i}\n";
+                        body += $"#EXT-X-MEDIA-SEQUENCE:{staringIndex}\n";
                     }
                         
                     body += $"{Body[i]}\n";
@@ -58,10 +60,95 @@ namespace PVLib
             }
         }
 
+        // for finished manifest
+        public string AsMediaSegment(int MS)
+        {
+            string body = string.Empty;
+            if (MS > 0)
+            {
+                body += "#EXT-X-DISCONTINUITY\n";
+            }
+            body += $"#EXT-X-MEDIA-SEQUENCE:{MS}\n";
+            for (int i = 0; i < Body.Count; i++)
+            {
+                body += $"{Body[i]}\n";
+            }
+            return body;
+        }
+        // for the current manifest
+        public string AsMediaSegment(int MS, segment segment)
+        {
+            bool SegmentFound = false;
+            TimeSpan Buffer = new();
+            string body = string.Empty;
+            if (MS > 0)
+            {
+                body += "#EXT-X-DISCONTINUITY\n";
+            }
+            body += $"#EXT-X-MEDIA-SEQUENCE:{MS}\n";
+            for (int i = 0; i < Body.Count; i++)
+            {
+                if (Body[i].Equals(segment))
+                {
+                    segment = Body[i];
+                    SegmentFound = true;
+                }
+                if (SegmentFound)
+                {
+                    Buffer += Body[i].duration;
+                    if (Buffer.TotalSeconds > 30)
+                    {
+                        Console.WriteLine($"Buffer is {Buffer.TotalSeconds}");
+                        break;
+                    }
+                }
+                body += $"{Body[i]}\n";
+            }
+            return body;
+        }
+
         public static HLS operator +(HLS A, HLS B)
         {
-            A.Body.AddRange(B.Body);
+            foreach (var segment in B.Body)
+            {
+                A.Body.Add(segment);
+                A.PruneSegments();
+            }
             return A;
+        }
+        public void merge(segment currentsegment, HLS B)
+        {
+            foreach (var segment in B.Body)
+            {
+                Body.Add(segment);
+                PruneSegments(CurrentPlaybackPosition());
+            }
+            int CurrentPlaybackPosition()
+            {
+                if (currentsegment == null) return 10000; // Fallback limit if no playback info
+
+                int currentIndex = Body.FindIndex(seg => seg.path == currentsegment.path);
+                return Math.Max(currentIndex - 50, 500); // Keep 50 segments before and 500 after
+            }
+        }
+
+        public void PruneSegments(int maxSegments = 5000)
+        {
+            while (Body.Count > maxSegments)
+            {
+                int removeCount =0;
+                for (int i = 1; i < Body.Count; i++)
+                {
+                    if (Body[i].path.Contains("seg0"))
+                    {
+                        removeCount = i;
+                        break;
+                    }
+                }
+                staringIndex += removeCount;
+                Body.RemoveRange(0, removeCount); // Remove oldest segments
+                ConsoleLog.writeMessage($"Pruned {removeCount} old segments, keeping {maxSegments}.");
+            }
         }
 
         public static HLS Parse(string text)
@@ -156,7 +243,7 @@ namespace PVLib
         public override string ToString()
         {
             
-            return $"{Header}\n{FullBody}\n#EXT-X-ENDLIST";
+            return $"{Header}\n{FullBody}\n{Footer}";
         }
         public string ToString(segment segment)
         {
@@ -189,7 +276,7 @@ namespace PVLib
                         body += "#EXT-X-DISCONTINUITY\n";
                     }
 
-                    body += $"#EXT-X-MEDIA-SEQUENCE:{i}\n";
+                    body += $"#EXT-X-MEDIA-SEQUENCE:{staringIndex+i}\n";
                 }
                 
                 body += $"{Body[i]}\n";

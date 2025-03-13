@@ -19,6 +19,7 @@ namespace PVLib
                 return (TotalEpsisodes / TotalMovies)-1;
             }
         }
+        public DateTime LastWatched;
         DirectoryInfo MovieDirectory
         {
             get
@@ -74,6 +75,36 @@ namespace PVLib
                ep = Content[CurrentEpisodeNumber].FullName;
                 CurrentEpisodeNumber++;
                 if(MovieProgress != ShowStatus.Complete)
+                {
+                    EpisodesSinceLastMovie++;
+                }
+            }
+            return ep;
+        }
+
+        public string NextEpisode(OnSeasonFanale seasonFanale)
+        {
+            ConsoleLog.Cycle(HomeDirectoryInfo.Name);
+            if(Status == ShowStatus.Complete)
+            {
+                return GetRerun();
+            }
+            var ep = string.Empty;
+            if (EpisodesSinceLastMovie>EpisodesPerMovie)
+            {
+                EpisodesSinceLastMovie = 0;
+                ep = MovieDirectory.GetFiles()[MovieNo].FullName;
+                MovieNo++;
+            }
+            else{
+                var c = Content;
+                ep = c[CurrentEpisodeNumber].FullName;
+                CurrentEpisodeNumber++;
+                if (c[CurrentEpisodeNumber-1].Directory.Name != c[CurrentEpisodeNumber].Directory.Name)
+                {
+                    seasonFanale.Invoke();
+                }
+                if (MovieProgress != ShowStatus.Complete)
                 {
                     EpisodesSinceLastMovie++;
                 }
@@ -200,12 +231,12 @@ namespace PVLib
                 }
                 for (int i = 0; i < mPaths.Count; i++)
                 {
-                    reruns.Add(new TimeSlot(mPaths[i].FullName));
+                    reruns.Add(new (mPaths[i].FullName));
                 }
                 return [.. reruns];
             }
         }
-
+        
         public override TimeSpan Duration
         {
             get
@@ -254,4 +285,5 @@ namespace PVLib
         }
         public Show() { }
     }
+    public delegate void OnSeasonFanale();
 }

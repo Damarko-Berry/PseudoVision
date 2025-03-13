@@ -39,6 +39,7 @@ namespace PVLib
                 TimeSlot timeSlot = new(movieDirectory.NextEpisode(), schedule.slots, today);
                 schedule.slots.Add(timeSlot);
             }
+            if (Live) schedule.live = true;
             SaveSchedule(schedule,today);
         }
 

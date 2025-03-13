@@ -177,7 +177,7 @@ namespace PVChannelManager
                     var TV = (TV_LikeChannel)subject;
                     Directory.Delete(TV.RerunDirectory, true);
                     Directory.CreateDirectory(TV.RerunDirectory);
-                    TV.rotation.ShowList.Clear();
+                    TV.rotation.Clear();
                     SaveLoad<TV_LikeChannel>.Save(TV, Path.Combine(subject.HomeDirectory, "Channel.chan"));
                 }
             }

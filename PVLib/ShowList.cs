@@ -1,24 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using static System.Reflection.Metadata.BlobBuilder;
 using static PVLib.ISchedule;
-
 
 namespace PVLib
 {
-    public class ShowList: PVObject, ISchedule
+    public class ShowList : PVObject, ISchedule
     {
         public Schedule_Type ScheduleType => Schedule_Type.Binge_Like;
         public List<string> Shows = new();
         int RotationPos = 0;
         TimeSlot CurrentlyPlaying = new();
+        public bool live = false;
         Playlist GetPlaylist
         {
             get
@@ -30,7 +22,7 @@ namespace PVLib
                 Directory.CreateDirectory(FileSystem.ArchiveDirectory(Name));
                 return new();
             }
-            
+
         }
         string LastPLayed => Path.Combine(FileSystem.ChanSchedules(Name), "Last Played", $"LastPLayed.lsp");
         FileInfo info => new FileInfo(CurrentlyPlaying.Media);
@@ -64,7 +56,14 @@ namespace PVLib
         public async Task SendMedia(HttpListenerContext client)
         {
             Itterate();
-            
+
+            if (live)
+            {
+                var startTime = (int)(DateTime.Now - (DateTime)CurrentlyPlaying.StartTime).TotalSeconds;
+                if (startTime < 30) startTime = 0;
+                await SendMedia(client, startTime);
+                return;
+            }
             client.Response.Headers.Add("Accept-Ranges", "bytes");
             FileStream fs = new FileStream(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
             try
@@ -90,6 +89,42 @@ namespace PVLib
                 {
                     await fs.CopyToAsync(client.Response.OutputStream);
                 }
+                fs.Close();
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.writeError(ex.ToString());
+            }
+            finally
+            {
+                client.Response.Close();
+            }
+        }
+        public async Task SendMedia(HttpListenerContext client, int startTimeSeconds = 0)
+        {
+            client.Response.Headers.Add("Accept-Ranges", "bytes");
+            using FileStream fs = new(CurrentlyPlaying.Media, FileMode.Open, FileAccess.Read);
+            try
+            {
+                client.Response.ContentType = $"video/{info.Extension}";
+                client.Response.ContentLength64 = fs.Length;
+
+                long startByte = 0;
+                if (startTimeSeconds > 0)
+                {
+                    long bitrate = 500_000; // Approximate bytes per second (adjust based on actual file)
+                    startByte = startTimeSeconds * bitrate;
+                    startByte = Math.Min(startByte, fs.Length - 1); // Prevent seeking past the file
+                }
+
+                client.Response.StatusCode = 206;
+                client.Response.Headers.Add("Content-Range", $"bytes {startByte}-{fs.Length - 1}/{fs.Length}");
+                client.Response.ContentLength64 = fs.Length - startByte;
+
+                fs.Seek(startByte, SeekOrigin.Begin);
+                await fs.CopyToAsync(client.Response.OutputStream);
+
+                fs.Close();
             }
             catch (Exception ex)
             {
@@ -161,7 +196,7 @@ namespace PVLib
         }
         public string GetContent(int s, string ip, int prt)
         {
-            return $@"<item id=""{s+1}"" parentID=""0"" restricted=""false"">
+            return $@"<item id=""{s + 1}"" parentID=""0"" restricted=""false"">
                         <dc:title>{Name}</dc:title>
                         <dc:creator>Unknown</dc:creator>
                         <upnp:class>object.item.videoItem.videoItem</upnp:class>
@@ -170,7 +205,7 @@ namespace PVLib
         }
         public async Task StartCycle()
         {
-            TimeSpan FiveMin= new(0, 5, 0);
+            TimeSpan FiveMin = new(0, 5, 0);
         StartUp:
             await Task.Delay(TimeLeftInDay.Subtract(FiveMin));
             DateTime tmrw = DateTime.Now.AddDays(1);

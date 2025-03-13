@@ -83,7 +83,6 @@ namespace PVLite
                 Directory.CreateDirectory(channel.ShowDirectory);
                 Directory.CreateDirectory(channel.SeasonsDirectory);
                 Directory.CreateDirectory(channel.ShortsDirectory);
-                channel.rotation.ShowList = new();
                 List<DirectoryInfo> dirs = new List<DirectoryInfo>(new DirectoryInfo(Directory.GetCurrentDirectory()).Parent.GetDirectories());
                 for (int i = 0; i < dirs.Count; i++)
                 {

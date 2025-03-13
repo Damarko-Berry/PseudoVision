@@ -61,6 +61,11 @@
                 <TextBlock Text="Security"/>
                 <TextBox x:Name="Redirect"/>
             </StackPanel>
+            <TextBlock/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Live Stream Protocol: "/>
+                <ComboBox x:Name="lso"/>
+            </StackPanel>
             <Button x:Name="save" Content="Save" Click="save_Click"/>
         </StackPanel>
     </Grid>

@@ -14,6 +14,7 @@ namespace PVLib
         
         public string Name { get; set; }
         int CurrentSlot;
+        public bool live;
         public Schedule_Type ScheduleType => Schedule_Type.TV_Like;
         public TimeSlot Slot 
         { 
@@ -59,6 +60,19 @@ namespace PVLib
                     var range = client.Request.Headers["Range"];
                     var bytesRange = range.Replace("bytes=", "").Split('-');
                     var from = long.Parse(bytesRange[0]);
+
+                    if (live)
+                    {
+                        var startTime = (int)(DateTime.Now - (DateTime)Slot.StartTime).TotalSeconds;
+                        if (startTime < 30) startTime = 0;
+                        if (startTime > 0)
+                        {
+                            long bitrate = 500_000; // Approximate bytes per second (adjust based on actual file)
+                            from = startTime * bitrate;
+                            //from = Math.Min(from, fs.Length - 1); // Prevent seeking past the file
+                        }
+                        Console.WriteLine(startTime);
+                    }
                     var to = bytesRange.Length > 1 && !string.IsNullOrEmpty(bytesRange[1]) ? long.Parse(bytesRange[1]) : fs.Length - 1;
 
                     client.Response.StatusCode = 206;
@@ -72,6 +86,42 @@ namespace PVLib
                 {
                     await fs.CopyToAsync(client.Response.OutputStream);
                 }
+                fs.Close();
+            }
+            catch (Exception ex)
+            {
+                ConsoleLog.writeError(ex.ToString());
+            }
+            finally
+            {
+                client.Response.Close();
+            }
+        }
+
+        public async Task SendMedia(HttpListenerContext client, int startTimeSeconds = 0)
+        {
+            using FileStream fs = new(Slot.Media, FileMode.Open, FileAccess.Read);
+            try
+            {
+                client.Response.ContentType = $"video/{info.Extension}";
+                client.Response.ContentLength64 = fs.Length;
+
+                long startByte = 0;
+                if (startTimeSeconds > 0)
+                {
+                    long bitrate = 500_000; // Approximate bytes per second (adjust based on actual file)
+                    startByte = startTimeSeconds * bitrate;
+                    startByte = Math.Min(startByte, fs.Length - 1); // Prevent seeking past the file
+                }
+
+                client.Response.StatusCode = 206;
+                client.Response.Headers.Add("Content-Range", $"bytes {startByte}-{fs.Length - 1}/{fs.Length}");
+                client.Response.ContentLength64 = fs.Length - startByte;
+
+                fs.Seek(startByte, SeekOrigin.Begin);
+                await fs.CopyToAsync(client.Response.OutputStream);
+
+                fs.Close();
             }
             catch (Exception ex)
             {

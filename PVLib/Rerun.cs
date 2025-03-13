@@ -10,11 +10,16 @@ namespace PVLib
     {
         public string Media;
         public Time MediaLength;
-        public TimeSpan Duration => MediaLength;
+        public TimeSpan Duration => (TimeSpan)MediaLength;
         public Rerun(TimeSlot slot)
         {
             Media = slot.Media;
             MediaLength = slot.Duration;
+        }
+        public Rerun(string media)
+        {
+            Media = media;
+            MediaLength = PVObject.GetMediaDuration(media);
         }
         public static implicit operator Rerun(TimeSlot timeSlot)
         {

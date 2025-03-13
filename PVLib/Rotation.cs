@@ -10,14 +10,27 @@ using System.Threading.Tasks;
 
 namespace PVLib
 {
-    public struct Rotation
+    public class Rotation
     {
-        public List<ShowRef> ShowList;
+        public ShowRef[] ShowList= [new() { DayToPlay = DayOfWeek.Sunday },new() { DayToPlay = DayOfWeek.Monday},new() { DayToPlay = DayOfWeek.Tuesday},new() { DayToPlay = DayOfWeek.Wednesday },new() { DayToPlay = DayOfWeek.Thursday},new() { DayToPlay = DayOfWeek.Friday },new() { DayToPlay = DayOfWeek.Saturday},  ];
+
+        int count
+        {
+            get
+            {
+                int CountofShows = 0;
+                for (int i = 0; i < ShowList.Length; i++)
+                {
+                    CountofShows += ShowList[i].Directory.Count;
+                }
+                return CountofShows;
+            }
+        }
         internal ShowRef this[ShowRef show]
         {
-            set 
+            set
             {
-                for (int i = 0; i < ShowList.Count; i++)
+                for (int i = 0; i < ShowList.Length; i++)
                 {
                     if (ShowList[i].DayToPlay == show.DayToPlay)
                     {
@@ -27,51 +40,53 @@ namespace PVLib
             }
             get
             {
-                for (int i = 0; i < ShowList.Count; i++)
+                for (int i = 0; i < ShowList.Length; i++)
                 {
                     if (ShowList[i].DayToPlay == show.DayToPlay)
                     {
                         return ShowList[i];
                     }
                 }
-                return show; 
+                return show;
             }
         }
+        internal ShowRef this[DayOfWeek day]=> ShowList[(int)day];
         internal Show GetShow(DayOfWeek day, TV_LikeChannel channel)
         {
-            for (int i = 0; i < ShowList.Count; i++)
-            {
-                if (ShowList[i].DayToPlay == day)
-                {
-                    
-                    return SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name + ".shw"));
-                }
+            try 
+            { 
+                return SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[(int)day].name + ".shw"));
             }
-            return null;
+            catch
+            {
+                return null;
+            }
         }
         internal void CreateNewRotation(Show[] shows)
         {
-            if (ShowList.Count>0) return;
-            ShowList = new List<ShowRef>();
-            var MAX = shows.Length;
-            MAX = Math.Clamp(MAX, 1, 7);
-            while(ShowList.Count < MAX)
+            int SD = 6;
+            while (count < shows.Length)
             {
-                choose:
-                Random rnd = new Random();
+            choose:
+                Random rnd = new();
                 Show h = shows[rnd.Next(shows.Length)];
                 if (AlreadyInRotation(h))
                 {
                     goto choose;
                 }
-                ShowList.Add(new(h.HomeDirectory, (DayOfWeek)(6 - ShowList.Count) ));
-            }
+                ShowList[SD].Directory.Add(h.HomeDirectory);
+                SD--;
+                if (SD < 0)
+                {
+                    SD = 6;
+                }
+            } 
         }
         bool AlreadyInRotation(Show show)
         {
-            for (int i = 0; i < ShowList.Count; i++)
+            for (int i = 0; i < ShowList.Length; i++)
             {
-                if(show.HomeDirectory == ShowList[i].Directory)
+                if (ShowList[i].Directory.Contains(show.HomeDirectory))
                 {
                     return true;
                 }
@@ -80,23 +95,24 @@ namespace PVLib
         }
         internal string GetNextEp(DayOfWeek day, TV_LikeChannel channel)
         {
-            if(ShowList.Count == 0) return string.Empty;
+            if (count== 0) return string.Empty;
             var NE = string.Empty;
-            Show v = null;
-            ShowRef shwrf = new();
-            for (int i = 0; i < ShowList.Count; i++)
+            if(ShowList[(int)day].Directory.Count == 0)
             {
-                if (ShowList[i].DayToPlay == day) {
-                    shwrf = ShowList[i];
-                    v = SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
-                    break;
+                OnShowComplete(ShowList[(int)day], channel.Shows);
+                if (ShowList[(int)day].Directory.Count == 0)
+                {
+                    return string.Empty;
                 }
             }
+            Show v = GetShow(day,channel);
+            ShowRef shwrf = new();
+           
             if (v == null)
                 NE = string.Empty;
             else
             {
-                NE = v.NextEpisode();
+                NE = v.NextEpisode(shwrf.Next);
                 SaveLoad<Show>.Save(v, Path.Combine(channel.ShowDirectory, shwrf.name + ".shw"));
                 if (v.Status == ShowStatus.Complete)
                 {
@@ -107,17 +123,17 @@ namespace PVLib
         }
         internal string GetNextEp(TV_LikeChannel channel)
         {
-            if(ShowList.Count == 0) return string.Empty;
+            if (ShowList.Length == 0) return string.Empty;
             Random r = new Random();
             var NE = string.Empty;
-            int i = r.Next(ShowList.Count);
-            var v = SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name+".shw"));
+            int i = r.Next(ShowList.Length);
+            var v = SaveLoad<Show>.Load(Path.Combine(channel.ShowDirectory, ShowList[i].name + ".shw"));
             var shwrf = ShowList[i];
             if (v == null)
                 NE = string.Empty;
             else
             {
-                NE = v.NextEpisode();
+                NE = v.NextEpisode(shwrf.Next);
                 SaveLoad<Show>.Save(v, Path.Combine(channel.ShowDirectory, shwrf.name + ".shw"));
                 if (v.Status == ShowStatus.Complete)
                 {
@@ -126,9 +142,16 @@ namespace PVLib
             }
             return NE;
         }
-
+        public void Clear()
+        {
+            for (int i = 0; i < ShowList.Length; i++)
+            {
+                ShowList[i].Directory.Clear();
+            }
+        }
         void OnShowComplete(ShowRef show, Show[] shows)
         {
+            
             var AllShows = new List<Show>(shows);
             for (int i = 0; i < AllShows.Count; i++)
             {
@@ -141,17 +164,13 @@ namespace PVLib
             if (AllShows.Count > 0)
             {
                 Random random = new Random();
-                this[show] = new(AllShows[random.Next(AllShows.Count)].HomeDirectory,show.DayToPlay);
-            }
-            else
-            {
-                ShowList.Remove(show);
+                this[show].Directory.Add(AllShows[random.Next(AllShows.Count)].HomeDirectory);
             }
         }
-
+        
         internal void Cancel(string name, Show[] other_shows)
         {
-            for (int i = 0; i < ShowList.Count; i++)
+            for (int i = 0; i < ShowList.Length; i++)
             {
                 if (ShowList[i].name == name)
                 {

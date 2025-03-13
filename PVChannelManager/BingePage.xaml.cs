@@ -29,7 +29,7 @@ namespace PVChannelManager
             channel = c;
             InitializeComponent();
             ChanName.Text = channel.ChannelName;
-            SendToNC.IsChecked = channel.Bommeranging;
+            SendToNC.IsChecked = channel.Boomeranging;
             UslHLS.IsChecked = channel.Live;
             ChannelList.ItemsSource = GetChannels();
             if (ChannelList.Items.Count > 0)
@@ -60,13 +60,13 @@ namespace PVChannelManager
 
         private void SendToNC_Checked(object sender, RoutedEventArgs e)
         {
-            channel.Bommeranging = true;
+            channel.Boomeranging = true;
             CJ.IsEnabled = true;
         }
 
         private void SendToNC_Unchecked(object sender, RoutedEventArgs e)
         {
-            channel.Bommeranging = false;
+            channel.Boomeranging = false;
             CJ.IsEnabled = false;
         }
 

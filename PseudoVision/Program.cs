@@ -16,9 +16,7 @@ namespace PseudoVision
         static UPNP upnp;
         static async Task Main(string[] args)
         {
-#if DEBUG
-            Directory.SetCurrentDirectory(@"C:\Users\marko\source\repos\PseudoVision\PVChannelManager\bin\Release\net8.0-windows");
-#endif
+
             MainLog.Cycle(Environment.MachineName);
             TerminateProcess("ffmpeg");
             try
@@ -28,6 +26,7 @@ namespace PseudoVision
             catch
             {
                 CurrentSettings = Settings.Default;
+                Console.WriteLine("Settings File Not Found. Using Default Settings");
             }
             upnp = CurrentSettings.upnp;
             string localIp = GetLocalIPAddress();
@@ -84,7 +83,7 @@ namespace PseudoVision
                     ISchedule sch = (chan.channel_Type == Channel_Type.TV_Like | chan.channel_Type == Channel_Type.Movies) ?
                        SaveLoad<Schedule>.Load(scdpath) : SaveLoad<ShowList>.Load(scdpath);
                     sch.Name = chan.ChannelName.ToLower();
-                    if (chan.Live)
+                    if (chan.Live & CurrentSettings.liveProtocol == LiveProtocol.HLS)
                     {
                         if (chan.channel_Type == Channel_Type.TV_Like)
                         {
@@ -131,6 +130,7 @@ namespace PseudoVision
             HttpListener listener = new HttpListener();
             listener.Prefixes.Add($"http://{localIp}:{port}/");
             listener.Start();
+            Console.WriteLine($"http://{localIp}:{port}/");
             
             while (true)
             {
@@ -317,10 +317,11 @@ namespace PseudoVision
         }
         static string GetLocalIPAddress()
         {
-            if(Settings.CurrentSettings.IP != string.Empty)
+            if(CurrentSettings.IP != string.Empty)
             {
-                return Settings.CurrentSettings.IP;
+                return CurrentSettings.IP;
             }
+            Console.WriteLine("Getting Local IP Address");
             var host = Dns.GetHostEntry(Dns.GetHostName());
             foreach (var ip in host.AddressList)
             {
@@ -354,18 +355,7 @@ namespace PseudoVision
             }
 
         }
-        static IPAddress GetIPAddress()
-        {
-            var host = Dns.GetHostEntry(Dns.GetHostName());
-            foreach (var ip in host.AddressList)
-            {
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                {
-                    return ip;
-                }
-            }
-            throw new Exception("Local IP Address Not Found!");
-        }
+        
         
         static string webPlayer(string localip, int port)
         {

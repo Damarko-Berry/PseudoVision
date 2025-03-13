@@ -22,6 +22,7 @@ namespace PVLib
         public bool Portable;
 
         public LiveHandling liveHandling = LiveHandling.Storage_Saver;
+        public LiveProtocol liveProtocol = LiveProtocol.Built_In;
         public string[] GetVideoExtensions
         {
             get
@@ -49,7 +50,8 @@ namespace PVLib
                     playlistFormat = PlaylistFormat.m3u,
                     VideoExtensions= string.Empty,
                     IP = GetLocalIPAddress(),
-                    ffmpegCache = Directory.GetCurrentDirectory()
+                    ffmpegCache = Directory.GetCurrentDirectory(),
+                    liveProtocol = LiveProtocol.Built_In
                 };
                 string GetLocalIPAddress()
                 {

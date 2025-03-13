@@ -18,11 +18,11 @@ namespace PVChannelManager
 
             InitializeComponent();
             if (Instance == null) Instance = this;
-            if (!File.Exists("settings"))
+            if (!File.Exists(FileSystem.SettingsFile))
             {
-                SaveLoad<Settings>.Save(Settings.Default, "settings");
+                SaveLoad<Settings>.Save(Settings.Default, FileSystem.SettingsFile);
             }
-            Settings.CurrentSettings = SaveLoad<Settings>.Load("settings");
+            Settings.CurrentSettings = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
 
             var pros = Process.GetProcesses(Environment.MachineName);
             for (int i = 0; i < pros.Length; i++)

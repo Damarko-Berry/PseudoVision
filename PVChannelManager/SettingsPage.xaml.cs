@@ -38,6 +38,7 @@ namespace PVChannelManager
                 settings.upnp.Manufacturer = UPNPManufacturer.Text;
                 settings.playlistFormat = (PlaylistFormat)PlstFormat.SelectedIndex;
                 settings.securityLevel = (SecurityApplication)SecurityType.SelectedIndex;
+                settings.liveProtocol = (LiveProtocol)lso.SelectedIndex;
                 return settings;
             }
         }
@@ -47,7 +48,7 @@ namespace PVChannelManager
             var sets = new Settings();
             try
             {
-                sets = SaveLoad<Settings>.Load("settings");
+                sets = SaveLoad<Settings>.Load(FileSystem.SettingsFile);
             }
             catch
             {
@@ -67,6 +68,8 @@ namespace PVChannelManager
             SecurityType.ItemsSource = Enum.GetValues(typeof(SecurityApplication));
             SecurityType.SelectedIndex = (int)sets.securityLevel;
             UPNPStuff.IsEnabled = (bool)UPNPbool.IsChecked;
+            lso.ItemsSource = Enum.GetValues(typeof(LiveProtocol));
+            lso.SelectedIndex = (int)sets.liveProtocol;
         }
 
         private void UPNPbool_Checked(object sender, RoutedEventArgs e)
@@ -94,7 +97,7 @@ namespace PVChannelManager
 
         private void save_Click(object sender, RoutedEventArgs e)
         {
-            SaveLoad<Settings>.Save(NSettings, "settings");
+            SaveLoad<Settings>.Save(NSettings, FileSystem.SettingsFile);
             Settings.CurrentSettings = NSettings;
             MainWindow.Instance.Main.GoBack();
         }
@@ -107,5 +110,7 @@ namespace PVChannelManager
                 OutPath.Text = folderDialog.FolderName;
             }
         }
+
+
     }
 }

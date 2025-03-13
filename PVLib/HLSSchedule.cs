@@ -204,7 +204,7 @@ namespace PVLib
             DateTime StartTime = Slot.StartTime;
             var TargetOffset = DateTime.Now.Subtract(StartTime);
             var pLength = CurrentSate.Length;
-            while (TargetOffset > pLength)
+            while (TargetOffset.Add(new(0, 0, 30)) > pLength)
             {
                 await Task.Delay(500);
                 TargetOffset = DateTime.Now.Subtract(StartTime);
@@ -337,6 +337,7 @@ namespace PVLib
         async Task ProcessVideo(string filePath, int SlotNo)
         {
             if (processing) return;
+            ConsoleLog.writeMessage($"Processing: {filePath}");
             processing = true;
             Directory.CreateDirectory(liveOutputDirectory);
             filePath = "\"" + filePath + "\"";

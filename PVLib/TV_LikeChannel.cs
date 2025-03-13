@@ -349,6 +349,7 @@ namespace PVLib
                     return span;
                 }
             }
+            if(Live)schedule.live = true;
             SaveSchedule(schedule,today);
             SaveLoad<TV_LikeChannel>.Save(this, FileSystem.ChannleChan(ChannelName));
             DateTime endtime = DateTime.Now;
@@ -399,7 +400,7 @@ namespace PVLib
                     estimatedCurrentTime += RR.Duration;
                 }
             }
-
+            if (Live) schedule.live = true;
             SaveSchedule(schedule, day);
             if (show.Status != ShowStatus.Complete)
             {

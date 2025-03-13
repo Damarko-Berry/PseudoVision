@@ -9,11 +9,13 @@
     /// When does your server require credentials
     /// </summary>
     public enum SecurityApplication {Never, Only_Public_Requests}
-    public enum Access {User, Modderator}
+    public enum Access {User, Moderator}
     public enum DeviceType { MediaServer, InternetGatewayDevice, lighting, reminder }
     public enum ServiceType { ContentDirectory, ConnectionManager }
     public enum MovieMode { WithReruns, Sunday ,Monday, Tuesday, Wednesday, Thursday, Friday, Saturday}
     public enum LiveHandling { Storage_Saver, CPU_Saver }
+    public enum LiveProtocol { Built_In, HLS }
+    public enum BreaksLength { OneWeek, TwoWeeks, ThreeWeeks, FourWeeks, TwoMonths, ThreeMonths, OneYear}
     public enum MessageType { Normal, Error }
     #region Metadata
     [Flags]
@@ -67,13 +69,19 @@
         Any = Kids | Teens | Adults
 
     }
-
     [Flags]
     public enum GenderDemographic
     {
         Male = 1,
         Female = 2,
         Any = Male | Female
+    }
+    [Flags]
+    public enum EpisodeStyle
+    {
+        Episodic = 1,
+        Seialized = 2,
+        Any= Episodic | Seialized
     }
 
     #endregion

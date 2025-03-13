@@ -31,8 +31,11 @@ namespace PVLib
         [XmlElement(ElementName = "Universe")]
         public string Universe { get; set; }
 
-        [XmlElement(ElementName = "PremireDate")]
-        public DateTime PremireDate { get; set; }
+        [XmlElement(ElementName = "PremiereDate")]
+        public DateTime PremiereDate { get; set; }
+
+        [XmlElement(ElementName = "EpDate")]
+        public EpisodeStyle EpStyle { get; set; }
 
         public string ToJson()
         {
@@ -54,7 +57,8 @@ namespace PVLib
                 TargetGender = GenderDemographic.Any,
                 Directors = new string[] { "Various" },
                 Studios = new string[] { "Various" },
-                PremireDate = DateTime.MinValue,
+                PremiereDate = DateTime.MinValue,
+                EpStyle = EpisodeStyle.Any,
             };
         }
     }

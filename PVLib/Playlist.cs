@@ -3,7 +3,7 @@
     public class Playlist
     {
         List<Rerun> files;
-        public Rerun this[int x] => files[x]; 
+        public Rerun this[int x] => files[x];
         public int Count => files.Count;
         PlaylistFormat format => Settings.CurrentSettings.playlistFormat;
         public Playlist(Schedule schedule)
@@ -26,8 +26,8 @@
         {
             files = new();
             FileInfo fileInfo = new FileInfo(path);
-            var form = EnumTranslator<PlaylistFormat>.fromString(fileInfo.Extension.Replace(".",string.Empty));
-            switch(form)
+            var form = EnumTranslator<PlaylistFormat>.fromString(fileInfo.Extension.Replace(".", string.Empty));
+            switch (form)
             {
                 case PlaylistFormat.m3u:
                     fromM3u(File.ReadAllText(fileInfo.FullName));
@@ -37,27 +37,36 @@
                     break;
             }
         }
-    #region m3u
-        void fromM3u(string content) 
+
+        public Playlist(string[] paths)
+        {
+            files = new();
+            for (int i = 0; i < paths.Length; i++)
+            {
+                files.Add(new(paths[i]));
+            }
+        }
+        #region m3u
+        void fromM3u(string content)
         {
             var c = content.Split("\n");
-            for (int i = 3; i < c.Length; i+=2)
+            for (int i = 3; i < c.Length; i += 2)
             {
-                if(i+1 == c.Length)
+                if (i + 1 == c.Length)
                 {
                     break;
                 }
                 var t = c[i];
                 t = t.Replace("#EXTINF:", string.Empty);
                 t = t.Split(",")[0];
-                var med = c[i+1];
+                var med = c[i + 1];
                 Rerun rerun = new Rerun();
-                rerun.MediaLength.Second= int.Parse(t.Replace(",",string.Empty));
+                rerun.MediaLength.Second = int.Parse(t.Replace(",", string.Empty));
                 rerun.Media = med;
                 files.Add(rerun);
             }
         }
-        string ToM3u()
+        public string ToM3u()
         {
             var Da = DateTime.Now;
             var M = Da.Date.Month;
@@ -71,23 +80,23 @@
             }
             return sb;
         }
-    #endregion
-    #region pls
+        #endregion
+        #region pls
         void fromPls(string content)
         {
             var c = content.Split("\n");
-            for (int i = 2; i < c.Length-2; i+=3)
+            for (int i = 2; i < c.Length - 2; i += 3)
             {
                 if (i + 2 == c.Length)
                 {
                     break;
                 }
                 var med = c[i].Split("=")[1];
-                var t = int.Parse(c[i+1].Split("=")[1]);
+                var t = int.Parse(c[i + 1].Split("=")[1]);
                 files.Add(new() { Media = med, MediaLength = new() { Second = t } });
             }
         }
-        string ToPls()
+        public string ToPls()
         {
             var sb = "[playlist]\n\n";
             for (int i = 0; i < files.Count; i++)
@@ -100,14 +109,14 @@
 
             return sb;
         }
-    #endregion
+        #endregion
         public override string ToString()
         {
             return format switch
             {
                 PlaylistFormat.m3u => ToM3u(),
                 PlaylistFormat.pls => ToPls(),
-                _=> throw new Exception("Invalid Selection")
+                _ => throw new Exception("Invalid Selection")
             };
         }
     }
